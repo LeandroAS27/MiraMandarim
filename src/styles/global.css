@@ -1,0 +1,13 @@
+:root {
+  --bg: #eceef1;
+  --dot: #cfd3d9;
+  --ink: #23262b;
+  --muted: #6b7280;
+  --bar: rgba(255, 255, 255, 0.92);
+  font-family: 'Noto Sans SC', system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  color: var(--ink);
+}
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body { background: var(--bg); overscroll-behavior: none; }
+button { font: inherit; }

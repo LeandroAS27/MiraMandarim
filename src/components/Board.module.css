@@ -1,0 +1,3 @@
+.viewport { position: fixed; inset: 0; overflow: auto; }
+.canvas { position: relative; background-color: var(--bg); background-image: radial-gradient(var(--dot) 1px, transparent 1px); background-size: 24px 24px; cursor: grab; }
+.panning, .panning * { cursor: grabbing !important; user-select: none; }
