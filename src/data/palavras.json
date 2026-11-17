@@ -1,0 +1,1505 @@
+{
+ "_aviso": "LISTA PROVISÓRIA: será trocada pela lista definitiva da professora. Palavras comuns de nível HSK 1 a 2, geradas para o demo.",
+ "palavras": [
+  {
+   "id": "p001",
+   "hanzi": "我",
+   "pinyin": "wǒ",
+   "traducao": "eu"
+  },
+  {
+   "id": "p002",
+   "hanzi": "你",
+   "pinyin": "nǐ",
+   "traducao": "você"
+  },
+  {
+   "id": "p003",
+   "hanzi": "他",
+   "pinyin": "tā",
+   "traducao": "ele"
+  },
+  {
+   "id": "p004",
+   "hanzi": "她",
+   "pinyin": "tā",
+   "traducao": "ela"
+  },
+  {
+   "id": "p005",
+   "hanzi": "我们",
+   "pinyin": "wǒmen",
+   "traducao": "nós"
+  },
+  {
+   "id": "p006",
+   "hanzi": "你们",
+   "pinyin": "nǐmen",
+   "traducao": "vocês"
+  },
+  {
+   "id": "p007",
+   "hanzi": "他们",
+   "pinyin": "tāmen",
+   "traducao": "eles"
+  },
+  {
+   "id": "p008",
+   "hanzi": "这",
+   "pinyin": "zhè",
+   "traducao": "este"
+  },
+  {
+   "id": "p009",
+   "hanzi": "那",
+   "pinyin": "nà",
+   "traducao": "aquele"
+  },
+  {
+   "id": "p010",
+   "hanzi": "谁",
+   "pinyin": "shéi",
+   "traducao": "quem"
+  },
+  {
+   "id": "p011",
+   "hanzi": "什么",
+   "pinyin": "shénme",
+   "traducao": "o quê"
+  },
+  {
+   "id": "p012",
+   "hanzi": "哪",
+   "pinyin": "nǎ",
+   "traducao": "qual"
+  },
+  {
+   "id": "p013",
+   "hanzi": "哪儿",
+   "pinyin": "nǎr",
+   "traducao": "onde"
+  },
+  {
+   "id": "p014",
+   "hanzi": "怎么",
+   "pinyin": "zěnme",
+   "traducao": "como"
+  },
+  {
+   "id": "p015",
+   "hanzi": "怎么样",
+   "pinyin": "zěnmeyàng",
+   "traducao": "que tal"
+  },
+  {
+   "id": "p016",
+   "hanzi": "几",
+   "pinyin": "jǐ",
+   "traducao": "quantos"
+  },
+  {
+   "id": "p017",
+   "hanzi": "多少",
+   "pinyin": "duōshao",
+   "traducao": "quanto"
+  },
+  {
+   "id": "p018",
+   "hanzi": "为什么",
+   "pinyin": "wèishénme",
+   "traducao": "por quê"
+  },
+  {
+   "id": "p019",
+   "hanzi": "人",
+   "pinyin": "rén",
+   "traducao": "pessoa"
+  },
+  {
+   "id": "p020",
+   "hanzi": "爸爸",
+   "pinyin": "bàba",
+   "traducao": "papai"
+  },
+  {
+   "id": "p021",
+   "hanzi": "妈妈",
+   "pinyin": "māma",
+   "traducao": "mamãe"
+  },
+  {
+   "id": "p022",
+   "hanzi": "哥哥",
+   "pinyin": "gēge",
+   "traducao": "irmão mais velho"
+  },
+  {
+   "id": "p023",
+   "hanzi": "姐姐",
+   "pinyin": "jiějie",
+   "traducao": "irmã mais velha"
+  },
+  {
+   "id": "p024",
+   "hanzi": "弟弟",
+   "pinyin": "dìdi",
+   "traducao": "irmão mais novo"
+  },
+  {
+   "id": "p025",
+   "hanzi": "妹妹",
+   "pinyin": "mèimei",
+   "traducao": "irmã mais nova"
+  },
+  {
+   "id": "p026",
+   "hanzi": "儿子",
+   "pinyin": "érzi",
+   "traducao": "filho"
+  },
+  {
+   "id": "p027",
+   "hanzi": "女儿",
+   "pinyin": "nǚ'ér",
+   "traducao": "filha"
+  },
+  {
+   "id": "p028",
+   "hanzi": "朋友",
+   "pinyin": "péngyou",
+   "traducao": "amigo"
+  },
+  {
+   "id": "p029",
+   "hanzi": "老师",
+   "pinyin": "lǎoshī",
+   "traducao": "professor"
+  },
+  {
+   "id": "p030",
+   "hanzi": "学生",
+   "pinyin": "xuésheng",
+   "traducao": "aluno"
+  },
+  {
+   "id": "p031",
+   "hanzi": "同学",
+   "pinyin": "tóngxué",
+   "traducao": "colega de classe"
+  },
+  {
+   "id": "p032",
+   "hanzi": "医生",
+   "pinyin": "yīshēng",
+   "traducao": "médico"
+  },
+  {
+   "id": "p033",
+   "hanzi": "先生",
+   "pinyin": "xiānsheng",
+   "traducao": "senhor"
+  },
+  {
+   "id": "p034",
+   "hanzi": "小姐",
+   "pinyin": "xiǎojiě",
+   "traducao": "senhorita"
+  },
+  {
+   "id": "p035",
+   "hanzi": "孩子",
+   "pinyin": "háizi",
+   "traducao": "criança"
+  },
+  {
+   "id": "p036",
+   "hanzi": "家",
+   "pinyin": "jiā",
+   "traducao": "casa, família"
+  },
+  {
+   "id": "p037",
+   "hanzi": "一",
+   "pinyin": "yī",
+   "traducao": "um"
+  },
+  {
+   "id": "p038",
+   "hanzi": "二",
+   "pinyin": "èr",
+   "traducao": "dois"
+  },
+  {
+   "id": "p039",
+   "hanzi": "三",
+   "pinyin": "sān",
+   "traducao": "três"
+  },
+  {
+   "id": "p040",
+   "hanzi": "四",
+   "pinyin": "sì",
+   "traducao": "quatro"
+  },
+  {
+   "id": "p041",
+   "hanzi": "五",
+   "pinyin": "wǔ",
+   "traducao": "cinco"
+  },
+  {
+   "id": "p042",
+   "hanzi": "六",
+   "pinyin": "liù",
+   "traducao": "seis"
+  },
+  {
+   "id": "p043",
+   "hanzi": "七",
+   "pinyin": "qī",
+   "traducao": "sete"
+  },
+  {
+   "id": "p044",
+   "hanzi": "八",
+   "pinyin": "bā",
+   "traducao": "oito"
+  },
+  {
+   "id": "p045",
+   "hanzi": "九",
+   "pinyin": "jiǔ",
+   "traducao": "nove"
+  },
+  {
+   "id": "p046",
+   "hanzi": "十",
+   "pinyin": "shí",
+   "traducao": "dez"
+  },
+  {
+   "id": "p047",
+   "hanzi": "百",
+   "pinyin": "bǎi",
+   "traducao": "cem"
+  },
+  {
+   "id": "p048",
+   "hanzi": "千",
+   "pinyin": "qiān",
+   "traducao": "mil"
+  },
+  {
+   "id": "p049",
+   "hanzi": "两",
+   "pinyin": "liǎng",
+   "traducao": "dois (quantidade)"
+  },
+  {
+   "id": "p050",
+   "hanzi": "零",
+   "pinyin": "líng",
+   "traducao": "zero"
+  },
+  {
+   "id": "p051",
+   "hanzi": "半",
+   "pinyin": "bàn",
+   "traducao": "meio"
+  },
+  {
+   "id": "p052",
+   "hanzi": "年",
+   "pinyin": "nián",
+   "traducao": "ano"
+  },
+  {
+   "id": "p053",
+   "hanzi": "月",
+   "pinyin": "yuè",
+   "traducao": "mês"
+  },
+  {
+   "id": "p054",
+   "hanzi": "日",
+   "pinyin": "rì",
+   "traducao": "dia"
+  },
+  {
+   "id": "p055",
+   "hanzi": "号",
+   "pinyin": "hào",
+   "traducao": "dia (data)"
+  },
+  {
+   "id": "p056",
+   "hanzi": "星期",
+   "pinyin": "xīngqī",
+   "traducao": "semana"
+  },
+  {
+   "id": "p057",
+   "hanzi": "今天",
+   "pinyin": "jīntiān",
+   "traducao": "hoje"
+  },
+  {
+   "id": "p058",
+   "hanzi": "明天",
+   "pinyin": "míngtiān",
+   "traducao": "amanhã"
+  },
+  {
+   "id": "p059",
+   "hanzi": "昨天",
+   "pinyin": "zuótiān",
+   "traducao": "ontem"
+  },
+  {
+   "id": "p060",
+   "hanzi": "上午",
+   "pinyin": "shàngwǔ",
+   "traducao": "manhã"
+  },
+  {
+   "id": "p061",
+   "hanzi": "中午",
+   "pinyin": "zhōngwǔ",
+   "traducao": "meio-dia"
+  },
+  {
+   "id": "p062",
+   "hanzi": "下午",
+   "pinyin": "xiàwǔ",
+   "traducao": "tarde"
+  },
+  {
+   "id": "p063",
+   "hanzi": "晚上",
+   "pinyin": "wǎnshang",
+   "traducao": "noite"
+  },
+  {
+   "id": "p064",
+   "hanzi": "现在",
+   "pinyin": "xiànzài",
+   "traducao": "agora"
+  },
+  {
+   "id": "p065",
+   "hanzi": "时候",
+   "pinyin": "shíhou",
+   "traducao": "momento"
+  },
+  {
+   "id": "p066",
+   "hanzi": "点",
+   "pinyin": "diǎn",
+   "traducao": "hora (em ponto)"
+  },
+  {
+   "id": "p067",
+   "hanzi": "分钟",
+   "pinyin": "fēnzhōng",
+   "traducao": "minuto"
+  },
+  {
+   "id": "p068",
+   "hanzi": "岁",
+   "pinyin": "suì",
+   "traducao": "anos (idade)"
+  },
+  {
+   "id": "p069",
+   "hanzi": "早上",
+   "pinyin": "zǎoshang",
+   "traducao": "manhã cedo"
+  },
+  {
+   "id": "p070",
+   "hanzi": "个",
+   "pinyin": "gè",
+   "traducao": "classificador geral"
+  },
+  {
+   "id": "p071",
+   "hanzi": "本",
+   "pinyin": "běn",
+   "traducao": "classificador de livros"
+  },
+  {
+   "id": "p072",
+   "hanzi": "些",
+   "pinyin": "xiē",
+   "traducao": "alguns"
+  },
+  {
+   "id": "p073",
+   "hanzi": "的",
+   "pinyin": "de",
+   "traducao": "partícula de posse"
+  },
+  {
+   "id": "p074",
+   "hanzi": "了",
+   "pinyin": "le",
+   "traducao": "partícula de aspecto"
+  },
+  {
+   "id": "p075",
+   "hanzi": "吗",
+   "pinyin": "ma",
+   "traducao": "partícula de pergunta"
+  },
+  {
+   "id": "p076",
+   "hanzi": "呢",
+   "pinyin": "ne",
+   "traducao": "e quanto a...?"
+  },
+  {
+   "id": "p077",
+   "hanzi": "吧",
+   "pinyin": "ba",
+   "traducao": "partícula de sugestão"
+  },
+  {
+   "id": "p078",
+   "hanzi": "不",
+   "pinyin": "bù",
+   "traducao": "não"
+  },
+  {
+   "id": "p079",
+   "hanzi": "没",
+   "pinyin": "méi",
+   "traducao": "não ter"
+  },
+  {
+   "id": "p080",
+   "hanzi": "很",
+   "pinyin": "hěn",
+   "traducao": "muito"
+  },
+  {
+   "id": "p081",
+   "hanzi": "都",
+   "pinyin": "dōu",
+   "traducao": "todos"
+  },
+  {
+   "id": "p082",
+   "hanzi": "也",
+   "pinyin": "yě",
+   "traducao": "também"
+  },
+  {
+   "id": "p083",
+   "hanzi": "还",
+   "pinyin": "hái",
+   "traducao": "ainda"
+  },
+  {
+   "id": "p084",
+   "hanzi": "在",
+   "pinyin": "zài",
+   "traducao": "estar em"
+  },
+  {
+   "id": "p085",
+   "hanzi": "和",
+   "pinyin": "hé",
+   "traducao": "e"
+  },
+  {
+   "id": "p086",
+   "hanzi": "太",
+   "pinyin": "tài",
+   "traducao": "demais"
+  },
+  {
+   "id": "p087",
+   "hanzi": "会",
+   "pinyin": "huì",
+   "traducao": "saber, poder"
+  },
+  {
+   "id": "p088",
+   "hanzi": "能",
+   "pinyin": "néng",
+   "traducao": "conseguir"
+  },
+  {
+   "id": "p089",
+   "hanzi": "想",
+   "pinyin": "xiǎng",
+   "traducao": "querer, pensar"
+  },
+  {
+   "id": "p090",
+   "hanzi": "要",
+   "pinyin": "yào",
+   "traducao": "querer, precisar"
+  },
+  {
+   "id": "p091",
+   "hanzi": "可以",
+   "pinyin": "kěyǐ",
+   "traducao": "pode"
+  },
+  {
+   "id": "p092",
+   "hanzi": "是",
+   "pinyin": "shì",
+   "traducao": "ser"
+  },
+  {
+   "id": "p093",
+   "hanzi": "有",
+   "pinyin": "yǒu",
+   "traducao": "ter"
+  },
+  {
+   "id": "p094",
+   "hanzi": "去",
+   "pinyin": "qù",
+   "traducao": "ir"
+  },
+  {
+   "id": "p095",
+   "hanzi": "来",
+   "pinyin": "lái",
+   "traducao": "vir"
+  },
+  {
+   "id": "p096",
+   "hanzi": "吃",
+   "pinyin": "chī",
+   "traducao": "comer"
+  },
+  {
+   "id": "p097",
+   "hanzi": "喝",
+   "pinyin": "hē",
+   "traducao": "beber"
+  },
+  {
+   "id": "p098",
+   "hanzi": "看",
+   "pinyin": "kàn",
+   "traducao": "olhar, ver"
+  },
+  {
+   "id": "p099",
+   "hanzi": "听",
+   "pinyin": "tīng",
+   "traducao": "ouvir"
+  },
+  {
+   "id": "p100",
+   "hanzi": "说",
+   "pinyin": "shuō",
+   "traducao": "falar"
+  },
+  {
+   "id": "p101",
+   "hanzi": "读",
+   "pinyin": "dú",
+   "traducao": "ler"
+  },
+  {
+   "id": "p102",
+   "hanzi": "写",
+   "pinyin": "xiě",
+   "traducao": "escrever"
+  },
+  {
+   "id": "p103",
+   "hanzi": "学",
+   "pinyin": "xué",
+   "traducao": "estudar"
+  },
+  {
+   "id": "p104",
+   "hanzi": "学习",
+   "pinyin": "xuéxí",
+   "traducao": "aprender"
+  },
+  {
+   "id": "p105",
+   "hanzi": "做",
+   "pinyin": "zuò",
+   "traducao": "fazer"
+  },
+  {
+   "id": "p106",
+   "hanzi": "买",
+   "pinyin": "mǎi",
+   "traducao": "comprar"
+  },
+  {
+   "id": "p107",
+   "hanzi": "卖",
+   "pinyin": "mài",
+   "traducao": "vender"
+  },
+  {
+   "id": "p108",
+   "hanzi": "坐",
+   "pinyin": "zuò",
+   "traducao": "sentar"
+  },
+  {
+   "id": "p109",
+   "hanzi": "开",
+   "pinyin": "kāi",
+   "traducao": "abrir, dirigir"
+  },
+  {
+   "id": "p110",
+   "hanzi": "住",
+   "pinyin": "zhù",
+   "traducao": "morar"
+  },
+  {
+   "id": "p111",
+   "hanzi": "叫",
+   "pinyin": "jiào",
+   "traducao": "chamar-se"
+  },
+  {
+   "id": "p112",
+   "hanzi": "给",
+   "pinyin": "gěi",
+   "traducao": "dar"
+  },
+  {
+   "id": "p113",
+   "hanzi": "爱",
+   "pinyin": "ài",
+   "traducao": "amar"
+  },
+  {
+   "id": "p114",
+   "hanzi": "喜欢",
+   "pinyin": "xǐhuan",
+   "traducao": "gostar"
+  },
+  {
+   "id": "p115",
+   "hanzi": "认识",
+   "pinyin": "rènshi",
+   "traducao": "conhecer"
+  },
+  {
+   "id": "p116",
+   "hanzi": "知道",
+   "pinyin": "zhīdào",
+   "traducao": "saber"
+  },
+  {
+   "id": "p117",
+   "hanzi": "请",
+   "pinyin": "qǐng",
+   "traducao": "por favor, convidar"
+  },
+  {
+   "id": "p118",
+   "hanzi": "问",
+   "pinyin": "wèn",
+   "traducao": "perguntar"
+  },
+  {
+   "id": "p119",
+   "hanzi": "回",
+   "pinyin": "huí",
+   "traducao": "voltar"
+  },
+  {
+   "id": "p120",
+   "hanzi": "走",
+   "pinyin": "zǒu",
+   "traducao": "andar"
+  },
+  {
+   "id": "p121",
+   "hanzi": "跑步",
+   "pinyin": "pǎobù",
+   "traducao": "correr"
+  },
+  {
+   "id": "p122",
+   "hanzi": "睡觉",
+   "pinyin": "shuìjiào",
+   "traducao": "dormir"
+  },
+  {
+   "id": "p123",
+   "hanzi": "起床",
+   "pinyin": "qǐchuáng",
+   "traducao": "levantar-se"
+  },
+  {
+   "id": "p124",
+   "hanzi": "打",
+   "pinyin": "dǎ",
+   "traducao": "bater, jogar"
+  },
+  {
+   "id": "p125",
+   "hanzi": "玩",
+   "pinyin": "wán",
+   "traducao": "brincar"
+  },
+  {
+   "id": "p126",
+   "hanzi": "工作",
+   "pinyin": "gōngzuò",
+   "traducao": "trabalhar"
+  },
+  {
+   "id": "p127",
+   "hanzi": "帮助",
+   "pinyin": "bāngzhù",
+   "traducao": "ajudar"
+  },
+  {
+   "id": "p128",
+   "hanzi": "等",
+   "pinyin": "děng",
+   "traducao": "esperar"
+  },
+  {
+   "id": "p129",
+   "hanzi": "找",
+   "pinyin": "zhǎo",
+   "traducao": "procurar"
+  },
+  {
+   "id": "p130",
+   "hanzi": "进",
+   "pinyin": "jìn",
+   "traducao": "entrar"
+  },
+  {
+   "id": "p131",
+   "hanzi": "出",
+   "pinyin": "chū",
+   "traducao": "sair"
+  },
+  {
+   "id": "p132",
+   "hanzi": "上",
+   "pinyin": "shàng",
+   "traducao": "subir, em cima"
+  },
+  {
+   "id": "p133",
+   "hanzi": "下",
+   "pinyin": "xià",
+   "traducao": "descer, embaixo"
+  },
+  {
+   "id": "p134",
+   "hanzi": "穿",
+   "pinyin": "chuān",
+   "traducao": "vestir"
+  },
+  {
+   "id": "p135",
+   "hanzi": "笑",
+   "pinyin": "xiào",
+   "traducao": "sorrir"
+  },
+  {
+   "id": "p136",
+   "hanzi": "哭",
+   "pinyin": "kū",
+   "traducao": "chorar"
+  },
+  {
+   "id": "p137",
+   "hanzi": "唱歌",
+   "pinyin": "chànggē",
+   "traducao": "cantar"
+  },
+  {
+   "id": "p138",
+   "hanzi": "跳舞",
+   "pinyin": "tiàowǔ",
+   "traducao": "dançar"
+  },
+  {
+   "id": "p139",
+   "hanzi": "游泳",
+   "pinyin": "yóuyǒng",
+   "traducao": "nadar"
+  },
+  {
+   "id": "p140",
+   "hanzi": "休息",
+   "pinyin": "xiūxi",
+   "traducao": "descansar"
+  },
+  {
+   "id": "p141",
+   "hanzi": "洗",
+   "pinyin": "xǐ",
+   "traducao": "lavar"
+  },
+  {
+   "id": "p142",
+   "hanzi": "觉得",
+   "pinyin": "juéde",
+   "traducao": "achar"
+  },
+  {
+   "id": "p143",
+   "hanzi": "希望",
+   "pinyin": "xīwàng",
+   "traducao": "esperar, desejar"
+  },
+  {
+   "id": "p144",
+   "hanzi": "好",
+   "pinyin": "hǎo",
+   "traducao": "bom"
+  },
+  {
+   "id": "p145",
+   "hanzi": "大",
+   "pinyin": "dà",
+   "traducao": "grande"
+  },
+  {
+   "id": "p146",
+   "hanzi": "小",
+   "pinyin": "xiǎo",
+   "traducao": "pequeno"
+  },
+  {
+   "id": "p147",
+   "hanzi": "多",
+   "pinyin": "duō",
+   "traducao": "muito"
+  },
+  {
+   "id": "p148",
+   "hanzi": "少",
+   "pinyin": "shǎo",
+   "traducao": "pouco"
+  },
+  {
+   "id": "p149",
+   "hanzi": "高",
+   "pinyin": "gāo",
+   "traducao": "alto"
+  },
+  {
+   "id": "p150",
+   "hanzi": "长",
+   "pinyin": "cháng",
+   "traducao": "comprido"
+  },
+  {
+   "id": "p151",
+   "hanzi": "新",
+   "pinyin": "xīn",
+   "traducao": "novo"
+  },
+  {
+   "id": "p152",
+   "hanzi": "旧",
+   "pinyin": "jiù",
+   "traducao": "velho (coisa)"
+  },
+  {
+   "id": "p153",
+   "hanzi": "快",
+   "pinyin": "kuài",
+   "traducao": "rápido"
+  },
+  {
+   "id": "p154",
+   "hanzi": "慢",
+   "pinyin": "màn",
+   "traducao": "devagar"
+  },
+  {
+   "id": "p155",
+   "hanzi": "冷",
+   "pinyin": "lěng",
+   "traducao": "frio"
+  },
+  {
+   "id": "p156",
+   "hanzi": "热",
+   "pinyin": "rè",
+   "traducao": "quente"
+  },
+  {
+   "id": "p157",
+   "hanzi": "贵",
+   "pinyin": "guì",
+   "traducao": "caro"
+  },
+  {
+   "id": "p158",
+   "hanzi": "便宜",
+   "pinyin": "piányi",
+   "traducao": "barato"
+  },
+  {
+   "id": "p159",
+   "hanzi": "漂亮",
+   "pinyin": "piàoliang",
+   "traducao": "bonito"
+  },
+  {
+   "id": "p160",
+   "hanzi": "高兴",
+   "pinyin": "gāoxìng",
+   "traducao": "feliz"
+  },
+  {
+   "id": "p161",
+   "hanzi": "累",
+   "pinyin": "lèi",
+   "traducao": "cansado"
+  },
+  {
+   "id": "p162",
+   "hanzi": "忙",
+   "pinyin": "máng",
+   "traducao": "ocupado"
+  },
+  {
+   "id": "p163",
+   "hanzi": "对",
+   "pinyin": "duì",
+   "traducao": "correto"
+  },
+  {
+   "id": "p164",
+   "hanzi": "错",
+   "pinyin": "cuò",
+   "traducao": "errado"
+  },
+  {
+   "id": "p165",
+   "hanzi": "远",
+   "pinyin": "yuǎn",
+   "traducao": "longe"
+  },
+  {
+   "id": "p166",
+   "hanzi": "近",
+   "pinyin": "jìn",
+   "traducao": "perto"
+  },
+  {
+   "id": "p167",
+   "hanzi": "白",
+   "pinyin": "bái",
+   "traducao": "branco"
+  },
+  {
+   "id": "p168",
+   "hanzi": "黑",
+   "pinyin": "hēi",
+   "traducao": "preto"
+  },
+  {
+   "id": "p169",
+   "hanzi": "红",
+   "pinyin": "hóng",
+   "traducao": "vermelho"
+  },
+  {
+   "id": "p170",
+   "hanzi": "老",
+   "pinyin": "lǎo",
+   "traducao": "velho (pessoa)"
+  },
+  {
+   "id": "p171",
+   "hanzi": "好吃",
+   "pinyin": "hǎochī",
+   "traducao": "gostoso"
+  },
+  {
+   "id": "p172",
+   "hanzi": "难",
+   "pinyin": "nán",
+   "traducao": "difícil"
+  },
+  {
+   "id": "p173",
+   "hanzi": "容易",
+   "pinyin": "róngyì",
+   "traducao": "fácil"
+  },
+  {
+   "id": "p174",
+   "hanzi": "水",
+   "pinyin": "shuǐ",
+   "traducao": "água"
+  },
+  {
+   "id": "p175",
+   "hanzi": "茶",
+   "pinyin": "chá",
+   "traducao": "chá"
+  },
+  {
+   "id": "p176",
+   "hanzi": "咖啡",
+   "pinyin": "kāfēi",
+   "traducao": "café"
+  },
+  {
+   "id": "p177",
+   "hanzi": "牛奶",
+   "pinyin": "niúnǎi",
+   "traducao": "leite"
+  },
+  {
+   "id": "p178",
+   "hanzi": "米饭",
+   "pinyin": "mǐfàn",
+   "traducao": "arroz"
+  },
+  {
+   "id": "p179",
+   "hanzi": "面条",
+   "pinyin": "miàntiáo",
+   "traducao": "macarrão"
+  },
+  {
+   "id": "p180",
+   "hanzi": "菜",
+   "pinyin": "cài",
+   "traducao": "prato, legume"
+  },
+  {
+   "id": "p181",
+   "hanzi": "肉",
+   "pinyin": "ròu",
+   "traducao": "carne"
+  },
+  {
+   "id": "p182",
+   "hanzi": "鸡蛋",
+   "pinyin": "jīdàn",
+   "traducao": "ovo"
+  },
+  {
+   "id": "p183",
+   "hanzi": "水果",
+   "pinyin": "shuǐguǒ",
+   "traducao": "fruta"
+  },
+  {
+   "id": "p184",
+   "hanzi": "苹果",
+   "pinyin": "píngguǒ",
+   "traducao": "maçã"
+  },
+  {
+   "id": "p185",
+   "hanzi": "西瓜",
+   "pinyin": "xīguā",
+   "traducao": "melancia"
+  },
+  {
+   "id": "p186",
+   "hanzi": "鱼",
+   "pinyin": "yú",
+   "traducao": "peixe"
+  },
+  {
+   "id": "p187",
+   "hanzi": "饭馆",
+   "pinyin": "fànguǎn",
+   "traducao": "restaurante"
+  },
+  {
+   "id": "p188",
+   "hanzi": "杯子",
+   "pinyin": "bēizi",
+   "traducao": "copo"
+  },
+  {
+   "id": "p189",
+   "hanzi": "衣服",
+   "pinyin": "yīfu",
+   "traducao": "roupa"
+  },
+  {
+   "id": "p190",
+   "hanzi": "鞋",
+   "pinyin": "xié",
+   "traducao": "sapato"
+  },
+  {
+   "id": "p191",
+   "hanzi": "书",
+   "pinyin": "shū",
+   "traducao": "livro"
+  },
+  {
+   "id": "p192",
+   "hanzi": "钱",
+   "pinyin": "qián",
+   "traducao": "dinheiro"
+  },
+  {
+   "id": "p193",
+   "hanzi": "手机",
+   "pinyin": "shǒujī",
+   "traducao": "celular"
+  },
+  {
+   "id": "p194",
+   "hanzi": "电脑",
+   "pinyin": "diànnǎo",
+   "traducao": "computador"
+  },
+  {
+   "id": "p195",
+   "hanzi": "电视",
+   "pinyin": "diànshì",
+   "traducao": "televisão"
+  },
+  {
+   "id": "p196",
+   "hanzi": "电影",
+   "pinyin": "diànyǐng",
+   "traducao": "filme"
+  },
+  {
+   "id": "p197",
+   "hanzi": "桌子",
+   "pinyin": "zhuōzi",
+   "traducao": "mesa"
+  },
+  {
+   "id": "p198",
+   "hanzi": "椅子",
+   "pinyin": "yǐzi",
+   "traducao": "cadeira"
+  },
+  {
+   "id": "p199",
+   "hanzi": "东西",
+   "pinyin": "dōngxi",
+   "traducao": "coisa"
+  },
+  {
+   "id": "p200",
+   "hanzi": "狗",
+   "pinyin": "gǒu",
+   "traducao": "cachorro"
+  },
+  {
+   "id": "p201",
+   "hanzi": "猫",
+   "pinyin": "māo",
+   "traducao": "gato"
+  },
+  {
+   "id": "p202",
+   "hanzi": "车",
+   "pinyin": "chē",
+   "traducao": "carro"
+  },
+  {
+   "id": "p203",
+   "hanzi": "飞机",
+   "pinyin": "fēijī",
+   "traducao": "avião"
+  },
+  {
+   "id": "p204",
+   "hanzi": "火车",
+   "pinyin": "huǒchē",
+   "traducao": "trem"
+  },
+  {
+   "id": "p205",
+   "hanzi": "出租车",
+   "pinyin": "chūzūchē",
+   "traducao": "táxi"
+  },
+  {
+   "id": "p206",
+   "hanzi": "自行车",
+   "pinyin": "zìxíngchē",
+   "traducao": "bicicleta"
+  },
+  {
+   "id": "p207",
+   "hanzi": "中国",
+   "pinyin": "Zhōngguó",
+   "traducao": "China"
+  },
+  {
+   "id": "p208",
+   "hanzi": "北京",
+   "pinyin": "Běijīng",
+   "traducao": "Pequim"
+  },
+  {
+   "id": "p209",
+   "hanzi": "学校",
+   "pinyin": "xuéxiào",
+   "traducao": "escola"
+  },
+  {
+   "id": "p210",
+   "hanzi": "医院",
+   "pinyin": "yīyuàn",
+   "traducao": "hospital"
+  },
+  {
+   "id": "p211",
+   "hanzi": "商店",
+   "pinyin": "shāngdiàn",
+   "traducao": "loja"
+  },
+  {
+   "id": "p212",
+   "hanzi": "公司",
+   "pinyin": "gōngsī",
+   "traducao": "empresa"
+  },
+  {
+   "id": "p213",
+   "hanzi": "房间",
+   "pinyin": "fángjiān",
+   "traducao": "quarto"
+  },
+  {
+   "id": "p214",
+   "hanzi": "前面",
+   "pinyin": "qiánmiàn",
+   "traducao": "frente"
+  },
+  {
+   "id": "p215",
+   "hanzi": "后面",
+   "pinyin": "hòumiàn",
+   "traducao": "atrás"
+  },
+  {
+   "id": "p216",
+   "hanzi": "里",
+   "pinyin": "lǐ",
+   "traducao": "dentro"
+  },
+  {
+   "id": "p217",
+   "hanzi": "外",
+   "pinyin": "wài",
+   "traducao": "fora"
+  },
+  {
+   "id": "p218",
+   "hanzi": "左边",
+   "pinyin": "zuǒbian",
+   "traducao": "esquerda"
+  },
+  {
+   "id": "p219",
+   "hanzi": "右边",
+   "pinyin": "yòubian",
+   "traducao": "direita"
+  },
+  {
+   "id": "p220",
+   "hanzi": "这儿",
+   "pinyin": "zhèr",
+   "traducao": "aqui"
+  },
+  {
+   "id": "p221",
+   "hanzi": "那儿",
+   "pinyin": "nàr",
+   "traducao": "ali"
+  },
+  {
+   "id": "p222",
+   "hanzi": "天气",
+   "pinyin": "tiānqì",
+   "traducao": "clima"
+  },
+  {
+   "id": "p223",
+   "hanzi": "雨",
+   "pinyin": "yǔ",
+   "traducao": "chuva"
+  },
+  {
+   "id": "p224",
+   "hanzi": "雪",
+   "pinyin": "xuě",
+   "traducao": "neve"
+  },
+  {
+   "id": "p225",
+   "hanzi": "山",
+   "pinyin": "shān",
+   "traducao": "montanha"
+  },
+  {
+   "id": "p226",
+   "hanzi": "太阳",
+   "pinyin": "tàiyáng",
+   "traducao": "sol"
+  },
+  {
+   "id": "p227",
+   "hanzi": "月亮",
+   "pinyin": "yuèliang",
+   "traducao": "lua"
+  },
+  {
+   "id": "p228",
+   "hanzi": "花",
+   "pinyin": "huā",
+   "traducao": "flor"
+  },
+  {
+   "id": "p229",
+   "hanzi": "树",
+   "pinyin": "shù",
+   "traducao": "árvore"
+  },
+  {
+   "id": "p230",
+   "hanzi": "汉语",
+   "pinyin": "Hànyǔ",
+   "traducao": "língua chinesa"
+  },
+  {
+   "id": "p231",
+   "hanzi": "中文",
+   "pinyin": "Zhōngwén",
+   "traducao": "chinês"
+  },
+  {
+   "id": "p232",
+   "hanzi": "英语",
+   "pinyin": "Yīngyǔ",
+   "traducao": "inglês"
+  },
+  {
+   "id": "p233",
+   "hanzi": "字",
+   "pinyin": "zì",
+   "traducao": "caractere"
+  },
+  {
+   "id": "p234",
+   "hanzi": "名字",
+   "pinyin": "míngzi",
+   "traducao": "nome"
+  },
+  {
+   "id": "p235",
+   "hanzi": "问题",
+   "pinyin": "wèntí",
+   "traducao": "pergunta, problema"
+  },
+  {
+   "id": "p236",
+   "hanzi": "意思",
+   "pinyin": "yìsi",
+   "traducao": "significado"
+  },
+  {
+   "id": "p237",
+   "hanzi": "谢谢",
+   "pinyin": "xièxie",
+   "traducao": "obrigado"
+  },
+  {
+   "id": "p238",
+   "hanzi": "不客气",
+   "pinyin": "búkèqi",
+   "traducao": "de nada"
+  },
+  {
+   "id": "p239",
+   "hanzi": "对不起",
+   "pinyin": "duìbuqǐ",
+   "traducao": "desculpe"
+  },
+  {
+   "id": "p240",
+   "hanzi": "没关系",
+   "pinyin": "méiguānxi",
+   "traducao": "sem problema"
+  },
+  {
+   "id": "p241",
+   "hanzi": "再见",
+   "pinyin": "zàijiàn",
+   "traducao": "tchau"
+  },
+  {
+   "id": "p242",
+   "hanzi": "你好",
+   "pinyin": "nǐ hǎo",
+   "traducao": "olá"
+  },
+  {
+   "id": "p243",
+   "hanzi": "手",
+   "pinyin": "shǒu",
+   "traducao": "mão"
+  },
+  {
+   "id": "p244",
+   "hanzi": "头",
+   "pinyin": "tóu",
+   "traducao": "cabeça"
+  },
+  {
+   "id": "p245",
+   "hanzi": "眼睛",
+   "pinyin": "yǎnjing",
+   "traducao": "olho"
+  },
+  {
+   "id": "p246",
+   "hanzi": "身体",
+   "pinyin": "shēntǐ",
+   "traducao": "corpo"
+  },
+  {
+   "id": "p247",
+   "hanzi": "大家",
+   "pinyin": "dàjiā",
+   "traducao": "todos"
+  },
+  {
+   "id": "p248",
+   "hanzi": "因为",
+   "pinyin": "yīnwèi",
+   "traducao": "porque"
+  },
+  {
+   "id": "p249",
+   "hanzi": "所以",
+   "pinyin": "suǒyǐ",
+   "traducao": "portanto"
+  },
+  {
+   "id": "p250",
+   "hanzi": "但是",
+   "pinyin": "dànshì",
+   "traducao": "mas"
+  }
+ ]
+}
