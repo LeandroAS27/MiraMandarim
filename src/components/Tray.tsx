@@ -36,7 +36,8 @@ export function Tray({ trayRef, open, items, remaining, colors, query, onQuery }
         <input
           type="search"
           className={styles.search}
-          placeholder="Buscar hanzi, pinyin ou tradução"
+          placeholder="Buscar palavra"
+          title="Busque por hanzi, pinyin (com ou sem tom) ou tradução"
           value={query}
           onChange={(e) => onQuery(e.target.value)}
         />

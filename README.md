@@ -27,11 +27,14 @@ npm run build    # build estático em dist/
 ## Como usar
 
 - Na raiz, "Criar quadro" gera um id curto e abre `/#/quadro/<id>`.
-- Arraste os post-its; arraste o fundo (mouse) ou use o scroll/toque para navegar.
+- O quadro começa **vazio**. As 250 palavras ficam numa **barra lateral**: arraste para o quadro só as que quiser usar.
+- Arrastar um post-it de volta para a barra o devolve. Ele pode ser movido livremente pelo quadro.
+- **Busca** na barra: por hanzi, pinyin (com ou sem tom, ex.: `ni`, `nǐ`) ou tradução (com ou sem acento).
+- Arraste o fundo (mouse) ou use o scroll/toque para navegar. "Ocultar palavras" recolhe a barra (no celular ela começa recolhida).
 - A tradução aparece ao passar o mouse ou num toque longo.
-- **Desfazer** (botão ou Ctrl/Cmd+Z): até 100 movimentos na memória.
-- Toda vez que o link é aberto ou recarregado, o quadro começa na posição de origem (grade).
-- **Salvar quadro** grava as posições no localStorage daquele link; **Abrir quadro salvo** (aparece quando existe um salvo) restaura.
+- **Desfazer** (botão ou Ctrl/Cmd+Z): até 100 movimentos (inclusive entrar e sair do quadro).
+- Toda vez que o link é aberto ou recarregado, o quadro volta ao estado de origem (vazio, todas as palavras na barra).
+- **Salvar quadro** grava quais palavras estão no quadro e onde, no localStorage daquele link; **Abrir quadro salvo** (aparece quando existe um salvo) restaura.
 - **Copiar link** copia o endereço do quadro.
 
 ## Como publicar na Vercel
@@ -50,15 +53,18 @@ Alternativa sem GitHub: `npx vercel` dentro da pasta do projeto. No Netlify vale
 src/
   data/palavras.json     lista provisória de 250 palavras
   store/                 BoardStore (interface) + LocalStorageBoardStore
-  lib/                   histórico de desfazer, grade inicial, id do quadro
+  lib/                   histórico de desfazer, busca, limites do quadro, id do quadro
   hooks/useBoard.ts      junta store e histórico
-  components/            Home, Board, Draggable, StickyNote, Toolbar
+  components/            Home, Board, Tray (barra lateral), Draggable, StickyNote, Toolbar
 ```
 
-Desempenho: durante o arraste só o post-it ativo se move (transform); o estado global só muda ao soltar. O conteúdo de cada post-it é memoizado.
+O estado é só o conjunto de post-its **no quadro** (id → x/y). Palavra ausente = na barra lateral.
+
+Desempenho: durante o arraste só o `DragOverlay` se move; o estado global só muda ao soltar. O conteúdo de cada post-it é memoizado.
 
 ## Próximos passos
 
 - Backend com WebSocket e quadro compartilhado de verdade (professora e alunos veem os mesmos movimentos).
 - Trocar a lista provisória pela lista definitiva da professora.
 - Validar com a professora a experiência em tablet e celular.
+- Ideias ainda fora do escopo: botão "Limpar quadro" (devolver tudo à barra), zoom, barra de palavras responsiva (gaveta no celular).

@@ -29,12 +29,6 @@ const inside = (el: Element | null, p: XY): boolean => {
   return p.x >= r.left && p.x <= r.right && p.y >= r.top && p.y <= r.bottom
 }
 
-const eventXY = (e: Event): XY | null => {
-  if ('clientX' in e) return { x: (e as PointerEvent).clientX, y: (e as PointerEvent).clientY }
-  const t = (e as TouchEvent).touches?.[0]
-  return t ? { x: t.clientX, y: t.clientY } : null
-}
-
 export function Board({ boardId }: { boardId: string }) {
   const { positions, moveNote, undo, canUndo, save, openSaved, hasSaved } = useBoard(boardId)
   const [topId, setTopId] = useState<string | null>(null)
@@ -56,21 +50,23 @@ export function Board({ boardId }: { boardId: string }) {
     const track = (e: PointerEvent) => {
       pointer.current = { x: e.clientX, y: e.clientY }
     }
-    window.addEventListener('pointerdown', track, true)
+    // Onde, dentro do post-it, o usuário o segurou (medido antes de qualquer movimento).
+    const markGrab = (e: PointerEvent) => {
+      track(e)
+      const el = (e.target as Element | null)?.closest?.('[aria-roledescription="draggable"]')
+      if (!el) return
+      const r = el.getBoundingClientRect()
+      grab.current = { x: e.clientX - r.left, y: e.clientY - r.top }
+    }
+    window.addEventListener('pointerdown', markGrab, true)
     window.addEventListener('pointermove', track, true)
     return () => {
-      window.removeEventListener('pointerdown', track, true)
+      window.removeEventListener('pointerdown', markGrab, true)
       window.removeEventListener('pointermove', track, true)
     }
   }, [])
 
-  const onDragStart = ({ active, activatorEvent }: DragStartEvent) => {
-    setActiveId(String(active.id))
-    const start = eventXY(activatorEvent) ?? pointer.current
-    const r = active.rect.current.initial
-    // Onde, dentro do post-it, o usuário o segurou.
-    grab.current = r ? { x: start.x - r.left, y: start.y - r.top } : { x: 0, y: 0 }
-  }
+  const onDragStart = ({ active }: DragStartEvent) => setActiveId(String(active.id))
 
   // O estado global só muda ao soltar.
   const onDragEnd = ({ active }: DragEndEvent) => {
