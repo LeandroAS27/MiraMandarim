@@ -3,14 +3,17 @@ import type { BoardStore, Listener } from './BoardStore'
 
 export const storageKey = (boardId: string) => `miro-mandarim:quadro:${boardId}`
 
+const isPos = (v: unknown): boolean =>
+  !!v && typeof (v as { x: unknown }).x === 'number' && typeof (v as { y: unknown }).y === 'number'
+
 export class LocalStorageBoardStore implements BoardStore {
   private current: Positions
   private listeners = new Set<Listener>()
 
-  /** `initial` é a posição de origem; o reset a cada entrada vem daqui. */
+  /** `initial` é a origem (quadro vazio); o reset a cada entrada vem daqui. */
   constructor(
     private boardId: string,
-    initial: Positions,
+    initial: Positions = {},
     private storage: Storage = localStorage,
   ) {
     this.current = { ...initial }
@@ -25,7 +28,10 @@ export class LocalStorageBoardStore implements BoardStore {
       const raw = this.storage.getItem(storageKey(this.boardId))
       if (!raw) return null
       const parsed = JSON.parse(raw)
-      return parsed && typeof parsed === 'object' ? (parsed as Positions) : null
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null
+      const out: Positions = {}
+      for (const [id, pos] of Object.entries(parsed)) if (isPos(pos)) out[id] = pos as Positions[string]
+      return out
     } catch {
       return null
     }
@@ -38,8 +44,7 @@ export class LocalStorageBoardStore implements BoardStore {
   load(): Positions | null {
     const saved = this.readSaved()
     if (!saved) return null
-    // Mantém palavras novas da lista na posição de origem.
-    this.current = { ...this.current, ...saved }
+    this.current = saved
     this.emit()
     return this.current
   }
@@ -56,7 +61,10 @@ export class LocalStorageBoardStore implements BoardStore {
   }
 
   applyMove(move: Move): void {
-    this.current = { ...this.current, [move.id]: move.to }
+    const next = { ...this.current }
+    if (move.to) next[move.id] = move.to
+    else delete next[move.id] // voltou para a barra lateral
+    this.current = next
     this.emit()
   }
 
