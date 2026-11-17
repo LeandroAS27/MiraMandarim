@@ -30,6 +30,8 @@ npm run build    # build estático em dist/
 - O quadro começa **vazio**. As 250 palavras ficam numa **barra lateral**: arraste para o quadro só as que quiser usar.
 - Arrastar um post-it de volta para a barra o devolve. Ele pode ser movido livremente pelo quadro.
 - **Busca** na barra: por hanzi, pinyin (com ou sem tom, ex.: `ni`, `nǐ`) ou tradução (com ou sem acento).
+- Para tirar uma palavra do quadro, passe o mouse e clique no **×** do post-it (ou selecione-o e aperte Delete). Ela volta à barra num único passo de desfazer. No toque, o × fica sempre visível.
+- **Frases:** post-its alinhados na mesma linha, próximos entre si (até ~40 px de espaço), formam uma frase, lida da esquerda para a direita. Um painel embaixo mostra hanzi, pinyin e a tradução **palavra a palavra** (não é tradução automática da frase). Linhas diferentes ou grupos afastados viram frases separadas. Post-its sozinhos não formam frase.
 - Arraste o fundo (mouse) ou use o scroll/toque para navegar. "Ocultar palavras" recolhe a barra (no celular ela começa recolhida).
 - A tradução aparece ao passar o mouse ou num toque longo.
 - **Desfazer** (botão ou Ctrl/Cmd+Z): até 100 movimentos (inclusive entrar e sair do quadro).

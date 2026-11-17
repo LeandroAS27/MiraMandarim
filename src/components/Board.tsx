@@ -12,6 +12,8 @@ import {
 import { colorOf, palavras, useBoard } from '../hooks/useBoard'
 import { CANVAS_H, CANVAS_W, TRAY_W, clampToCanvas } from '../lib/layout'
 import { matches } from '../lib/search'
+import { buildSentences } from '../lib/sentences'
+import { SentencePanel } from './SentencePanel'
 import { Draggable } from './Draggable'
 import { StickyNote } from './StickyNote'
 import { Toolbar } from './Toolbar'
@@ -128,6 +130,10 @@ export function Board({ boardId }: { boardId: string }) {
     () => palavras.filter((p) => !positions[p.id] && matches(p, query)),
     [positions, query],
   )
+  const sentences = useMemo(
+    () => buildSentences(palavras.filter((p) => positions[p.id]).map((p) => ({ palavra: p, pos: positions[p.id] }))),
+    [positions],
+  )
   const active = activeId ? palavras.find((p) => p.id === activeId) : undefined
 
   return (
@@ -161,6 +167,7 @@ export function Board({ boardId }: { boardId: string }) {
         {placed.length === 0 && (
           <p className={styles.hint}>Arraste palavras da barra lateral para o quadro.</p>
         )}
+        <SentencePanel sentences={sentences} />
         <DragOverlay dropAnimation={null} zIndex={3000}>
           {active ? <StickyNote palavra={active} color={colorOf[active.id]} variant="overlay" /> : null}
         </DragOverlay>
