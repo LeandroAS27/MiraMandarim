@@ -8,8 +8,11 @@ const MOVE_TOLERANCE = 8
 interface Props {
   palavra: Palavra
   color: number
-  /** "tray": a tradução cobre o post-it (a barra lateral cortaria um balão). */
-  variant?: 'board' | 'tray'
+  /**
+   * "tray": a tradução cobre o post-it (a barra lateral cortaria um balão).
+   * "overlay": o post-it sendo arrastado, sem tradução.
+   */
+  variant?: 'board' | 'tray' | 'overlay'
 }
 
 /**
@@ -45,7 +48,7 @@ export const StickyNote = memo(function StickyNote({ palavra, color, variant = '
 
   return (
     <div
-      className={`${styles.note} ${styles['c' + color]} ${showTr ? styles.show : ''} ${variant === 'tray' ? styles.tray : ''}`}
+      className={`${styles.note} ${styles['c' + color]} ${showTr ? styles.show : ''} ${variant === 'tray' ? styles.tray : ''} ${variant === 'overlay' ? styles.overlay : ''}`}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={clear}

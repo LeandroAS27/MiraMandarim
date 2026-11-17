@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   DndContext,
   DragOverlay,
@@ -121,6 +121,7 @@ export function Board({ boardId }: { boardId: string }) {
     window.addEventListener('pointerup', up)
   }
 
+  const returnNote = useCallback((id: string) => moveNote(id, null), [moveNote])
   const placed = palavras.filter((p) => positions[p.id])
   const remaining = palavras.length - placed.length
   const trayItems = useMemo(
@@ -153,7 +154,7 @@ export function Board({ boardId }: { boardId: string }) {
         <div ref={viewport} className={styles.viewport}>
           <div className={styles.canvas} style={{ width: CANVAS_W, height: CANVAS_H }} onPointerDown={onBgPointerDown}>
             {placed.map((p) => (
-              <Draggable key={p.id} palavra={p} pos={positions[p.id]} color={colorOf[p.id]} isTop={p.id === topId} />
+              <Draggable key={p.id} palavra={p} pos={positions[p.id]} color={colorOf[p.id]} isTop={p.id === topId} onReturn={returnNote} />
             ))}
           </div>
         </div>
@@ -161,7 +162,7 @@ export function Board({ boardId }: { boardId: string }) {
           <p className={styles.hint}>Arraste palavras da barra lateral para o quadro.</p>
         )}
         <DragOverlay dropAnimation={null} zIndex={3000}>
-          {active ? <StickyNote palavra={active} color={colorOf[active.id]} /> : null}
+          {active ? <StickyNote palavra={active} color={colorOf[active.id]} variant="overlay" /> : null}
         </DragOverlay>
       </DndContext>
     </div>

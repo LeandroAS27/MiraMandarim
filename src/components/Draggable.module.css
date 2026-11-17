@@ -1,0 +1,5 @@
+.wrap { position: absolute; touch-action: none; }
+.del { position: absolute; top: -8px; right: -8px; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 50%; background: #23262b; color: #fff; font-size: 15px; line-height: 22px; text-align: center; cursor: pointer; opacity: 0; transition: opacity .12s; box-shadow: 0 1px 3px rgba(0,0,0,.3); z-index: 6; }
+.wrap:hover .del, .del:focus-visible { opacity: 1; }
+.del:hover { background: #b42318; }
+@media (hover: none) { .del { opacity: 1; } }
