@@ -1,4 +1,4 @@
-.bar { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 2000; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; max-width: calc(100vw - 16px); padding: 6px 8px; background: var(--bar); backdrop-filter: blur(6px); border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,.15); }
+.bar { position: fixed; top: 10px; left: calc(var(--tray-w, 0px) + (100vw - var(--tray-w, 0px)) / 2); transform: translateX(-50%); z-index: 2000; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; max-width: calc(100vw - var(--tray-w, 0px) - 16px); padding: 6px 8px; background: var(--bar); backdrop-filter: blur(6px); border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,.15); }
 .bar button { border: 1px solid #d5d8de; background: #fff; border-radius: 7px; padding: 6px 10px; font-size: .85rem; cursor: pointer; }
 .bar button:hover:not(:disabled) { background: #f2f4f7; }
 .bar button:disabled { opacity: .4; cursor: default; }

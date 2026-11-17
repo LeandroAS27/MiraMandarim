@@ -8,13 +8,15 @@ const MOVE_TOLERANCE = 8
 interface Props {
   palavra: Palavra
   color: number
+  /** "tray": a tradução cobre o post-it (a barra lateral cortaria um balão). */
+  variant?: 'board' | 'tray'
 }
 
 /**
  * Visual do post-it. Memoizado: não re-renderiza durante o arraste
  * (só o wrapper Draggable recebe o transform).
  */
-export const StickyNote = memo(function StickyNote({ palavra, color }: Props) {
+export const StickyNote = memo(function StickyNote({ palavra, color, variant = 'board' }: Props) {
   const [showTr, setShowTr] = useState(false)
   const press = useRef<{ t: number; x: number; y: number } | null>(null)
 
@@ -43,7 +45,7 @@ export const StickyNote = memo(function StickyNote({ palavra, color }: Props) {
 
   return (
     <div
-      className={`${styles.note} ${styles['c' + color]} ${showTr ? styles.show : ''}`}
+      className={`${styles.note} ${styles['c' + color]} ${showTr ? styles.show : ''} ${variant === 'tray' ? styles.tray : ''}`}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={clear}

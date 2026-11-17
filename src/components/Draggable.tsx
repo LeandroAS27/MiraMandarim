@@ -11,14 +11,12 @@ interface Props {
 }
 
 /**
- * Posiciona o post-it por transform (x/y livres) e o liga ao dnd-kit.
- * O dnd-kit re-renderiza este wrapper (leve) a cada movimento; o conteúdo
- * (StickyNote, memoizado) não re-renderiza.
+ * Post-it posicionado no quadro (x/y livres, por transform).
+ * Durante o arraste quem aparece é o DragOverlay; este fica invisível no lugar.
+ * O dnd-kit re-renderiza este wrapper (leve); o StickyNote (memoizado) não.
  */
 export const Draggable = memo(function Draggable({ palavra, pos, color, isTop }: Props) {
-  const { setNodeRef, attributes, listeners, transform, isDragging } = useDraggable({ id: palavra.id })
-  const dx = isDragging && transform ? transform.x : 0
-  const dy = isDragging && transform ? transform.y : 0
+  const { setNodeRef, attributes, listeners, isDragging } = useDraggable({ id: palavra.id })
   return (
     <div
       ref={setNodeRef}
@@ -28,10 +26,10 @@ export const Draggable = memo(function Draggable({ palavra, pos, color, isTop }:
         position: 'absolute',
         left: 0,
         top: 0,
-        transform: `translate3d(${pos.x + dx}px, ${pos.y + dy}px, 0)`,
-        zIndex: isDragging ? 1000 : isTop ? 10 : 1,
+        transform: `translate3d(${pos.x}px, ${pos.y}px, 0)`,
+        zIndex: isTop ? 10 : 1,
+        opacity: isDragging ? 0 : 1,
         touchAction: 'none',
-        willChange: isDragging ? 'transform' : undefined,
       }}
     >
       <StickyNote palavra={palavra} color={color} />

@@ -4,12 +4,14 @@ import styles from './Toolbar.module.css'
 interface Props {
   canUndo: boolean
   hasSaved: boolean
+  trayOpen: boolean
+  onToggleTray: () => void
   onUndo: () => void
   onSave: () => void
   onOpenSaved: () => void
 }
 
-export function Toolbar({ canUndo, hasSaved, onUndo, onSave, onOpenSaved }: Props) {
+export function Toolbar({ canUndo, hasSaved, trayOpen, onToggleTray, onUndo, onSave, onOpenSaved }: Props) {
   const [msg, setMsg] = useState('')
   const flash = (m: string) => {
     setMsg(m)
@@ -25,6 +27,9 @@ export function Toolbar({ canUndo, hasSaved, onUndo, onSave, onOpenSaved }: Prop
   }
   return (
     <header className={styles.bar}>
+      <button onClick={onToggleTray} aria-pressed={trayOpen}>
+        {trayOpen ? 'Ocultar palavras' : 'Mostrar palavras'}
+      </button>
       <button onClick={onUndo} disabled={!canUndo}>Desfazer</button>
       <button
         onClick={() => {
