@@ -98,3 +98,19 @@ describe('LocalStorageBoardStore', () => {
     expect(fn).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('LocalStorageBoardStore: limpar e restaurar', () => {
+  beforeEach(() => localStorage.clear())
+
+  it('clear esvazia o quadro e restore recria as cópias', () => {
+    const s = new LocalStorageBoardStore('q1')
+    const a = inst('i1', 'a', 1, 1)
+    const b = inst('i2', 'a', 2, 2)
+    s.applyMove(create(a))
+    s.applyMove(create(b))
+    s.applyMove({ type: 'clear', instances: [a, b] })
+    expect(s.getState()).toEqual({})
+    s.applyMove({ type: 'restore', instances: [a, b] })
+    expect(s.getState()).toEqual({ i1: a, i2: b })
+  })
+})

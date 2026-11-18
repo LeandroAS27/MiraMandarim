@@ -40,7 +40,7 @@ const inside = (el: Element | null, p: XY): boolean => {
 }
 
 export function Board({ boardId }: { boardId: string }) {
-  const { instances, createInstance, moveInstance, removeInstance, undo, canUndo, save, openSaved, hasSaved } = useBoard(boardId)
+  const { instances, createInstance, moveInstance, removeInstance, clearBoard, undo, canUndo, save, openSaved, hasSaved } = useBoard(boardId)
   const [prefs, updatePrefs] = usePreferences()
   const [topId, setTopId] = useState<string | null>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -266,6 +266,8 @@ export function Board({ boardId }: { boardId: string }) {
         />
         <Toolbar
           canUndo={canUndo}
+          canClear={placed.length > 0}
+          onClear={clearBoard}
           hasSaved={hasSaved}
           trayOpen={trayOpen}
           legendOpen={legendOpen}

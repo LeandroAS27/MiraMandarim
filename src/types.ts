@@ -34,3 +34,5 @@ export type Move =
   | { type: 'create'; instance: Instance }
   | { type: 'move'; instanceId: string; from: Pos; to: Pos }
   | { type: 'remove'; instance: Instance } // guarda a cópia inteira para o desfazer recriá-la
+  | { type: 'clear'; instances: Instance[] } // limpar quadro: guarda todas as cópias removidas
+  | { type: 'restore'; instances: Instance[] } // desfazer de 'clear': recria todas de uma vez

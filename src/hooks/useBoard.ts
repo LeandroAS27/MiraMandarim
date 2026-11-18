@@ -23,6 +23,7 @@ export function useBoard(boardId: string) {
   const createInstance = useCallback((palavraId: string, pos: Pos) => ctl.create(palavraId, pos), [ctl])
   const moveInstance = useCallback((instanceId: string, to: Pos) => ctl.move(instanceId, to), [ctl])
   const removeInstance = useCallback((instanceId: string) => ctl.remove(instanceId), [ctl])
+  const clearBoard = useCallback(() => ctl.clear(), [ctl])
   const undo = useCallback(() => void ctl.undo(), [ctl])
 
   const save = useCallback(() => {
@@ -37,5 +38,5 @@ export function useBoard(boardId: string) {
   }, [store, ctl])
 
   // canUndo é lido a cada render; toda operação muda o estado e re-renderiza.
-  return { instances, createInstance, moveInstance, removeInstance, undo, canUndo: ctl.canUndo(), save, openSaved, hasSaved }
+  return { instances, createInstance, moveInstance, removeInstance, clearBoard, undo, canUndo: ctl.canUndo(), save, openSaved, hasSaved }
 }

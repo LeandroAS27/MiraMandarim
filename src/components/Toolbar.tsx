@@ -4,6 +4,8 @@ import styles from './Toolbar.module.css'
 
 interface Props {
   canUndo: boolean
+  canClear: boolean
+  onClear: () => void
   hasSaved: boolean
   trayOpen: boolean
   legendOpen: boolean
@@ -16,7 +18,7 @@ interface Props {
   onOpenSaved: () => void
 }
 
-export function Toolbar({ canUndo, hasSaved, trayOpen, legendOpen, onToggleLegend, prefs, onPrefs, onToggleTray, onUndo, onSave, onOpenSaved }: Props) {
+export function Toolbar({ canUndo, canClear, onClear, hasSaved, trayOpen, legendOpen, onToggleLegend, prefs, onPrefs, onToggleTray, onUndo, onSave, onOpenSaved }: Props) {
   const [msg, setMsg] = useState('')
   const flash = (m: string) => {
     setMsg(m)
@@ -38,6 +40,9 @@ export function Toolbar({ canUndo, hasSaved, trayOpen, legendOpen, onToggleLegen
           {trayOpen ? 'Ocultar palavras' : 'Mostrar palavras'}
         </button>
         <button onClick={onUndo} disabled={!canUndo}>Desfazer</button>
+        <button onClick={onClear} disabled={!canClear} title="Remove todas as palavras do quadro (dá para desfazer)">
+          Limpar quadro
+        </button>
         <button
           onClick={() => {
             onSave()

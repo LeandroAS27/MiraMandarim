@@ -37,6 +37,7 @@ npm run build    # build estático em dist/
 - **Busca** no banco: por hanzi, pinyin (com ou sem tom, ex.: `ni`, `nǐ`) ou tradução (com ou sem acento).
 - **Filtro de nível:** Todos, HSK 1 ou HSK 2. Cada cartão tem um selo pequeno "1" ou "2" no canto superior direito (tooltip "HSK 1" / "HSK 2").
 - **Desfazer** (botão ou Ctrl/Cmd+Z): até 100 passos. Criar, mover e remover cópias entram no histórico (remover é um passo só).
+- **Limpar quadro** remove todas as cópias de uma vez (o botão fica desativado com o quadro vazio). É um único passo do desfazer: Ctrl/Cmd+Z traz tudo de volta. Não pede confirmação, justamente por ser desfazível.
 - **Salvar quadro** grava as cópias e suas posições no localStorage daquele link; **Abrir quadro salvo** (aparece quando existe um salvo) restaura. O reset ao abrir o link continua sendo o padrão.
 - **Copiar link** copia o endereço do quadro.
 

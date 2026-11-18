@@ -34,6 +34,13 @@ export class BoardController {
     this.apply({ type: 'remove', instance })
   }
 
+  /** Limpa o quadro: remove todas as cópias de uma vez, como um único passo do desfazer. */
+  clear(): void {
+    const instances = Object.values(this.store.getState())
+    if (instances.length === 0) return
+    this.apply({ type: 'clear', instances })
+  }
+
   /** Desfaz o último passo. Retorna false se não havia nada para desfazer. */
   undo(): boolean {
     const { history, move } = popMove(this.history)

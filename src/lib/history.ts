@@ -34,5 +34,9 @@ export function invertMove(m: Move): Move {
       return { type: 'create', instance: m.instance }
     case 'move':
       return { type: 'move', instanceId: m.instanceId, from: m.to, to: m.from }
+    case 'clear':
+      return { type: 'restore', instances: m.instances }
+    case 'restore':
+      return { type: 'clear', instances: m.instances }
   }
 }

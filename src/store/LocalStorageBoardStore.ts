@@ -78,8 +78,13 @@ export class LocalStorageBoardStore implements BoardStore {
   }
 
   applyMove(move: Move): void {
-    const next = { ...this.current }
+    const next = move.type === 'clear' ? {} : { ...this.current }
     switch (move.type) {
+      case 'clear':
+        break
+      case 'restore':
+        for (const i of move.instances) next[i.instanceId] = i
+        break
       case 'create':
         next[move.instance.instanceId] = move.instance
         break

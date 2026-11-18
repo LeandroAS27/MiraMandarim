@@ -40,6 +40,9 @@ describe('history', () => {
   it('invertMove: criar ↔ remover e mover volta ao ponto de origem', () => {
     expect(invertMove({ type: 'create', instance: inst })).toEqual({ type: 'remove', instance: inst })
     expect(invertMove({ type: 'remove', instance: inst })).toEqual({ type: 'create', instance: inst })
+    const list = [inst, { ...inst, instanceId: 'i2' }]
+    expect(invertMove({ type: 'clear', instances: list })).toEqual({ type: 'restore', instances: list })
+    expect(invertMove({ type: 'restore', instances: list })).toEqual({ type: 'clear', instances: list })
     expect(invertMove(mv(1))).toEqual({ type: 'move', instanceId: 'i1', from: { x: 2, y: 2 }, to: { x: 1, y: 1 } })
   })
 })

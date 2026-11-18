@@ -98,6 +98,38 @@ describe('BoardController: desfazer', () => {
     expect(ctl.undo()).toBe(false)
   })
 
+  it('limpar quadro remove todas as cópias e é um único passo de desfazer', () => {
+    const { store, ctl } = setup()
+    const a = ctl.create('p001', { x: 1, y: 1 })
+    const b = ctl.create('p001', { x: 2, y: 2 })
+    const c = ctl.create('p002', { x: 3, y: 3 })
+    ctl.move(c.instanceId, { x: 30, y: 30 })
+    ctl.clear()
+    expect(store.getState()).toEqual({})
+    expect(ctl.undo()).toBe(true) // um passo recria tudo
+    expect(Object.keys(store.getState()).sort()).toEqual([a.instanceId, b.instanceId, c.instanceId].sort())
+    expect(store.getState()[c.instanceId].pos).toEqual({ x: 30, y: 30 })
+    expect(store.getState()[a.instanceId]).toEqual(a)
+  })
+
+  it('limpar um quadro vazio não entra no histórico', () => {
+    const { ctl } = setup()
+    ctl.clear()
+    expect(ctl.canUndo()).toBe(false)
+  })
+
+  it('depois de limpar dá para criar de novo e desfazer na ordem', () => {
+    const { store, ctl } = setup()
+    ctl.create('p001', { x: 0, y: 0 })
+    ctl.clear()
+    const n = ctl.create('p009', { x: 5, y: 5 })
+    ctl.undo() // desfaz a nova cópia
+    expect(store.getState()).toEqual({})
+    ctl.undo() // desfaz o limpar
+    expect(Object.keys(store.getState())).toHaveLength(1)
+    expect(store.getState()[n.instanceId]).toBeUndefined()
+  })
+
   it('clearHistory zera o desfazer', () => {
     const { ctl } = setup()
     ctl.create('p001', { x: 0, y: 0 })
