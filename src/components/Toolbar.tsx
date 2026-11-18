@@ -32,34 +32,39 @@ export function Toolbar({ canUndo, hasSaved, trayOpen, legendOpen, onToggleLegen
   }
   return (
     <header className={styles.bar}>
-      <button onClick={onToggleTray} aria-pressed={trayOpen}>
-        {trayOpen ? 'Ocultar palavras' : 'Mostrar palavras'}
-      </button>
-      <button onClick={onUndo} disabled={!canUndo}>Desfazer</button>
-      <button
-        onClick={() => {
-          onSave()
-          flash('Quadro salvo')
-        }}
-      >
-        Salvar quadro
-      </button>
-      {hasSaved && <button onClick={onOpenSaved}>Abrir quadro salvo</button>}
-      <button onClick={copy}>Copiar link</button>
-      <button className={styles.toggle} aria-pressed={prefs.showPinyin} onClick={() => onPrefs({ showPinyin: !prefs.showPinyin })}>
-        Pinyin
-      </button>
-      <button className={styles.toggle} aria-pressed={prefs.showTraducao} onClick={() => onPrefs({ showTraducao: !prefs.showTraducao })}>
-        Tradução
-      </button>
-      <button className={styles.toggle} aria-pressed={legendOpen} onClick={onToggleLegend}>
-        Legenda
-      </button>
-      <button className={styles.toggle} aria-pressed={prefs.pinFrase} onClick={() => onPrefs({ pinFrase: !prefs.pinFrase })}>
-        Fixar frase
-      </button>
-      <span className={styles.msg} aria-live="polite">{msg}</span>
-      <span className={styles.demo}>Demo: os movimentos ainda não são compartilhados entre dispositivos.</span>
+      {/* no celular esta linha rola na horizontal */}
+      <div className={styles.actions}>
+        <button onClick={onToggleTray} aria-pressed={trayOpen}>
+          {trayOpen ? 'Ocultar palavras' : 'Mostrar palavras'}
+        </button>
+        <button onClick={onUndo} disabled={!canUndo}>Desfazer</button>
+        <button
+          onClick={() => {
+            onSave()
+            flash('Quadro salvo')
+          }}
+        >
+          Salvar quadro
+        </button>
+        {hasSaved && <button onClick={onOpenSaved}>Abrir quadro salvo</button>}
+        <button onClick={copy}>Copiar link</button>
+        <button className={styles.toggle} aria-pressed={prefs.showPinyin} onClick={() => onPrefs({ showPinyin: !prefs.showPinyin })}>
+          Pinyin
+        </button>
+        <button className={styles.toggle} aria-pressed={prefs.showTraducao} onClick={() => onPrefs({ showTraducao: !prefs.showTraducao })}>
+          Tradução
+        </button>
+        <button className={styles.toggle} aria-pressed={legendOpen} onClick={onToggleLegend}>
+          Legenda
+        </button>
+        <button className={styles.toggle} aria-pressed={prefs.pinFrase} onClick={() => onPrefs({ pinFrase: !prefs.pinFrase })}>
+          Fixar frase
+        </button>
+      </div>
+      <div className={styles.info}>
+        <span className={styles.msg} aria-live="polite">{msg}</span>
+        <span className={styles.demo}>Demo: os movimentos ainda não são compartilhados entre dispositivos.</span>
+      </div>
     </header>
   )
 }

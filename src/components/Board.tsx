@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   DndContext,
   DragOverlay,
-  PointerSensor,
+  MouseSensor,
   TouchSensor,
   useSensor,
   useSensors,
@@ -10,6 +10,7 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core'
 import { palavraById, palavras, useBoard } from '../hooks/useBoard'
+import { MOBILE_QUERY, useMediaQuery } from '../hooks/useMediaQuery'
 import { usePreferences } from '../hooks/usePreferences'
 import { CANVAS_H, CANVAS_W, TRAY_W, clampToCanvas } from '../lib/layout'
 import { matches } from '../lib/search'
@@ -44,15 +45,19 @@ export function Board({ boardId }: { boardId: string }) {
   const [query, setQuery] = useState('')
   const [hsk, setHsk] = useState<HskFilter>('all')
   const [legendOpen, setLegendOpen] = useState(false)
-  const [trayOpen, setTrayOpen] = useState(() => window.innerWidth >= 700)
+  const isMobile = useMediaQuery(MOBILE_QUERY)
+  // No celular o banco começa fechado (é uma gaveta que ocupa parte da tela).
+  const [trayOpen, setTrayOpen] = useState(() => !window.matchMedia(MOBILE_QUERY).matches)
   const viewport = useRef<HTMLDivElement>(null)
   const tray = useRef<HTMLElement>(null)
   const pointer = useRef<XY>({ x: 0, y: 0 })
   const grab = useRef<XY>({ x: 0, y: 0 })
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 8 } }),
+    // Mouse e toque separados: no toque, arrastar só começa após segurar um instante,
+    // então rolar a lista de palavras ou o quadro com o dedo continua funcionando.
+    useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
   )
 
   // Posição atual do ponteiro: decide onde o cartão é solto (banco ou quadro).
@@ -68,11 +73,18 @@ export function Board({ boardId }: { boardId: string }) {
       const r = el.getBoundingClientRect()
       grab.current = { x: e.clientX - r.left, y: e.clientY - r.top }
     }
+    // No toque, o navegador pode parar de enviar pointermove durante o arraste: segue também o touchmove.
+    const trackTouch = (e: TouchEvent) => {
+      const t = e.touches[0]
+      if (t) pointer.current = { x: t.clientX, y: t.clientY }
+    }
     window.addEventListener('pointerdown', markGrab, true)
     window.addEventListener('pointermove', track, true)
+    window.addEventListener('touchmove', trackTouch, { capture: true, passive: true })
     return () => {
       window.removeEventListener('pointerdown', markGrab, true)
       window.removeEventListener('pointermove', track, true)
+      window.removeEventListener('touchmove', trackTouch, true)
     }
   }, [])
 
@@ -154,7 +166,15 @@ export function Board({ boardId }: { boardId: string }) {
   }, [activeId, instances])
 
   return (
-    <div style={{ '--tray-w': trayOpen ? `${TRAY_W}px` : '0px' } as React.CSSProperties}>
+    <div
+      style={
+        {
+          // desktop: barra lateral; celular: gaveta embaixo (altura em global.css)
+          '--tray-w': trayOpen && !isMobile ? `${TRAY_W}px` : '0px',
+          '--tray-h': trayOpen && isMobile ? 'var(--tray-sheet-h)' : '0px',
+        } as React.CSSProperties
+      }
+    >
       <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragCancel={() => setActiveId(null)}>
         <Tray
           trayRef={tray}

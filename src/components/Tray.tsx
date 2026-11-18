@@ -25,7 +25,7 @@ const TrayItem = memo(function TrayItem({ palavra, showPinyin, showTraducao }: I
     data: { kind: 'bank', palavraId: palavra.id },
   })
   return (
-    <div ref={setNodeRef} {...attributes} {...listeners} style={{ touchAction: 'none' }}>
+    <div ref={setNodeRef} {...attributes} {...listeners} style={{ touchAction: 'manipulation' }}>
       <StickyNote palavra={palavra} variant="tray" showPinyin={showPinyin} showTraducao={showTraducao} />
     </div>
   )

@@ -9,3 +9,14 @@
 .filter { display: flex; gap: 4px; }
 .filter button { flex: 1; border: 1px solid #cfd3d9; background: #fff; border-radius: 7px; padding: 5px 0; font-size: .78rem; cursor: pointer; }
 .filter button[aria-pressed='true'] { background: #23262b; color: #fff; border-color: #23262b; }
+
+/* Celular: o banco vira uma gaveta embaixo; busca e filtro HSK ficam lado a lado. */
+@media (max-width: 699px) {
+  .tray { top: auto; right: 0; width: auto; height: var(--tray-sheet-h); border-right: 0; border-top: 1px solid #d9dce2; box-shadow: 0 -2px 10px rgba(0,0,0,.08); }
+  .closed { transform: translateY(100%); box-shadow: none; }
+  .head { grid-template-columns: 1fr auto; padding: 8px 10px 6px; }
+  .count { grid-column: 1 / -1; }
+  .filter button { padding: 8px 10px; }
+  .search { padding: 9px 10px; }
+  .list { grid-template-columns: repeat(auto-fill, 96px); padding: 10px 8px 16px; }
+}

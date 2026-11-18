@@ -11,3 +11,7 @@
 html, body, #root { height: 100%; margin: 0; }
 body { background: var(--bg); overscroll-behavior: none; }
 button { font: inherit; }
+
+:root { --tray-sheet-h: min(42vh, 360px); }
+html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; }
+button { touch-action: manipulation; }
