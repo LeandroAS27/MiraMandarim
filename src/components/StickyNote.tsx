@@ -57,6 +57,7 @@ export const StickyNote = memo(function StickyNote({ palavra, color, showPinyin,
       onPointerCancel={clear}
     >
       <span className={styles.hanzi}>{palavra.hanzi}</span>
+      <span className={styles.badge} title={`HSK ${palavra.hsk}`}>{palavra.hsk}</span>
       {showPinyin && <span className={styles.pinyin}>{palavra.pinyin}</span>}
       {showTraducao && <span className={styles.tr}>{palavra.traducao}</span>}
     </div>

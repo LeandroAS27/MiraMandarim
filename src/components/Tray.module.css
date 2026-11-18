@@ -6,3 +6,6 @@
 .count { font-size: .72rem; color: var(--muted); }
 .list { flex: 1; overflow-y: auto; padding: 12px 8px 24px; display: grid; grid-template-columns: repeat(2, 96px); justify-content: center; gap: 12px; align-content: start; }
 .empty { grid-column: 1 / -1; text-align: center; color: var(--muted); font-size: .85rem; margin: 24px 0; }
+.filter { display: flex; gap: 4px; }
+.filter button { flex: 1; border: 1px solid #cfd3d9; background: #fff; border-radius: 7px; padding: 5px 0; font-size: .78rem; cursor: pointer; }
+.filter button[aria-pressed='true'] { background: #23262b; color: #fff; border-color: #23262b; }

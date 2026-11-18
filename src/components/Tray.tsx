@@ -4,6 +4,14 @@ import type { Palavra } from '../types'
 import { StickyNote } from './StickyNote'
 import styles from './Tray.module.css'
 
+export type HskFilter = 'all' | 1 | 2
+
+const HSK_OPTIONS: { value: HskFilter; label: string }[] = [
+  { value: 'all', label: 'Todos' },
+  { value: 1, label: 'HSK 1' },
+  { value: 2, label: 'HSK 2' },
+]
+
 interface ItemProps {
   palavra: Palavra
   color: number
@@ -32,12 +40,14 @@ interface Props {
   colors: Record<string, number>
   query: string
   onQuery: (q: string) => void
+  hsk: HskFilter
+  onHsk: (h: HskFilter) => void
   showPinyin: boolean
   showTraducao: boolean
 }
 
 /** Banco de palavras: todas as palavras, para puxar quantas cópias quiser. */
-export function Tray({ trayRef, open, items, total, colors, query, onQuery, showPinyin, showTraducao }: Props) {
+export function Tray({ trayRef, open, items, total, colors, query, onQuery, hsk, onHsk, showPinyin, showTraducao }: Props) {
   return (
     <aside ref={trayRef} className={`${styles.tray} ${open ? '' : styles.closed}`} aria-label="Banco de palavras">
       <div className={styles.head}>
@@ -49,6 +59,13 @@ export function Tray({ trayRef, open, items, total, colors, query, onQuery, show
           value={query}
           onChange={(e) => onQuery(e.target.value)}
         />
+        <div className={styles.filter} role="group" aria-label="Filtrar por nível HSK">
+          {HSK_OPTIONS.map((o) => (
+            <button key={String(o.value)} type="button" aria-pressed={hsk === o.value} onClick={() => onHsk(o.value)}>
+              {o.label}
+            </button>
+          ))}
+        </div>
         <span className={styles.count}>
           {items.length === total ? `${total} palavras` : `${items.length} de ${total} palavras`}
           {' · arraste para copiar'}

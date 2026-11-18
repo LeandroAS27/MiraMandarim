@@ -1,1505 +1,2405 @@
 {
- "_aviso": "LISTA PROVISÓRIA: será trocada pela lista definitiva da professora. Palavras comuns de nível HSK 1 a 2, geradas para o demo.",
+ "_aviso": "LISTA PROVISÓRIA: será trocada pela lista da professora. Palavras do HSK 1 (150) e HSK 2 (150), padrão HSK 2.0, a partir da lista pública github.com/clem109/hsk-vocabulary. Traduções em português e classes gramaticais (campo \"classe\") são provisórias e precisam de revisão.",
  "palavras": [
   {
    "id": "p001",
-   "hanzi": "我",
-   "pinyin": "wǒ",
-   "traducao": "eu"
+   "hanzi": "爱",
+   "pinyin": "ài",
+   "traducao": "amar",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p002",
-   "hanzi": "你",
-   "pinyin": "nǐ",
-   "traducao": "você"
+   "hanzi": "八",
+   "pinyin": "bā",
+   "traducao": "oito",
+   "classe": "numeral",
+   "hsk": 1
   },
   {
    "id": "p003",
-   "hanzi": "他",
-   "pinyin": "tā",
-   "traducao": "ele"
+   "hanzi": "爸爸",
+   "pinyin": "bàba",
+   "traducao": "papai",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p004",
-   "hanzi": "她",
-   "pinyin": "tā",
-   "traducao": "ela"
+   "hanzi": "杯子",
+   "pinyin": "bēizi",
+   "traducao": "copo",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p005",
-   "hanzi": "我们",
-   "pinyin": "wǒmen",
-   "traducao": "nós"
+   "hanzi": "北京",
+   "pinyin": "Běijīng",
+   "traducao": "Pequim",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p006",
-   "hanzi": "你们",
-   "pinyin": "nǐmen",
-   "traducao": "vocês"
+   "hanzi": "本",
+   "pinyin": "běn",
+   "traducao": "classificador de livros",
+   "classe": "classificador",
+   "hsk": 1
   },
   {
    "id": "p007",
-   "hanzi": "他们",
-   "pinyin": "tāmen",
-   "traducao": "eles"
+   "hanzi": "不客气",
+   "pinyin": "bùkèqi",
+   "traducao": "de nada",
+   "classe": "outro",
+   "hsk": 1
   },
   {
    "id": "p008",
-   "hanzi": "这",
-   "pinyin": "zhè",
-   "traducao": "este"
+   "hanzi": "不",
+   "pinyin": "bù",
+   "traducao": "não",
+   "classe": "adverbio",
+   "hsk": 1
   },
   {
    "id": "p009",
-   "hanzi": "那",
-   "pinyin": "nà",
-   "traducao": "aquele"
+   "hanzi": "菜",
+   "pinyin": "cài",
+   "traducao": "prato, legume",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p010",
-   "hanzi": "谁",
-   "pinyin": "shéi",
-   "traducao": "quem"
+   "hanzi": "茶",
+   "pinyin": "chá",
+   "traducao": "chá",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p011",
-   "hanzi": "什么",
-   "pinyin": "shénme",
-   "traducao": "o quê"
+   "hanzi": "吃",
+   "pinyin": "chī",
+   "traducao": "comer",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p012",
-   "hanzi": "哪",
-   "pinyin": "nǎ",
-   "traducao": "qual"
+   "hanzi": "出租车",
+   "pinyin": "chūzūchē",
+   "traducao": "táxi",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p013",
-   "hanzi": "哪儿",
-   "pinyin": "nǎr",
-   "traducao": "onde"
+   "hanzi": "打电话",
+   "pinyin": "dǎdiànhuà",
+   "traducao": "telefonar",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p014",
-   "hanzi": "怎么",
-   "pinyin": "zěnme",
-   "traducao": "como"
+   "hanzi": "大",
+   "pinyin": "dà",
+   "traducao": "grande",
+   "classe": "adjetivo",
+   "hsk": 1
   },
   {
    "id": "p015",
-   "hanzi": "怎么样",
-   "pinyin": "zěnmeyàng",
-   "traducao": "que tal"
+   "hanzi": "的",
+   "pinyin": "de",
+   "traducao": "partícula de posse",
+   "classe": "particula",
+   "hsk": 1
   },
   {
    "id": "p016",
-   "hanzi": "几",
-   "pinyin": "jǐ",
-   "traducao": "quantos"
+   "hanzi": "点",
+   "pinyin": "diǎn",
+   "traducao": "hora (em ponto)",
+   "classe": "classificador",
+   "hsk": 1
   },
   {
    "id": "p017",
-   "hanzi": "多少",
-   "pinyin": "duōshao",
-   "traducao": "quanto"
+   "hanzi": "电脑",
+   "pinyin": "diànnǎo",
+   "traducao": "computador",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p018",
-   "hanzi": "为什么",
-   "pinyin": "wèishénme",
-   "traducao": "por quê"
+   "hanzi": "电视",
+   "pinyin": "diànshì",
+   "traducao": "televisão",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p019",
-   "hanzi": "人",
-   "pinyin": "rén",
-   "traducao": "pessoa"
+   "hanzi": "电影",
+   "pinyin": "diànyǐng",
+   "traducao": "filme",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p020",
-   "hanzi": "爸爸",
-   "pinyin": "bàba",
-   "traducao": "papai"
+   "hanzi": "东西",
+   "pinyin": "dōngxi",
+   "traducao": "coisa",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p021",
-   "hanzi": "妈妈",
-   "pinyin": "māma",
-   "traducao": "mamãe"
+   "hanzi": "都",
+   "pinyin": "dōu",
+   "traducao": "todos",
+   "classe": "adverbio",
+   "hsk": 1
   },
   {
    "id": "p022",
-   "hanzi": "哥哥",
-   "pinyin": "gēge",
-   "traducao": "irmão mais velho"
+   "hanzi": "读",
+   "pinyin": "dú",
+   "traducao": "ler",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p023",
-   "hanzi": "姐姐",
-   "pinyin": "jiějie",
-   "traducao": "irmã mais velha"
+   "hanzi": "对不起",
+   "pinyin": "duìbuqǐ",
+   "traducao": "desculpe",
+   "classe": "outro",
+   "hsk": 1
   },
   {
    "id": "p024",
-   "hanzi": "弟弟",
-   "pinyin": "dìdi",
-   "traducao": "irmão mais novo"
+   "hanzi": "多",
+   "pinyin": "duō",
+   "traducao": "muito",
+   "classe": "adjetivo",
+   "hsk": 1
   },
   {
    "id": "p025",
-   "hanzi": "妹妹",
-   "pinyin": "mèimei",
-   "traducao": "irmã mais nova"
+   "hanzi": "多少",
+   "pinyin": "duōshao",
+   "traducao": "quanto",
+   "classe": "pronome",
+   "hsk": 1
   },
   {
    "id": "p026",
    "hanzi": "儿子",
    "pinyin": "érzi",
-   "traducao": "filho"
+   "traducao": "filho",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p027",
-   "hanzi": "女儿",
-   "pinyin": "nǚ'ér",
-   "traducao": "filha"
+   "hanzi": "二",
+   "pinyin": "èr",
+   "traducao": "dois",
+   "classe": "numeral",
+   "hsk": 1
   },
   {
    "id": "p028",
-   "hanzi": "朋友",
-   "pinyin": "péngyou",
-   "traducao": "amigo"
+   "hanzi": "饭馆",
+   "pinyin": "fànguǎn",
+   "traducao": "restaurante",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p029",
-   "hanzi": "老师",
-   "pinyin": "lǎoshī",
-   "traducao": "professor"
+   "hanzi": "飞机",
+   "pinyin": "fēijī",
+   "traducao": "avião",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p030",
-   "hanzi": "学生",
-   "pinyin": "xuésheng",
-   "traducao": "aluno"
+   "hanzi": "分钟",
+   "pinyin": "fēnzhōng",
+   "traducao": "minuto",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p031",
-   "hanzi": "同学",
-   "pinyin": "tóngxué",
-   "traducao": "colega de classe"
+   "hanzi": "高兴",
+   "pinyin": "gāoxìng",
+   "traducao": "feliz",
+   "classe": "adjetivo",
+   "hsk": 1
   },
   {
    "id": "p032",
-   "hanzi": "医生",
-   "pinyin": "yīshēng",
-   "traducao": "médico"
+   "hanzi": "个",
+   "pinyin": "gè",
+   "traducao": "classificador geral",
+   "classe": "classificador",
+   "hsk": 1
   },
   {
    "id": "p033",
-   "hanzi": "先生",
-   "pinyin": "xiānsheng",
-   "traducao": "senhor"
+   "hanzi": "工作",
+   "pinyin": "gōngzuò",
+   "traducao": "trabalhar",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p034",
-   "hanzi": "小姐",
-   "pinyin": "xiǎojiě",
-   "traducao": "senhorita"
+   "hanzi": "狗",
+   "pinyin": "gǒu",
+   "traducao": "cachorro",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p035",
-   "hanzi": "孩子",
-   "pinyin": "háizi",
-   "traducao": "criança"
+   "hanzi": "汉语",
+   "pinyin": "Hànyǔ",
+   "traducao": "língua chinesa",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p036",
-   "hanzi": "家",
-   "pinyin": "jiā",
-   "traducao": "casa, família"
+   "hanzi": "好",
+   "pinyin": "hǎo",
+   "traducao": "bom",
+   "classe": "adjetivo",
+   "hsk": 1
   },
   {
    "id": "p037",
-   "hanzi": "一",
-   "pinyin": "yī",
-   "traducao": "um"
+   "hanzi": "喝",
+   "pinyin": "hē",
+   "traducao": "beber",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p038",
-   "hanzi": "二",
-   "pinyin": "èr",
-   "traducao": "dois"
+   "hanzi": "和",
+   "pinyin": "hé",
+   "traducao": "e",
+   "classe": "conjuncao",
+   "hsk": 1
   },
   {
    "id": "p039",
-   "hanzi": "三",
-   "pinyin": "sān",
-   "traducao": "três"
+   "hanzi": "很",
+   "pinyin": "hěn",
+   "traducao": "muito",
+   "classe": "adverbio",
+   "hsk": 1
   },
   {
    "id": "p040",
-   "hanzi": "四",
-   "pinyin": "sì",
-   "traducao": "quatro"
+   "hanzi": "后面",
+   "pinyin": "hòumian",
+   "traducao": "atrás",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p041",
-   "hanzi": "五",
-   "pinyin": "wǔ",
-   "traducao": "cinco"
+   "hanzi": "回",
+   "pinyin": "huí",
+   "traducao": "voltar",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p042",
-   "hanzi": "六",
-   "pinyin": "liù",
-   "traducao": "seis"
+   "hanzi": "会",
+   "pinyin": "huì",
+   "traducao": "saber, poder",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p043",
-   "hanzi": "七",
-   "pinyin": "qī",
-   "traducao": "sete"
+   "hanzi": "火车站",
+   "pinyin": "huǒchēzhàn",
+   "traducao": "estação de trem",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p044",
-   "hanzi": "八",
-   "pinyin": "bā",
-   "traducao": "oito"
+   "hanzi": "几",
+   "pinyin": "jǐ",
+   "traducao": "quantos",
+   "classe": "pronome",
+   "hsk": 1
   },
   {
    "id": "p045",
-   "hanzi": "九",
-   "pinyin": "jiǔ",
-   "traducao": "nove"
+   "hanzi": "家",
+   "pinyin": "jiā",
+   "traducao": "casa, família",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p046",
-   "hanzi": "十",
-   "pinyin": "shí",
-   "traducao": "dez"
+   "hanzi": "叫",
+   "pinyin": "jiào",
+   "traducao": "chamar-se",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p047",
-   "hanzi": "百",
-   "pinyin": "bǎi",
-   "traducao": "cem"
+   "hanzi": "今天",
+   "pinyin": "jīntiān",
+   "traducao": "hoje",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p048",
-   "hanzi": "千",
-   "pinyin": "qiān",
-   "traducao": "mil"
+   "hanzi": "九",
+   "pinyin": "jiǔ",
+   "traducao": "nove",
+   "classe": "numeral",
+   "hsk": 1
   },
   {
    "id": "p049",
-   "hanzi": "两",
-   "pinyin": "liǎng",
-   "traducao": "dois (quantidade)"
+   "hanzi": "开",
+   "pinyin": "kāi",
+   "traducao": "abrir, dirigir",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p050",
-   "hanzi": "零",
-   "pinyin": "líng",
-   "traducao": "zero"
+   "hanzi": "看",
+   "pinyin": "kàn",
+   "traducao": "olhar, ver",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p051",
-   "hanzi": "半",
-   "pinyin": "bàn",
-   "traducao": "meio"
+   "hanzi": "看见",
+   "pinyin": "kànjiàn",
+   "traducao": "ver, avistar",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p052",
-   "hanzi": "年",
-   "pinyin": "nián",
-   "traducao": "ano"
+   "hanzi": "块",
+   "pinyin": "kuài",
+   "traducao": "pedaço, yuan (coloquial)",
+   "classe": "classificador",
+   "hsk": 1
   },
   {
    "id": "p053",
-   "hanzi": "月",
-   "pinyin": "yuè",
-   "traducao": "mês"
+   "hanzi": "来",
+   "pinyin": "lái",
+   "traducao": "vir",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p054",
-   "hanzi": "日",
-   "pinyin": "rì",
-   "traducao": "dia"
+   "hanzi": "老师",
+   "pinyin": "lǎoshī",
+   "traducao": "professor",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p055",
-   "hanzi": "号",
-   "pinyin": "hào",
-   "traducao": "dia (data)"
+   "hanzi": "了",
+   "pinyin": "le",
+   "traducao": "partícula de aspecto",
+   "classe": "particula",
+   "hsk": 1
   },
   {
    "id": "p056",
-   "hanzi": "星期",
-   "pinyin": "xīngqī",
-   "traducao": "semana"
+   "hanzi": "冷",
+   "pinyin": "lěng",
+   "traducao": "frio",
+   "classe": "adjetivo",
+   "hsk": 1
   },
   {
    "id": "p057",
-   "hanzi": "今天",
-   "pinyin": "jīntiān",
-   "traducao": "hoje"
+   "hanzi": "里",
+   "pinyin": "lǐ",
+   "traducao": "dentro",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p058",
-   "hanzi": "明天",
-   "pinyin": "míngtiān",
-   "traducao": "amanhã"
+   "hanzi": "零",
+   "pinyin": "líng",
+   "traducao": "zero",
+   "classe": "numeral",
+   "hsk": 1
   },
   {
    "id": "p059",
-   "hanzi": "昨天",
-   "pinyin": "zuótiān",
-   "traducao": "ontem"
+   "hanzi": "六",
+   "pinyin": "liù",
+   "traducao": "seis",
+   "classe": "numeral",
+   "hsk": 1
   },
   {
    "id": "p060",
-   "hanzi": "上午",
-   "pinyin": "shàngwǔ",
-   "traducao": "manhã"
+   "hanzi": "妈妈",
+   "pinyin": "māma",
+   "traducao": "mamãe",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p061",
-   "hanzi": "中午",
-   "pinyin": "zhōngwǔ",
-   "traducao": "meio-dia"
+   "hanzi": "吗",
+   "pinyin": "ma",
+   "traducao": "partícula de pergunta",
+   "classe": "particula",
+   "hsk": 1
   },
   {
    "id": "p062",
-   "hanzi": "下午",
-   "pinyin": "xiàwǔ",
-   "traducao": "tarde"
+   "hanzi": "买",
+   "pinyin": "mǎi",
+   "traducao": "comprar",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p063",
-   "hanzi": "晚上",
-   "pinyin": "wǎnshang",
-   "traducao": "noite"
+   "hanzi": "猫",
+   "pinyin": "māo",
+   "traducao": "gato",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p064",
-   "hanzi": "现在",
-   "pinyin": "xiànzài",
-   "traducao": "agora"
+   "hanzi": "没",
+   "pinyin": "méi",
+   "traducao": "não ter",
+   "classe": "adverbio",
+   "hsk": 1
   },
   {
    "id": "p065",
-   "hanzi": "时候",
-   "pinyin": "shíhou",
-   "traducao": "momento"
+   "hanzi": "没关系",
+   "pinyin": "méiguānxi",
+   "traducao": "sem problema",
+   "classe": "outro",
+   "hsk": 1
   },
   {
    "id": "p066",
-   "hanzi": "点",
-   "pinyin": "diǎn",
-   "traducao": "hora (em ponto)"
+   "hanzi": "米饭",
+   "pinyin": "mǐfàn",
+   "traducao": "arroz",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p067",
-   "hanzi": "分钟",
-   "pinyin": "fēnzhōng",
-   "traducao": "minuto"
+   "hanzi": "明天",
+   "pinyin": "míngtiān",
+   "traducao": "amanhã",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p068",
-   "hanzi": "岁",
-   "pinyin": "suì",
-   "traducao": "anos (idade)"
+   "hanzi": "名字",
+   "pinyin": "míngzi",
+   "traducao": "nome",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p069",
-   "hanzi": "早上",
-   "pinyin": "zǎoshang",
-   "traducao": "manhã cedo"
+   "hanzi": "哪",
+   "pinyin": "nǎ",
+   "traducao": "qual",
+   "classe": "pronome",
+   "hsk": 1
   },
   {
    "id": "p070",
-   "hanzi": "个",
-   "pinyin": "gè",
-   "traducao": "classificador geral"
+   "hanzi": "那",
+   "pinyin": "nà",
+   "traducao": "aquele",
+   "classe": "pronome",
+   "hsk": 1
   },
   {
    "id": "p071",
-   "hanzi": "本",
-   "pinyin": "běn",
-   "traducao": "classificador de livros"
+   "hanzi": "呢",
+   "pinyin": "ne",
+   "traducao": "e quanto a...?",
+   "classe": "particula",
+   "hsk": 1
   },
   {
    "id": "p072",
-   "hanzi": "些",
-   "pinyin": "xiē",
-   "traducao": "alguns"
+   "hanzi": "能",
+   "pinyin": "néng",
+   "traducao": "conseguir",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p073",
-   "hanzi": "的",
-   "pinyin": "de",
-   "traducao": "partícula de posse"
+   "hanzi": "你",
+   "pinyin": "nǐ",
+   "traducao": "você",
+   "classe": "pronome",
+   "hsk": 1
   },
   {
    "id": "p074",
-   "hanzi": "了",
-   "pinyin": "le",
-   "traducao": "partícula de aspecto"
+   "hanzi": "年",
+   "pinyin": "nián",
+   "traducao": "ano",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p075",
-   "hanzi": "吗",
-   "pinyin": "ma",
-   "traducao": "partícula de pergunta"
+   "hanzi": "女儿",
+   "pinyin": "nǚ'ér",
+   "traducao": "filha",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p076",
-   "hanzi": "呢",
-   "pinyin": "ne",
-   "traducao": "e quanto a...?"
+   "hanzi": "朋友",
+   "pinyin": "péngyou",
+   "traducao": "amigo",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p077",
-   "hanzi": "吧",
-   "pinyin": "ba",
-   "traducao": "partícula de sugestão"
+   "hanzi": "漂亮",
+   "pinyin": "piàoliang",
+   "traducao": "bonito",
+   "classe": "adjetivo",
+   "hsk": 1
   },
   {
    "id": "p078",
-   "hanzi": "不",
-   "pinyin": "bù",
-   "traducao": "não"
+   "hanzi": "苹果",
+   "pinyin": "píngguǒ",
+   "traducao": "maçã",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p079",
-   "hanzi": "没",
-   "pinyin": "méi",
-   "traducao": "não ter"
+   "hanzi": "七",
+   "pinyin": "qī",
+   "traducao": "sete",
+   "classe": "numeral",
+   "hsk": 1
   },
   {
    "id": "p080",
-   "hanzi": "很",
-   "pinyin": "hěn",
-   "traducao": "muito"
+   "hanzi": "钱",
+   "pinyin": "qián",
+   "traducao": "dinheiro",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p081",
-   "hanzi": "都",
-   "pinyin": "dōu",
-   "traducao": "todos"
+   "hanzi": "前面",
+   "pinyin": "qiánmiàn",
+   "traducao": "frente",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p082",
-   "hanzi": "也",
-   "pinyin": "yě",
-   "traducao": "também"
+   "hanzi": "请",
+   "pinyin": "qǐng",
+   "traducao": "por favor, convidar",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p083",
-   "hanzi": "还",
-   "pinyin": "hái",
-   "traducao": "ainda"
+   "hanzi": "去",
+   "pinyin": "qù",
+   "traducao": "ir",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p084",
-   "hanzi": "在",
-   "pinyin": "zài",
-   "traducao": "estar em"
+   "hanzi": "热",
+   "pinyin": "rè",
+   "traducao": "quente",
+   "classe": "adjetivo",
+   "hsk": 1
   },
   {
    "id": "p085",
-   "hanzi": "和",
-   "pinyin": "hé",
-   "traducao": "e"
+   "hanzi": "人",
+   "pinyin": "rén",
+   "traducao": "pessoa",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p086",
-   "hanzi": "太",
-   "pinyin": "tài",
-   "traducao": "demais"
+   "hanzi": "认识",
+   "pinyin": "rènshi",
+   "traducao": "conhecer",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p087",
-   "hanzi": "会",
-   "pinyin": "huì",
-   "traducao": "saber, poder"
+   "hanzi": "日",
+   "pinyin": "rì",
+   "traducao": "dia",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p088",
-   "hanzi": "能",
-   "pinyin": "néng",
-   "traducao": "conseguir"
+   "hanzi": "三",
+   "pinyin": "sān",
+   "traducao": "três",
+   "classe": "numeral",
+   "hsk": 1
   },
   {
    "id": "p089",
-   "hanzi": "想",
-   "pinyin": "xiǎng",
-   "traducao": "querer, pensar"
+   "hanzi": "商店",
+   "pinyin": "shāngdiàn",
+   "traducao": "loja",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p090",
-   "hanzi": "要",
-   "pinyin": "yào",
-   "traducao": "querer, precisar"
+   "hanzi": "上",
+   "pinyin": "shàng",
+   "traducao": "subir, em cima",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p091",
-   "hanzi": "可以",
-   "pinyin": "kěyǐ",
-   "traducao": "pode"
+   "hanzi": "上午",
+   "pinyin": "shàngwǔ",
+   "traducao": "manhã",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p092",
-   "hanzi": "是",
-   "pinyin": "shì",
-   "traducao": "ser"
+   "hanzi": "少",
+   "pinyin": "shǎo",
+   "traducao": "pouco",
+   "classe": "adjetivo",
+   "hsk": 1
   },
   {
    "id": "p093",
-   "hanzi": "有",
-   "pinyin": "yǒu",
-   "traducao": "ter"
+   "hanzi": "谁",
+   "pinyin": "shéi",
+   "traducao": "quem",
+   "classe": "pronome",
+   "hsk": 1
   },
   {
    "id": "p094",
-   "hanzi": "去",
-   "pinyin": "qù",
-   "traducao": "ir"
+   "hanzi": "什么",
+   "pinyin": "shénme",
+   "traducao": "o quê",
+   "classe": "pronome",
+   "hsk": 1
   },
   {
    "id": "p095",
-   "hanzi": "来",
-   "pinyin": "lái",
-   "traducao": "vir"
+   "hanzi": "十",
+   "pinyin": "shí",
+   "traducao": "dez",
+   "classe": "numeral",
+   "hsk": 1
   },
   {
    "id": "p096",
-   "hanzi": "吃",
-   "pinyin": "chī",
-   "traducao": "comer"
+   "hanzi": "时候",
+   "pinyin": "shíhou",
+   "traducao": "momento",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p097",
-   "hanzi": "喝",
-   "pinyin": "hē",
-   "traducao": "beber"
+   "hanzi": "是",
+   "pinyin": "shì",
+   "traducao": "ser",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p098",
-   "hanzi": "看",
-   "pinyin": "kàn",
-   "traducao": "olhar, ver"
+   "hanzi": "书",
+   "pinyin": "shū",
+   "traducao": "livro",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p099",
-   "hanzi": "听",
-   "pinyin": "tīng",
-   "traducao": "ouvir"
+   "hanzi": "水",
+   "pinyin": "shuǐ",
+   "traducao": "água",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p100",
-   "hanzi": "说",
-   "pinyin": "shuō",
-   "traducao": "falar"
+   "hanzi": "水果",
+   "pinyin": "shuǐguǒ",
+   "traducao": "fruta",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p101",
-   "hanzi": "读",
-   "pinyin": "dú",
-   "traducao": "ler"
+   "hanzi": "睡觉",
+   "pinyin": "shuìjiào",
+   "traducao": "dormir",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p102",
-   "hanzi": "写",
-   "pinyin": "xiě",
-   "traducao": "escrever"
+   "hanzi": "说话",
+   "pinyin": "shuōhuà",
+   "traducao": "falar",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p103",
-   "hanzi": "学",
-   "pinyin": "xué",
-   "traducao": "estudar"
+   "hanzi": "四",
+   "pinyin": "sì",
+   "traducao": "quatro",
+   "classe": "numeral",
+   "hsk": 1
   },
   {
    "id": "p104",
-   "hanzi": "学习",
-   "pinyin": "xuéxí",
-   "traducao": "aprender"
+   "hanzi": "岁",
+   "pinyin": "suì",
+   "traducao": "anos (idade)",
+   "classe": "classificador",
+   "hsk": 1
   },
   {
    "id": "p105",
-   "hanzi": "做",
-   "pinyin": "zuò",
-   "traducao": "fazer"
+   "hanzi": "他",
+   "pinyin": "tā",
+   "traducao": "ele",
+   "classe": "pronome",
+   "hsk": 1
   },
   {
    "id": "p106",
-   "hanzi": "买",
-   "pinyin": "mǎi",
-   "traducao": "comprar"
+   "hanzi": "她",
+   "pinyin": "tā",
+   "traducao": "ela",
+   "classe": "pronome",
+   "hsk": 1
   },
   {
    "id": "p107",
-   "hanzi": "卖",
-   "pinyin": "mài",
-   "traducao": "vender"
+   "hanzi": "太",
+   "pinyin": "tài",
+   "traducao": "demais",
+   "classe": "adverbio",
+   "hsk": 1
   },
   {
    "id": "p108",
-   "hanzi": "坐",
-   "pinyin": "zuò",
-   "traducao": "sentar"
+   "hanzi": "天气",
+   "pinyin": "tiānqì",
+   "traducao": "clima",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p109",
-   "hanzi": "开",
-   "pinyin": "kāi",
-   "traducao": "abrir, dirigir"
+   "hanzi": "听",
+   "pinyin": "tīng",
+   "traducao": "ouvir",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p110",
-   "hanzi": "住",
-   "pinyin": "zhù",
-   "traducao": "morar"
+   "hanzi": "同学",
+   "pinyin": "tóngxué",
+   "traducao": "colega de classe",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p111",
-   "hanzi": "叫",
-   "pinyin": "jiào",
-   "traducao": "chamar-se"
+   "hanzi": "喂",
+   "pinyin": "wèi",
+   "traducao": "alô",
+   "classe": "outro",
+   "hsk": 1
   },
   {
    "id": "p112",
-   "hanzi": "给",
-   "pinyin": "gěi",
-   "traducao": "dar"
+   "hanzi": "我",
+   "pinyin": "wǒ",
+   "traducao": "eu",
+   "classe": "pronome",
+   "hsk": 1
   },
   {
    "id": "p113",
-   "hanzi": "爱",
-   "pinyin": "ài",
-   "traducao": "amar"
+   "hanzi": "我们",
+   "pinyin": "wǒmen",
+   "traducao": "nós",
+   "classe": "pronome",
+   "hsk": 1
   },
   {
    "id": "p114",
-   "hanzi": "喜欢",
-   "pinyin": "xǐhuan",
-   "traducao": "gostar"
+   "hanzi": "五",
+   "pinyin": "wǔ",
+   "traducao": "cinco",
+   "classe": "numeral",
+   "hsk": 1
   },
   {
    "id": "p115",
-   "hanzi": "认识",
-   "pinyin": "rènshi",
-   "traducao": "conhecer"
+   "hanzi": "喜欢",
+   "pinyin": "xǐhuan",
+   "traducao": "gostar",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p116",
-   "hanzi": "知道",
-   "pinyin": "zhīdào",
-   "traducao": "saber"
+   "hanzi": "下",
+   "pinyin": "xià",
+   "traducao": "descer, embaixo",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p117",
-   "hanzi": "请",
-   "pinyin": "qǐng",
-   "traducao": "por favor, convidar"
+   "hanzi": "下午",
+   "pinyin": "xiàwǔ",
+   "traducao": "tarde",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p118",
-   "hanzi": "问",
-   "pinyin": "wèn",
-   "traducao": "perguntar"
+   "hanzi": "下雨",
+   "pinyin": "xiàyǔ",
+   "traducao": "chover",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p119",
-   "hanzi": "回",
-   "pinyin": "huí",
-   "traducao": "voltar"
+   "hanzi": "先生",
+   "pinyin": "xiānsheng",
+   "traducao": "senhor",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p120",
-   "hanzi": "走",
-   "pinyin": "zǒu",
-   "traducao": "andar"
+   "hanzi": "现在",
+   "pinyin": "xiànzài",
+   "traducao": "agora",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p121",
-   "hanzi": "跑步",
-   "pinyin": "pǎobù",
-   "traducao": "correr"
+   "hanzi": "想",
+   "pinyin": "xiǎng",
+   "traducao": "querer, pensar",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p122",
-   "hanzi": "睡觉",
-   "pinyin": "shuìjiào",
-   "traducao": "dormir"
+   "hanzi": "小",
+   "pinyin": "xiǎo",
+   "traducao": "pequeno",
+   "classe": "adjetivo",
+   "hsk": 1
   },
   {
    "id": "p123",
-   "hanzi": "起床",
-   "pinyin": "qǐchuáng",
-   "traducao": "levantar-se"
+   "hanzi": "小姐",
+   "pinyin": "xiǎojie",
+   "traducao": "senhorita",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p124",
-   "hanzi": "打",
-   "pinyin": "dǎ",
-   "traducao": "bater, jogar"
+   "hanzi": "些",
+   "pinyin": "xiē",
+   "traducao": "alguns",
+   "classe": "classificador",
+   "hsk": 1
   },
   {
    "id": "p125",
-   "hanzi": "玩",
-   "pinyin": "wán",
-   "traducao": "brincar"
+   "hanzi": "写",
+   "pinyin": "xiě",
+   "traducao": "escrever",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p126",
-   "hanzi": "工作",
-   "pinyin": "gōngzuò",
-   "traducao": "trabalhar"
+   "hanzi": "谢谢",
+   "pinyin": "xièxie",
+   "traducao": "obrigado",
+   "classe": "outro",
+   "hsk": 1
   },
   {
    "id": "p127",
-   "hanzi": "帮助",
-   "pinyin": "bāngzhù",
-   "traducao": "ajudar"
+   "hanzi": "星期",
+   "pinyin": "xīngqī",
+   "traducao": "semana",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p128",
-   "hanzi": "等",
-   "pinyin": "děng",
-   "traducao": "esperar"
+   "hanzi": "学生",
+   "pinyin": "xuésheng",
+   "traducao": "aluno",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p129",
-   "hanzi": "找",
-   "pinyin": "zhǎo",
-   "traducao": "procurar"
+   "hanzi": "学习",
+   "pinyin": "xuéxí",
+   "traducao": "aprender",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p130",
-   "hanzi": "进",
-   "pinyin": "jìn",
-   "traducao": "entrar"
+   "hanzi": "学校",
+   "pinyin": "xuéxiào",
+   "traducao": "escola",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p131",
-   "hanzi": "出",
-   "pinyin": "chū",
-   "traducao": "sair"
+   "hanzi": "一",
+   "pinyin": "yī",
+   "traducao": "um",
+   "classe": "numeral",
+   "hsk": 1
   },
   {
    "id": "p132",
-   "hanzi": "上",
-   "pinyin": "shàng",
-   "traducao": "subir, em cima"
+   "hanzi": "衣服",
+   "pinyin": "yīfu",
+   "traducao": "roupa",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p133",
-   "hanzi": "下",
-   "pinyin": "xià",
-   "traducao": "descer, embaixo"
+   "hanzi": "医生",
+   "pinyin": "yīshēng",
+   "traducao": "médico",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p134",
-   "hanzi": "穿",
-   "pinyin": "chuān",
-   "traducao": "vestir"
+   "hanzi": "医院",
+   "pinyin": "yīyuàn",
+   "traducao": "hospital",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p135",
-   "hanzi": "笑",
-   "pinyin": "xiào",
-   "traducao": "sorrir"
+   "hanzi": "椅子",
+   "pinyin": "yǐzi",
+   "traducao": "cadeira",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p136",
-   "hanzi": "哭",
-   "pinyin": "kū",
-   "traducao": "chorar"
+   "hanzi": "有",
+   "pinyin": "yǒu",
+   "traducao": "ter",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p137",
-   "hanzi": "唱歌",
-   "pinyin": "chànggē",
-   "traducao": "cantar"
+   "hanzi": "月",
+   "pinyin": "yuè",
+   "traducao": "mês",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p138",
-   "hanzi": "跳舞",
-   "pinyin": "tiàowǔ",
-   "traducao": "dançar"
+   "hanzi": "在",
+   "pinyin": "zài",
+   "traducao": "estar em",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p139",
-   "hanzi": "游泳",
-   "pinyin": "yóuyǒng",
-   "traducao": "nadar"
+   "hanzi": "再见",
+   "pinyin": "zàijiàn",
+   "traducao": "tchau",
+   "classe": "outro",
+   "hsk": 1
   },
   {
    "id": "p140",
-   "hanzi": "休息",
-   "pinyin": "xiūxi",
-   "traducao": "descansar"
+   "hanzi": "怎么",
+   "pinyin": "zěnme",
+   "traducao": "como",
+   "classe": "pronome",
+   "hsk": 1
   },
   {
    "id": "p141",
-   "hanzi": "洗",
-   "pinyin": "xǐ",
-   "traducao": "lavar"
+   "hanzi": "怎么样",
+   "pinyin": "zěnmeyàng",
+   "traducao": "que tal",
+   "classe": "pronome",
+   "hsk": 1
   },
   {
    "id": "p142",
-   "hanzi": "觉得",
-   "pinyin": "juéde",
-   "traducao": "achar"
+   "hanzi": "这",
+   "pinyin": "zhè",
+   "traducao": "este",
+   "classe": "pronome",
+   "hsk": 1
   },
   {
    "id": "p143",
-   "hanzi": "希望",
-   "pinyin": "xīwàng",
-   "traducao": "esperar, desejar"
+   "hanzi": "中国",
+   "pinyin": "Zhōngguó",
+   "traducao": "China",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p144",
-   "hanzi": "好",
-   "pinyin": "hǎo",
-   "traducao": "bom"
+   "hanzi": "中午",
+   "pinyin": "zhōngwǔ",
+   "traducao": "meio-dia",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p145",
-   "hanzi": "大",
-   "pinyin": "dà",
-   "traducao": "grande"
+   "hanzi": "住",
+   "pinyin": "zhù",
+   "traducao": "morar",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p146",
-   "hanzi": "小",
-   "pinyin": "xiǎo",
-   "traducao": "pequeno"
+   "hanzi": "桌子",
+   "pinyin": "zhuōzi",
+   "traducao": "mesa",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p147",
-   "hanzi": "多",
-   "pinyin": "duō",
-   "traducao": "muito"
+   "hanzi": "字",
+   "pinyin": "zì",
+   "traducao": "caractere",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p148",
-   "hanzi": "少",
-   "pinyin": "shǎo",
-   "traducao": "pouco"
+   "hanzi": "昨天",
+   "pinyin": "zuótiān",
+   "traducao": "ontem",
+   "classe": "substantivo",
+   "hsk": 1
   },
   {
    "id": "p149",
-   "hanzi": "高",
-   "pinyin": "gāo",
-   "traducao": "alto"
+   "hanzi": "坐",
+   "pinyin": "zuò",
+   "traducao": "sentar",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p150",
-   "hanzi": "长",
-   "pinyin": "cháng",
-   "traducao": "comprido"
+   "hanzi": "做",
+   "pinyin": "zuò",
+   "traducao": "fazer",
+   "classe": "verbo",
+   "hsk": 1
   },
   {
    "id": "p151",
-   "hanzi": "新",
-   "pinyin": "xīn",
-   "traducao": "novo"
+   "hanzi": "吧",
+   "pinyin": "ba",
+   "traducao": "partícula de sugestão",
+   "classe": "particula",
+   "hsk": 2
   },
   {
    "id": "p152",
-   "hanzi": "旧",
-   "pinyin": "jiù",
-   "traducao": "velho (coisa)"
+   "hanzi": "白",
+   "pinyin": "bái",
+   "traducao": "branco",
+   "classe": "adjetivo",
+   "hsk": 2
   },
   {
    "id": "p153",
-   "hanzi": "快",
-   "pinyin": "kuài",
-   "traducao": "rápido"
+   "hanzi": "百",
+   "pinyin": "bǎi",
+   "traducao": "cem",
+   "classe": "numeral",
+   "hsk": 2
   },
   {
    "id": "p154",
-   "hanzi": "慢",
-   "pinyin": "màn",
-   "traducao": "devagar"
+   "hanzi": "帮助",
+   "pinyin": "bāngzhù",
+   "traducao": "ajudar",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p155",
-   "hanzi": "冷",
-   "pinyin": "lěng",
-   "traducao": "frio"
+   "hanzi": "报纸",
+   "pinyin": "bàozhǐ",
+   "traducao": "jornal",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p156",
-   "hanzi": "热",
-   "pinyin": "rè",
-   "traducao": "quente"
+   "hanzi": "比",
+   "pinyin": "bǐ",
+   "traducao": "comparar, mais do que",
+   "classe": "preposicao",
+   "hsk": 2
   },
   {
    "id": "p157",
-   "hanzi": "贵",
-   "pinyin": "guì",
-   "traducao": "caro"
+   "hanzi": "别",
+   "pinyin": "bié",
+   "traducao": "não (ordem)",
+   "classe": "adverbio",
+   "hsk": 2
   },
   {
    "id": "p158",
-   "hanzi": "便宜",
-   "pinyin": "piányi",
-   "traducao": "barato"
+   "hanzi": "长",
+   "pinyin": "cháng",
+   "traducao": "comprido",
+   "classe": "adjetivo",
+   "hsk": 2
   },
   {
    "id": "p159",
-   "hanzi": "漂亮",
-   "pinyin": "piàoliang",
-   "traducao": "bonito"
+   "hanzi": "唱歌",
+   "pinyin": "chànggē",
+   "traducao": "cantar",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p160",
-   "hanzi": "高兴",
-   "pinyin": "gāoxìng",
-   "traducao": "feliz"
+   "hanzi": "出",
+   "pinyin": "chū",
+   "traducao": "sair",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p161",
-   "hanzi": "累",
-   "pinyin": "lèi",
-   "traducao": "cansado"
+   "hanzi": "穿",
+   "pinyin": "chuān",
+   "traducao": "vestir",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p162",
-   "hanzi": "忙",
-   "pinyin": "máng",
-   "traducao": "ocupado"
+   "hanzi": "船",
+   "pinyin": "chuán",
+   "traducao": "barco",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p163",
-   "hanzi": "对",
-   "pinyin": "duì",
-   "traducao": "correto"
+   "hanzi": "次",
+   "pinyin": "cì",
+   "traducao": "vez (classificador)",
+   "classe": "classificador",
+   "hsk": 2
   },
   {
    "id": "p164",
-   "hanzi": "错",
-   "pinyin": "cuò",
-   "traducao": "errado"
+   "hanzi": "从",
+   "pinyin": "cóng",
+   "traducao": "de, desde",
+   "classe": "preposicao",
+   "hsk": 2
   },
   {
    "id": "p165",
-   "hanzi": "远",
-   "pinyin": "yuǎn",
-   "traducao": "longe"
+   "hanzi": "错",
+   "pinyin": "cuò",
+   "traducao": "errado",
+   "classe": "adjetivo",
+   "hsk": 2
   },
   {
    "id": "p166",
-   "hanzi": "近",
-   "pinyin": "jìn",
-   "traducao": "perto"
+   "hanzi": "打篮球",
+   "pinyin": "dǎlánqiú",
+   "traducao": "jogar basquete",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p167",
-   "hanzi": "白",
-   "pinyin": "bái",
-   "traducao": "branco"
+   "hanzi": "大家",
+   "pinyin": "dàjiā",
+   "traducao": "todos",
+   "classe": "pronome",
+   "hsk": 2
   },
   {
    "id": "p168",
-   "hanzi": "黑",
-   "pinyin": "hēi",
-   "traducao": "preto"
+   "hanzi": "但是",
+   "pinyin": "dànshì",
+   "traducao": "mas",
+   "classe": "conjuncao",
+   "hsk": 2
   },
   {
    "id": "p169",
-   "hanzi": "红",
-   "pinyin": "hóng",
-   "traducao": "vermelho"
+   "hanzi": "到",
+   "pinyin": "dào",
+   "traducao": "chegar, até",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p170",
-   "hanzi": "老",
-   "pinyin": "lǎo",
-   "traducao": "velho (pessoa)"
+   "hanzi": "得",
+   "pinyin": "de",
+   "traducao": "partícula de complemento",
+   "classe": "particula",
+   "hsk": 2
   },
   {
    "id": "p171",
-   "hanzi": "好吃",
-   "pinyin": "hǎochī",
-   "traducao": "gostoso"
+   "hanzi": "得",
+   "pinyin": "děi",
+   "traducao": "ter que",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p172",
-   "hanzi": "难",
-   "pinyin": "nán",
-   "traducao": "difícil"
+   "hanzi": "弟弟",
+   "pinyin": "dìdi",
+   "traducao": "irmão mais novo",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p173",
-   "hanzi": "容易",
-   "pinyin": "róngyì",
-   "traducao": "fácil"
+   "hanzi": "第一",
+   "pinyin": "dìyī",
+   "traducao": "primeiro",
+   "classe": "numeral",
+   "hsk": 2
   },
   {
    "id": "p174",
-   "hanzi": "水",
-   "pinyin": "shuǐ",
-   "traducao": "água"
+   "hanzi": "懂",
+   "pinyin": "dǒng",
+   "traducao": "entender",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p175",
-   "hanzi": "茶",
-   "pinyin": "chá",
-   "traducao": "chá"
+   "hanzi": "房间",
+   "pinyin": "fángjiān",
+   "traducao": "quarto",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p176",
-   "hanzi": "咖啡",
-   "pinyin": "kāfēi",
-   "traducao": "café"
+   "hanzi": "非常",
+   "pinyin": "fēicháng",
+   "traducao": "muito, extremamente",
+   "classe": "adverbio",
+   "hsk": 2
   },
   {
    "id": "p177",
-   "hanzi": "牛奶",
-   "pinyin": "niúnǎi",
-   "traducao": "leite"
+   "hanzi": "服务员",
+   "pinyin": "fúwùyuán",
+   "traducao": "garçom",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p178",
-   "hanzi": "米饭",
-   "pinyin": "mǐfàn",
-   "traducao": "arroz"
+   "hanzi": "高",
+   "pinyin": "gāo",
+   "traducao": "alto",
+   "classe": "adjetivo",
+   "hsk": 2
   },
   {
    "id": "p179",
-   "hanzi": "面条",
-   "pinyin": "miàntiáo",
-   "traducao": "macarrão"
+   "hanzi": "告诉",
+   "pinyin": "gàosu",
+   "traducao": "contar, avisar",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p180",
-   "hanzi": "菜",
-   "pinyin": "cài",
-   "traducao": "prato, legume"
+   "hanzi": "哥哥",
+   "pinyin": "gēge",
+   "traducao": "irmão mais velho",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p181",
-   "hanzi": "肉",
-   "pinyin": "ròu",
-   "traducao": "carne"
+   "hanzi": "给",
+   "pinyin": "gěi",
+   "traducao": "dar",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p182",
-   "hanzi": "鸡蛋",
-   "pinyin": "jīdàn",
-   "traducao": "ovo"
+   "hanzi": "公共汽车",
+   "pinyin": "gōnggòngqìchē",
+   "traducao": "ônibus",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p183",
-   "hanzi": "水果",
-   "pinyin": "shuǐguǒ",
-   "traducao": "fruta"
+   "hanzi": "公斤",
+   "pinyin": "gōngjīn",
+   "traducao": "quilograma",
+   "classe": "classificador",
+   "hsk": 2
   },
   {
    "id": "p184",
-   "hanzi": "苹果",
-   "pinyin": "píngguǒ",
-   "traducao": "maçã"
+   "hanzi": "公司",
+   "pinyin": "gōngsī",
+   "traducao": "empresa",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p185",
-   "hanzi": "西瓜",
-   "pinyin": "xīguā",
-   "traducao": "melancia"
+   "hanzi": "贵",
+   "pinyin": "guì",
+   "traducao": "caro",
+   "classe": "adjetivo",
+   "hsk": 2
   },
   {
    "id": "p186",
-   "hanzi": "鱼",
-   "pinyin": "yú",
-   "traducao": "peixe"
+   "hanzi": "还",
+   "pinyin": "hái",
+   "traducao": "ainda",
+   "classe": "adverbio",
+   "hsk": 2
   },
   {
    "id": "p187",
-   "hanzi": "饭馆",
-   "pinyin": "fànguǎn",
-   "traducao": "restaurante"
+   "hanzi": "孩子",
+   "pinyin": "háizi",
+   "traducao": "criança",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p188",
-   "hanzi": "杯子",
-   "pinyin": "bēizi",
-   "traducao": "copo"
+   "hanzi": "好吃",
+   "pinyin": "hǎochī",
+   "traducao": "gostoso",
+   "classe": "adjetivo",
+   "hsk": 2
   },
   {
    "id": "p189",
-   "hanzi": "衣服",
-   "pinyin": "yīfu",
-   "traducao": "roupa"
+   "hanzi": "号",
+   "pinyin": "hào",
+   "traducao": "dia (data)",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p190",
-   "hanzi": "鞋",
-   "pinyin": "xié",
-   "traducao": "sapato"
+   "hanzi": "黑",
+   "pinyin": "hēi",
+   "traducao": "preto",
+   "classe": "adjetivo",
+   "hsk": 2
   },
   {
    "id": "p191",
-   "hanzi": "书",
-   "pinyin": "shū",
-   "traducao": "livro"
+   "hanzi": "红",
+   "pinyin": "hóng",
+   "traducao": "vermelho",
+   "classe": "adjetivo",
+   "hsk": 2
   },
   {
    "id": "p192",
-   "hanzi": "钱",
-   "pinyin": "qián",
-   "traducao": "dinheiro"
+   "hanzi": "欢迎",
+   "pinyin": "huānyíng",
+   "traducao": "bem-vindo",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p193",
-   "hanzi": "手机",
-   "pinyin": "shǒujī",
-   "traducao": "celular"
+   "hanzi": "还",
+   "pinyin": "huán",
+   "traducao": "devolver",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p194",
-   "hanzi": "电脑",
-   "pinyin": "diànnǎo",
-   "traducao": "computador"
+   "hanzi": "回答",
+   "pinyin": "huídá",
+   "traducao": "responder",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p195",
-   "hanzi": "电视",
-   "pinyin": "diànshì",
-   "traducao": "televisão"
+   "hanzi": "机场",
+   "pinyin": "jīchǎng",
+   "traducao": "aeroporto",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p196",
-   "hanzi": "电影",
-   "pinyin": "diànyǐng",
-   "traducao": "filme"
+   "hanzi": "鸡蛋",
+   "pinyin": "jīdàn",
+   "traducao": "ovo",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p197",
-   "hanzi": "桌子",
-   "pinyin": "zhuōzi",
-   "traducao": "mesa"
+   "hanzi": "件",
+   "pinyin": "jiàn",
+   "traducao": "classificador (roupas, assuntos)",
+   "classe": "classificador",
+   "hsk": 2
   },
   {
    "id": "p198",
-   "hanzi": "椅子",
-   "pinyin": "yǐzi",
-   "traducao": "cadeira"
+   "hanzi": "教室",
+   "pinyin": "jiàoshì",
+   "traducao": "sala de aula",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p199",
-   "hanzi": "东西",
-   "pinyin": "dōngxi",
-   "traducao": "coisa"
+   "hanzi": "姐姐",
+   "pinyin": "jiějie",
+   "traducao": "irmã mais velha",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p200",
-   "hanzi": "狗",
-   "pinyin": "gǒu",
-   "traducao": "cachorro"
+   "hanzi": "介绍",
+   "pinyin": "jièshào",
+   "traducao": "apresentar",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p201",
-   "hanzi": "猫",
-   "pinyin": "māo",
-   "traducao": "gato"
+   "hanzi": "进",
+   "pinyin": "jìn",
+   "traducao": "entrar",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p202",
-   "hanzi": "车",
-   "pinyin": "chē",
-   "traducao": "carro"
+   "hanzi": "近",
+   "pinyin": "jìn",
+   "traducao": "perto",
+   "classe": "adjetivo",
+   "hsk": 2
   },
   {
    "id": "p203",
-   "hanzi": "飞机",
-   "pinyin": "fēijī",
-   "traducao": "avião"
+   "hanzi": "就",
+   "pinyin": "jiù",
+   "traducao": "logo, então",
+   "classe": "adverbio",
+   "hsk": 2
   },
   {
    "id": "p204",
-   "hanzi": "火车",
-   "pinyin": "huǒchē",
-   "traducao": "trem"
+   "hanzi": "觉得",
+   "pinyin": "juéde",
+   "traducao": "achar",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p205",
-   "hanzi": "出租车",
-   "pinyin": "chūzūchē",
-   "traducao": "táxi"
+   "hanzi": "咖啡",
+   "pinyin": "kāfēi",
+   "traducao": "café",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p206",
-   "hanzi": "自行车",
-   "pinyin": "zìxíngchē",
-   "traducao": "bicicleta"
+   "hanzi": "开始",
+   "pinyin": "kāishǐ",
+   "traducao": "começar",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p207",
-   "hanzi": "中国",
-   "pinyin": "Zhōngguó",
-   "traducao": "China"
+   "hanzi": "考试",
+   "pinyin": "kǎoshì",
+   "traducao": "prova",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p208",
-   "hanzi": "北京",
-   "pinyin": "Běijīng",
-   "traducao": "Pequim"
+   "hanzi": "可能",
+   "pinyin": "kěnéng",
+   "traducao": "talvez, possível",
+   "classe": "adverbio",
+   "hsk": 2
   },
   {
    "id": "p209",
-   "hanzi": "学校",
-   "pinyin": "xuéxiào",
-   "traducao": "escola"
+   "hanzi": "可以",
+   "pinyin": "kěyǐ",
+   "traducao": "pode",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p210",
-   "hanzi": "医院",
-   "pinyin": "yīyuàn",
-   "traducao": "hospital"
+   "hanzi": "课",
+   "pinyin": "kè",
+   "traducao": "aula",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p211",
-   "hanzi": "商店",
-   "pinyin": "shāngdiàn",
-   "traducao": "loja"
+   "hanzi": "快",
+   "pinyin": "kuài",
+   "traducao": "rápido",
+   "classe": "adjetivo",
+   "hsk": 2
   },
   {
    "id": "p212",
-   "hanzi": "公司",
-   "pinyin": "gōngsī",
-   "traducao": "empresa"
+   "hanzi": "快乐",
+   "pinyin": "kuàilè",
+   "traducao": "feliz, alegre",
+   "classe": "adjetivo",
+   "hsk": 2
   },
   {
    "id": "p213",
-   "hanzi": "房间",
-   "pinyin": "fángjiān",
-   "traducao": "quarto"
+   "hanzi": "累",
+   "pinyin": "lèi",
+   "traducao": "cansado",
+   "classe": "adjetivo",
+   "hsk": 2
   },
   {
    "id": "p214",
-   "hanzi": "前面",
-   "pinyin": "qiánmiàn",
-   "traducao": "frente"
+   "hanzi": "离",
+   "pinyin": "lí",
+   "traducao": "distar de",
+   "classe": "preposicao",
+   "hsk": 2
   },
   {
    "id": "p215",
-   "hanzi": "后面",
-   "pinyin": "hòumiàn",
-   "traducao": "atrás"
+   "hanzi": "两",
+   "pinyin": "liǎng",
+   "traducao": "dois (quantidade)",
+   "classe": "numeral",
+   "hsk": 2
   },
   {
    "id": "p216",
-   "hanzi": "里",
-   "pinyin": "lǐ",
-   "traducao": "dentro"
+   "hanzi": "路",
+   "pinyin": "lù",
+   "traducao": "estrada, caminho",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p217",
-   "hanzi": "外",
-   "pinyin": "wài",
-   "traducao": "fora"
+   "hanzi": "旅游",
+   "pinyin": "lǚyóu",
+   "traducao": "viajar, turismo",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p218",
-   "hanzi": "左边",
-   "pinyin": "zuǒbian",
-   "traducao": "esquerda"
+   "hanzi": "卖",
+   "pinyin": "mài",
+   "traducao": "vender",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p219",
-   "hanzi": "右边",
-   "pinyin": "yòubian",
-   "traducao": "direita"
+   "hanzi": "慢",
+   "pinyin": "màn",
+   "traducao": "devagar",
+   "classe": "adjetivo",
+   "hsk": 2
   },
   {
    "id": "p220",
-   "hanzi": "这儿",
-   "pinyin": "zhèr",
-   "traducao": "aqui"
+   "hanzi": "忙",
+   "pinyin": "máng",
+   "traducao": "ocupado",
+   "classe": "adjetivo",
+   "hsk": 2
   },
   {
    "id": "p221",
-   "hanzi": "那儿",
-   "pinyin": "nàr",
-   "traducao": "ali"
+   "hanzi": "每",
+   "pinyin": "měi",
+   "traducao": "cada",
+   "classe": "pronome",
+   "hsk": 2
   },
   {
    "id": "p222",
-   "hanzi": "天气",
-   "pinyin": "tiānqì",
-   "traducao": "clima"
+   "hanzi": "妹妹",
+   "pinyin": "mèimei",
+   "traducao": "irmã mais nova",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p223",
-   "hanzi": "雨",
-   "pinyin": "yǔ",
-   "traducao": "chuva"
+   "hanzi": "门",
+   "pinyin": "mén",
+   "traducao": "porta",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p224",
-   "hanzi": "雪",
-   "pinyin": "xuě",
-   "traducao": "neve"
+   "hanzi": "男人",
+   "pinyin": "nánrén",
+   "traducao": "homem",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p225",
-   "hanzi": "山",
-   "pinyin": "shān",
-   "traducao": "montanha"
+   "hanzi": "您",
+   "pinyin": "nín",
+   "traducao": "você (formal)",
+   "classe": "pronome",
+   "hsk": 2
   },
   {
    "id": "p226",
-   "hanzi": "太阳",
-   "pinyin": "tàiyáng",
-   "traducao": "sol"
+   "hanzi": "牛奶",
+   "pinyin": "niúnǎi",
+   "traducao": "leite",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p227",
-   "hanzi": "月亮",
-   "pinyin": "yuèliang",
-   "traducao": "lua"
+   "hanzi": "女人",
+   "pinyin": "nǚrén",
+   "traducao": "mulher",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p228",
-   "hanzi": "花",
-   "pinyin": "huā",
-   "traducao": "flor"
+   "hanzi": "旁边",
+   "pinyin": "pángbiān",
+   "traducao": "ao lado",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p229",
-   "hanzi": "树",
-   "pinyin": "shù",
-   "traducao": "árvore"
+   "hanzi": "跑步",
+   "pinyin": "pǎobù",
+   "traducao": "correr",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p230",
-   "hanzi": "汉语",
-   "pinyin": "Hànyǔ",
-   "traducao": "língua chinesa"
+   "hanzi": "便宜",
+   "pinyin": "piányi",
+   "traducao": "barato",
+   "classe": "adjetivo",
+   "hsk": 2
   },
   {
    "id": "p231",
-   "hanzi": "中文",
-   "pinyin": "Zhōngwén",
-   "traducao": "chinês"
+   "hanzi": "票",
+   "pinyin": "piào",
+   "traducao": "bilhete",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p232",
-   "hanzi": "英语",
-   "pinyin": "Yīngyǔ",
-   "traducao": "inglês"
+   "hanzi": "妻子",
+   "pinyin": "qīzi",
+   "traducao": "esposa",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p233",
-   "hanzi": "字",
-   "pinyin": "zì",
-   "traducao": "caractere"
+   "hanzi": "起床",
+   "pinyin": "qǐchuáng",
+   "traducao": "levantar-se",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p234",
-   "hanzi": "名字",
-   "pinyin": "míngzi",
-   "traducao": "nome"
+   "hanzi": "千",
+   "pinyin": "qiān",
+   "traducao": "mil",
+   "classe": "numeral",
+   "hsk": 2
   },
   {
    "id": "p235",
-   "hanzi": "问题",
-   "pinyin": "wèntí",
-   "traducao": "pergunta, problema"
+   "hanzi": "晴",
+   "pinyin": "qíng",
+   "traducao": "céu limpo",
+   "classe": "adjetivo",
+   "hsk": 2
   },
   {
    "id": "p236",
-   "hanzi": "意思",
-   "pinyin": "yìsi",
-   "traducao": "significado"
+   "hanzi": "去年",
+   "pinyin": "qùnián",
+   "traducao": "ano passado",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p237",
-   "hanzi": "谢谢",
-   "pinyin": "xièxie",
-   "traducao": "obrigado"
+   "hanzi": "让",
+   "pinyin": "ràng",
+   "traducao": "deixar, fazer",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p238",
-   "hanzi": "不客气",
-   "pinyin": "búkèqi",
-   "traducao": "de nada"
+   "hanzi": "上班",
+   "pinyin": "shàngbān",
+   "traducao": "ir trabalhar",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p239",
-   "hanzi": "对不起",
-   "pinyin": "duìbuqǐ",
-   "traducao": "desculpe"
+   "hanzi": "身体",
+   "pinyin": "shēntǐ",
+   "traducao": "corpo",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p240",
-   "hanzi": "没关系",
-   "pinyin": "méiguānxi",
-   "traducao": "sem problema"
+   "hanzi": "生病",
+   "pinyin": "shēngbìng",
+   "traducao": "ficar doente",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p241",
-   "hanzi": "再见",
-   "pinyin": "zàijiàn",
-   "traducao": "tchau"
+   "hanzi": "生日",
+   "pinyin": "shēngrì",
+   "traducao": "aniversário",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p242",
-   "hanzi": "你好",
-   "pinyin": "nǐ hǎo",
-   "traducao": "olá"
+   "hanzi": "时间",
+   "pinyin": "shíjiān",
+   "traducao": "tempo",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p243",
-   "hanzi": "手",
-   "pinyin": "shǒu",
-   "traducao": "mão"
+   "hanzi": "事情",
+   "pinyin": "shìqing",
+   "traducao": "assunto, coisa",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p244",
-   "hanzi": "头",
-   "pinyin": "tóu",
-   "traducao": "cabeça"
+   "hanzi": "手表",
+   "pinyin": "shǒubiǎo",
+   "traducao": "relógio de pulso",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p245",
-   "hanzi": "眼睛",
-   "pinyin": "yǎnjing",
-   "traducao": "olho"
+   "hanzi": "手机",
+   "pinyin": "shǒujī",
+   "traducao": "celular",
+   "classe": "substantivo",
+   "hsk": 2
   },
   {
    "id": "p246",
-   "hanzi": "身体",
-   "pinyin": "shēntǐ",
-   "traducao": "corpo"
+   "hanzi": "送",
+   "pinyin": "sòng",
+   "traducao": "enviar, dar de presente",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p247",
-   "hanzi": "大家",
-   "pinyin": "dàjiā",
-   "traducao": "todos"
+   "hanzi": "所以",
+   "pinyin": "suǒyǐ",
+   "traducao": "portanto",
+   "classe": "conjuncao",
+   "hsk": 2
   },
   {
    "id": "p248",
-   "hanzi": "因为",
-   "pinyin": "yīnwèi",
-   "traducao": "porque"
+   "hanzi": "它",
+   "pinyin": "tā",
+   "traducao": "ele/ela (coisa)",
+   "classe": "pronome",
+   "hsk": 2
   },
   {
    "id": "p249",
-   "hanzi": "所以",
-   "pinyin": "suǒyǐ",
-   "traducao": "portanto"
+   "hanzi": "踢",
+   "pinyin": "tī",
+   "traducao": "chutar",
+   "classe": "verbo",
+   "hsk": 2
   },
   {
    "id": "p250",
-   "hanzi": "但是",
-   "pinyin": "dànshì",
-   "traducao": "mas"
+   "hanzi": "题",
+   "pinyin": "tí",
+   "traducao": "questão",
+   "classe": "substantivo",
+   "hsk": 2
+  },
+  {
+   "id": "p251",
+   "hanzi": "跳舞",
+   "pinyin": "tiàowǔ",
+   "traducao": "dançar",
+   "classe": "verbo",
+   "hsk": 2
+  },
+  {
+   "id": "p252",
+   "hanzi": "外",
+   "pinyin": "wài",
+   "traducao": "fora",
+   "classe": "substantivo",
+   "hsk": 2
+  },
+  {
+   "id": "p253",
+   "hanzi": "完",
+   "pinyin": "wán",
+   "traducao": "terminar",
+   "classe": "verbo",
+   "hsk": 2
+  },
+  {
+   "id": "p254",
+   "hanzi": "玩",
+   "pinyin": "wán",
+   "traducao": "brincar",
+   "classe": "verbo",
+   "hsk": 2
+  },
+  {
+   "id": "p255",
+   "hanzi": "晚上",
+   "pinyin": "wǎnshang",
+   "traducao": "noite",
+   "classe": "substantivo",
+   "hsk": 2
+  },
+  {
+   "id": "p256",
+   "hanzi": "为",
+   "pinyin": "wèi",
+   "traducao": "por, para",
+   "classe": "preposicao",
+   "hsk": 2
+  },
+  {
+   "id": "p257",
+   "hanzi": "问",
+   "pinyin": "wèn",
+   "traducao": "perguntar",
+   "classe": "verbo",
+   "hsk": 2
+  },
+  {
+   "id": "p258",
+   "hanzi": "问题",
+   "pinyin": "wèntí",
+   "traducao": "pergunta, problema",
+   "classe": "substantivo",
+   "hsk": 2
+  },
+  {
+   "id": "p259",
+   "hanzi": "西瓜",
+   "pinyin": "xīguā",
+   "traducao": "melancia",
+   "classe": "substantivo",
+   "hsk": 2
+  },
+  {
+   "id": "p260",
+   "hanzi": "希望",
+   "pinyin": "xīwàng",
+   "traducao": "esperar, desejar",
+   "classe": "verbo",
+   "hsk": 2
+  },
+  {
+   "id": "p261",
+   "hanzi": "洗",
+   "pinyin": "xǐ",
+   "traducao": "lavar",
+   "classe": "verbo",
+   "hsk": 2
+  },
+  {
+   "id": "p262",
+   "hanzi": "向",
+   "pinyin": "xiàng",
+   "traducao": "em direção a",
+   "classe": "preposicao",
+   "hsk": 2
+  },
+  {
+   "id": "p263",
+   "hanzi": "小时",
+   "pinyin": "xiǎoshí",
+   "traducao": "hora (duração)",
+   "classe": "substantivo",
+   "hsk": 2
+  },
+  {
+   "id": "p264",
+   "hanzi": "笑",
+   "pinyin": "xiào",
+   "traducao": "sorrir",
+   "classe": "verbo",
+   "hsk": 2
+  },
+  {
+   "id": "p265",
+   "hanzi": "新",
+   "pinyin": "xīn",
+   "traducao": "novo",
+   "classe": "adjetivo",
+   "hsk": 2
+  },
+  {
+   "id": "p266",
+   "hanzi": "姓",
+   "pinyin": "xìng",
+   "traducao": "sobrenome",
+   "classe": "verbo",
+   "hsk": 2
+  },
+  {
+   "id": "p267",
+   "hanzi": "休息",
+   "pinyin": "xiūxi",
+   "traducao": "descansar",
+   "classe": "verbo",
+   "hsk": 2
+  },
+  {
+   "id": "p268",
+   "hanzi": "雪",
+   "pinyin": "xuě",
+   "traducao": "neve",
+   "classe": "substantivo",
+   "hsk": 2
+  },
+  {
+   "id": "p269",
+   "hanzi": "颜色",
+   "pinyin": "yánsè",
+   "traducao": "cor",
+   "classe": "substantivo",
+   "hsk": 2
+  },
+  {
+   "id": "p270",
+   "hanzi": "眼睛",
+   "pinyin": "yǎnjing",
+   "traducao": "olho",
+   "classe": "substantivo",
+   "hsk": 2
+  },
+  {
+   "id": "p271",
+   "hanzi": "羊肉",
+   "pinyin": "yángròu",
+   "traducao": "carne de carneiro",
+   "classe": "substantivo",
+   "hsk": 2
+  },
+  {
+   "id": "p272",
+   "hanzi": "药",
+   "pinyin": "yào",
+   "traducao": "remédio",
+   "classe": "substantivo",
+   "hsk": 2
+  },
+  {
+   "id": "p273",
+   "hanzi": "要",
+   "pinyin": "yào",
+   "traducao": "querer, precisar",
+   "classe": "verbo",
+   "hsk": 2
+  },
+  {
+   "id": "p274",
+   "hanzi": "也",
+   "pinyin": "yě",
+   "traducao": "também",
+   "classe": "adverbio",
+   "hsk": 2
+  },
+  {
+   "id": "p275",
+   "hanzi": "已经",
+   "pinyin": "yǐjīng",
+   "traducao": "já",
+   "classe": "adverbio",
+   "hsk": 2
+  },
+  {
+   "id": "p276",
+   "hanzi": "一起",
+   "pinyin": "yīqǐ",
+   "traducao": "juntos",
+   "classe": "adverbio",
+   "hsk": 2
+  },
+  {
+   "id": "p277",
+   "hanzi": "意思",
+   "pinyin": "yìsi",
+   "traducao": "significado",
+   "classe": "substantivo",
+   "hsk": 2
+  },
+  {
+   "id": "p278",
+   "hanzi": "阴",
+   "pinyin": "yīn",
+   "traducao": "nublado",
+   "classe": "adjetivo",
+   "hsk": 2
+  },
+  {
+   "id": "p279",
+   "hanzi": "因为",
+   "pinyin": "yīnwèi",
+   "traducao": "porque",
+   "classe": "conjuncao",
+   "hsk": 2
+  },
+  {
+   "id": "p280",
+   "hanzi": "游泳",
+   "pinyin": "yóuyǒng",
+   "traducao": "nadar",
+   "classe": "verbo",
+   "hsk": 2
+  },
+  {
+   "id": "p281",
+   "hanzi": "右边",
+   "pinyin": "yòubian",
+   "traducao": "direita",
+   "classe": "substantivo",
+   "hsk": 2
+  },
+  {
+   "id": "p282",
+   "hanzi": "鱼",
+   "pinyin": "yú",
+   "traducao": "peixe",
+   "classe": "substantivo",
+   "hsk": 2
+  },
+  {
+   "id": "p283",
+   "hanzi": "元",
+   "pinyin": "yuán",
+   "traducao": "yuan",
+   "classe": "classificador",
+   "hsk": 2
+  },
+  {
+   "id": "p284",
+   "hanzi": "远",
+   "pinyin": "yuǎn",
+   "traducao": "longe",
+   "classe": "adjetivo",
+   "hsk": 2
+  },
+  {
+   "id": "p285",
+   "hanzi": "运动",
+   "pinyin": "yùndòng",
+   "traducao": "exercício, esporte",
+   "classe": "verbo",
+   "hsk": 2
+  },
+  {
+   "id": "p286",
+   "hanzi": "再",
+   "pinyin": "zài",
+   "traducao": "de novo",
+   "classe": "adverbio",
+   "hsk": 2
+  },
+  {
+   "id": "p287",
+   "hanzi": "早上",
+   "pinyin": "zǎoshang",
+   "traducao": "manhã cedo",
+   "classe": "substantivo",
+   "hsk": 2
+  },
+  {
+   "id": "p288",
+   "hanzi": "张",
+   "pinyin": "zhāng",
+   "traducao": "classificador (folhas, mesas)",
+   "classe": "classificador",
+   "hsk": 2
+  },
+  {
+   "id": "p289",
+   "hanzi": "长",
+   "pinyin": "zhǎng",
+   "traducao": "crescer",
+   "classe": "verbo",
+   "hsk": 2
+  },
+  {
+   "id": "p290",
+   "hanzi": "丈夫",
+   "pinyin": "zhàngfu",
+   "traducao": "marido",
+   "classe": "substantivo",
+   "hsk": 2
+  },
+  {
+   "id": "p291",
+   "hanzi": "找",
+   "pinyin": "zhǎo",
+   "traducao": "procurar",
+   "classe": "verbo",
+   "hsk": 2
+  },
+  {
+   "id": "p292",
+   "hanzi": "着",
+   "pinyin": "zhe",
+   "traducao": "partícula de ação em curso",
+   "classe": "particula",
+   "hsk": 2
+  },
+  {
+   "id": "p293",
+   "hanzi": "真",
+   "pinyin": "zhēn",
+   "traducao": "realmente",
+   "classe": "adverbio",
+   "hsk": 2
+  },
+  {
+   "id": "p294",
+   "hanzi": "正在",
+   "pinyin": "zhèngzài",
+   "traducao": "estar fazendo (agora)",
+   "classe": "adverbio",
+   "hsk": 2
+  },
+  {
+   "id": "p295",
+   "hanzi": "知道",
+   "pinyin": "zhīdào",
+   "traducao": "saber",
+   "classe": "verbo",
+   "hsk": 2
+  },
+  {
+   "id": "p296",
+   "hanzi": "准备",
+   "pinyin": "zhǔnbèi",
+   "traducao": "preparar",
+   "classe": "verbo",
+   "hsk": 2
+  },
+  {
+   "id": "p297",
+   "hanzi": "自行车",
+   "pinyin": "zìxíngchē",
+   "traducao": "bicicleta",
+   "classe": "substantivo",
+   "hsk": 2
+  },
+  {
+   "id": "p298",
+   "hanzi": "走",
+   "pinyin": "zǒu",
+   "traducao": "andar",
+   "classe": "verbo",
+   "hsk": 2
+  },
+  {
+   "id": "p299",
+   "hanzi": "最",
+   "pinyin": "zuì",
+   "traducao": "mais (superlativo)",
+   "classe": "adverbio",
+   "hsk": 2
+  },
+  {
+   "id": "p300",
+   "hanzi": "左边",
+   "pinyin": "zuǒbian",
+   "traducao": "esquerda",
+   "classe": "substantivo",
+   "hsk": 2
   }
  ]
 }

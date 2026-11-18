@@ -3,6 +3,8 @@ export interface Palavra {
   hanzi: string
   pinyin: string
   traducao: string
+  /** Nível HSK (padrão HSK 2.0). */
+  hsk: 1 | 2
 }
 
 export interface Pos {

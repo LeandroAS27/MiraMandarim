@@ -18,7 +18,7 @@ import { Draggable } from './Draggable'
 import { SentencePanel } from './SentencePanel'
 import { StickyNote } from './StickyNote'
 import { Toolbar } from './Toolbar'
-import { Tray } from './Tray'
+import { Tray, type HskFilter } from './Tray'
 import styles from './Board.module.css'
 
 interface XY {
@@ -41,6 +41,7 @@ export function Board({ boardId }: { boardId: string }) {
   const [topId, setTopId] = useState<string | null>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [query, setQuery] = useState('')
+  const [hsk, setHsk] = useState<HskFilter>('all')
   const [trayOpen, setTrayOpen] = useState(() => window.innerWidth >= 700)
   const viewport = useRef<HTMLDivElement>(null)
   const tray = useRef<HTMLElement>(null)
@@ -135,7 +136,10 @@ export function Board({ boardId }: { boardId: string }) {
 
   const removeNote = useCallback((instanceId: string) => removeInstance(instanceId), [removeInstance])
   const placed = Object.values(instances)
-  const trayItems = useMemo(() => palavras.filter((p) => matches(p, query)), [query])
+  const trayItems = useMemo(
+    () => palavras.filter((p) => (hsk === 'all' || p.hsk === hsk) && matches(p, query)),
+    [query, hsk],
+  )
   const sentences = useMemo(
     () => buildSentences(placed.map((i) => ({ palavra: palavraById[i.palavraId], pos: i.pos }))),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -158,6 +162,8 @@ export function Board({ boardId }: { boardId: string }) {
           colors={colorOf}
           query={query}
           onQuery={setQuery}
+          hsk={hsk}
+          onHsk={setHsk}
           showPinyin={prefs.showPinyin}
           showTraducao={prefs.showTraducao}
         />
