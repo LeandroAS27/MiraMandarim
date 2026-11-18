@@ -1,7 +1,17 @@
-.panel { position: fixed; bottom: 12px; left: calc(var(--tray-w, 0px) + (100vw - var(--tray-w, 0px)) / 2); transform: translateX(-50%); z-index: 1200; width: max-content; min-width: 220px; max-width: calc(100vw - var(--tray-w, 0px) - 24px); max-height: 32vh; overflow-y: auto; padding: 8px 14px 10px; background: var(--bar); backdrop-filter: blur(6px); border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,.18); }
-.title { margin: 0 0 4px; font-size: .68rem; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
-.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-.item { display: grid; gap: 1px; }
-.hanzi { font-size: 1.5rem; font-weight: 500; line-height: 1.25; }
-.pinyin { font-size: .9rem; color: #4b5563; }
-.gloss { font-size: .75rem; color: var(--muted); }
+.dock { position: fixed; left: var(--tray-w, 0px); right: 0; bottom: var(--tray-h, 0px); z-index: 1200; display: flex; flex-direction: column; align-items: center; transform: translateY(calc(100% - 28px)); transition: transform .2s ease; pointer-events: none; }
+.open { transform: translateY(0); }
+.handle, .panel { pointer-events: auto; }
+@media (hover: hover) { .dock:hover { transform: translateY(0); } }
+
+.handle { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 28px; padding: 0 12px; border: 0; background: var(--bar); backdrop-filter: blur(6px); border-top: 1px solid #d9dce2; color: var(--muted); font: inherit; font-size: .75rem; cursor: pointer; }
+.handle:disabled { cursor: default; color: var(--ink); }
+.grip { width: 28px; height: 4px; border-radius: 2px; background: #c4c8cf; flex: none; }
+.handleLabel { max-width: 60%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+.panel { width: 100%; max-height: 40vh; overflow-y: auto; padding: 10px 16px 14px; background: var(--bar); backdrop-filter: blur(6px); text-align: center; box-shadow: 0 -2px 12px rgba(0,0,0,.12); }
+.hanzi { margin: 0; font-size: 1.9rem; font-weight: 500; line-height: 1.3; overflow-wrap: anywhere; }
+.pinyin { margin: 2px 0 0; font-size: 1rem; color: #4b5563; overflow-wrap: anywhere; }
+.gloss { margin: 6px 0 0; font-size: .85rem; color: var(--ink); overflow-wrap: anywhere; }
+.label { color: var(--muted); }
+.empty { margin: 0; color: var(--muted); }
+.rule { margin: 8px 0 0; font-size: .68rem; color: var(--muted); }

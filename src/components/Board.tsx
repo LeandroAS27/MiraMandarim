@@ -13,7 +13,7 @@ import { palavraById, palavras, useBoard } from '../hooks/useBoard'
 import { usePreferences } from '../hooks/usePreferences'
 import { CANVAS_H, CANVAS_W, TRAY_W, clampToCanvas } from '../lib/layout'
 import { matches } from '../lib/search'
-import { buildSentences } from '../lib/sentences'
+import { buildSentence } from '../lib/sentences'
 import { Draggable } from './Draggable'
 import { SentencePanel } from './SentencePanel'
 import { StickyNote } from './StickyNote'
@@ -142,8 +142,8 @@ export function Board({ boardId }: { boardId: string }) {
     () => palavras.filter((p) => (hsk === 'all' || p.hsk === hsk) && matches(p, query)),
     [query, hsk],
   )
-  const sentences = useMemo(
-    () => buildSentences(placed.map((i) => ({ palavra: palavraById[i.palavraId], pos: i.pos }))),
+  const sentence = useMemo(
+    () => buildSentence(placed.map((i) => ({ palavra: palavraById[i.palavraId], pos: i.pos }))),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [instances],
   )
@@ -198,7 +198,7 @@ export function Board({ boardId }: { boardId: string }) {
         </div>
         {placed.length === 0 && <p className={styles.hint}>Arraste palavras do banco para o quadro.</p>}
         {legendOpen && <Legend onClose={() => setLegendOpen(false)} />}
-        <SentencePanel sentences={sentences} />
+        <SentencePanel sentence={sentence} pinned={prefs.pinFrase} />
         <DragOverlay dropAnimation={null} zIndex={3000}>
           {activePalavra ? (
             <StickyNote

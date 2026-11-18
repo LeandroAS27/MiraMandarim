@@ -55,6 +55,9 @@ export function Toolbar({ canUndo, hasSaved, trayOpen, legendOpen, onToggleLegen
       <button className={styles.toggle} aria-pressed={legendOpen} onClick={onToggleLegend}>
         Legenda
       </button>
+      <button className={styles.toggle} aria-pressed={prefs.pinFrase} onClick={() => onPrefs({ pinFrase: !prefs.pinFrase })}>
+        Fixar frase
+      </button>
       <span className={styles.msg} aria-live="polite">{msg}</span>
       <span className={styles.demo}>Demo: os movimentos ainda não são compartilhados entre dispositivos.</span>
     </header>

@@ -1,5 +1,5 @@
 import type { Palavra, Pos } from '../types'
-import { NOTE_H, NOTE_W } from './layout'
+import { NOTE_H } from './layout'
 
 export interface Placed {
   palavra: Palavra
@@ -10,50 +10,33 @@ export interface Sentence {
   words: Palavra[]
   hanzi: string
   pinyin: string
-  /** Tradução palavra a palavra (não é uma tradução da frase). */
+  /** Tradução palavra por palavra (junção das traduções de cada cartão, não tradução da frase). */
   gloss: string
 }
 
-/** Diferença de y (px) para dois post-its contarem como a mesma linha. */
+/** Diferença de y (px), a partir do cartão mais alto da linha, para ainda ser a mesma linha. */
 export const ROW_TOLERANCE = NOTE_H * 0.6
-/** Espaço máximo (px) entre dois post-its vizinhos da mesma frase. */
-export const MAX_GAP = 40
 
 /**
- * Lê o quadro como texto: post-its alinhados na mesma linha e próximos entre si
- * formam uma frase, lida da esquerda para a direita. Linhas de cima vêm primeiro.
- * Post-its sozinhos não formam frase.
+ * Monta a frase formada pelos cartões do quadro, só pela posição:
+ *  - cartões com quase a mesma altura (até ROW_TOLERANCE do mais alto da linha) formam uma
+ *    linha, lida da esquerda para a direita;
+ *  - em linhas diferentes, a de cima vem primeiro.
+ * Todos os cartões entram numa única frase (cópias da mesma palavra aparecem de novo).
+ * Sem cartões, não há frase (null).
  */
-export function buildSentences(placed: Placed[]): Sentence[] {
-  const byY = [...placed].sort((a, b) => a.pos.y - b.pos.y || a.pos.x - b.pos.x)
+export function buildSentence(placed: Placed[]): Sentence | null {
+  if (placed.length === 0) return null
 
+  const byY = [...placed].sort((a, b) => a.pos.y - b.pos.y || a.pos.x - b.pos.x)
   const rows: Placed[][] = []
   for (const item of byY) {
-    const row = rows.find((r) => Math.abs(r[0].pos.y - item.pos.y) <= ROW_TOLERANCE)
-    if (row) row.push(item)
+    const row = rows[rows.length - 1]
+    if (row && item.pos.y - row[0].pos.y <= ROW_TOLERANCE) row.push(item)
     else rows.push([item])
   }
 
-  const sentences: Sentence[] = []
-  for (const row of rows) {
-    row.sort((a, b) => a.pos.x - b.pos.x)
-    let chain: Placed[] = []
-    const flush = () => {
-      if (chain.length >= 2) sentences.push(toSentence(chain))
-      chain = []
-    }
-    for (const item of row) {
-      const prev = chain[chain.length - 1]
-      if (prev && item.pos.x - prev.pos.x > NOTE_W + MAX_GAP) flush()
-      chain.push(item)
-    }
-    flush()
-  }
-  return sentences
-}
-
-function toSentence(chain: Placed[]): Sentence {
-  const words = chain.map((c) => c.palavra)
+  const words = rows.flatMap((row) => row.sort((a, b) => a.pos.x - b.pos.x).map((c) => c.palavra))
   return {
     words,
     hanzi: words.map((w) => w.hanzi).join(''),
