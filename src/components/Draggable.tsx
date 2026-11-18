@@ -9,6 +9,8 @@ interface Props {
   pos: Pos
   color: number
   isTop: boolean
+  showPinyin: boolean
+  showTraducao: boolean
   /** Devolve a palavra à barra lateral (um único passo no histórico). */
   onReturn: (id: string) => void
 }
@@ -19,7 +21,7 @@ interface Props {
  * transform, e o DragOverlay precisa partir do ponto certo.
  * Durante o arraste quem aparece é o DragOverlay; este fica invisível no lugar.
  */
-export const Draggable = memo(function Draggable({ palavra, pos, color, isTop, onReturn }: Props) {
+export const Draggable = memo(function Draggable({ palavra, pos, color, isTop, onReturn, showPinyin, showTraducao }: Props) {
   const { setNodeRef, attributes, listeners, isDragging } = useDraggable({ id: palavra.id })
   return (
     <div
@@ -40,7 +42,7 @@ export const Draggable = memo(function Draggable({ palavra, pos, color, isTop, o
         opacity: isDragging ? 0 : 1,
       }}
     >
-      <StickyNote palavra={palavra} color={color} />
+      <StickyNote palavra={palavra} color={color} showPinyin={showPinyin} showTraducao={showTraducao} />
       <button
         type="button"
         className={styles.del}

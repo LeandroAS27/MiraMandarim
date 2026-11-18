@@ -1,17 +1,20 @@
 import { useState } from 'react'
+import type { Prefs } from '../store/preferences'
 import styles from './Toolbar.module.css'
 
 interface Props {
   canUndo: boolean
   hasSaved: boolean
   trayOpen: boolean
+  prefs: Prefs
+  onPrefs: (patch: Partial<Prefs>) => void
   onToggleTray: () => void
   onUndo: () => void
   onSave: () => void
   onOpenSaved: () => void
 }
 
-export function Toolbar({ canUndo, hasSaved, trayOpen, onToggleTray, onUndo, onSave, onOpenSaved }: Props) {
+export function Toolbar({ canUndo, hasSaved, trayOpen, prefs, onPrefs, onToggleTray, onUndo, onSave, onOpenSaved }: Props) {
   const [msg, setMsg] = useState('')
   const flash = (m: string) => {
     setMsg(m)
@@ -41,6 +44,12 @@ export function Toolbar({ canUndo, hasSaved, trayOpen, onToggleTray, onUndo, onS
       </button>
       {hasSaved && <button onClick={onOpenSaved}>Abrir quadro salvo</button>}
       <button onClick={copy}>Copiar link</button>
+      <button className={styles.toggle} aria-pressed={prefs.showPinyin} onClick={() => onPrefs({ showPinyin: !prefs.showPinyin })}>
+        Pinyin
+      </button>
+      <button className={styles.toggle} aria-pressed={prefs.showTraducao} onClick={() => onPrefs({ showTraducao: !prefs.showTraducao })}>
+        Tradução
+      </button>
       <span className={styles.msg} aria-live="polite">{msg}</span>
       <span className={styles.demo}>Demo: os movimentos ainda não são compartilhados entre dispositivos.</span>
     </header>

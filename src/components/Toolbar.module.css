@@ -2,5 +2,7 @@
 .bar button { border: 1px solid #d5d8de; background: #fff; border-radius: 7px; padding: 6px 10px; font-size: .85rem; cursor: pointer; }
 .bar button:hover:not(:disabled) { background: #f2f4f7; }
 .bar button:disabled { opacity: .4; cursor: default; }
+.bar button.toggle[aria-pressed='true'] { background: #23262b; color: #fff; border-color: #23262b; }
+.bar button.toggle[aria-pressed='true']:hover:not(:disabled) { background: #3a3f47; }
 .msg { font-size: .8rem; color: #0f766e; }
 .demo { font-size: .72rem; color: var(--muted); }

@@ -18,6 +18,7 @@ import { Draggable } from './Draggable'
 import { StickyNote } from './StickyNote'
 import { Toolbar } from './Toolbar'
 import { Tray } from './Tray'
+import { usePreferences } from "../hooks/usePreferences"
 import styles from './Board.module.css'
 
 interface XY {
@@ -33,6 +34,7 @@ const inside = (el: Element | null, p: XY): boolean => {
 
 export function Board({ boardId }: { boardId: string }) {
   const { positions, moveNote, undo, canUndo, save, openSaved, hasSaved } = useBoard(boardId)
+  const [prefs, updatePrefs] = usePreferences()
   const [topId, setTopId] = useState<string | null>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [query, setQuery] = useState('')
@@ -147,11 +149,15 @@ export function Board({ boardId }: { boardId: string }) {
           colors={colorOf}
           query={query}
           onQuery={setQuery}
+          showPinyin={prefs.showPinyin}
+          showTraducao={prefs.showTraducao}
         />
         <Toolbar
           canUndo={canUndo}
           hasSaved={hasSaved}
           trayOpen={trayOpen}
+          prefs={prefs}
+          onPrefs={updatePrefs}
           onToggleTray={() => setTrayOpen((o) => !o)}
           onUndo={undo}
           onSave={save}
@@ -160,7 +166,7 @@ export function Board({ boardId }: { boardId: string }) {
         <div ref={viewport} className={styles.viewport}>
           <div className={styles.canvas} style={{ width: CANVAS_W, height: CANVAS_H }} onPointerDown={onBgPointerDown}>
             {placed.map((p) => (
-              <Draggable key={p.id} palavra={p} pos={positions[p.id]} color={colorOf[p.id]} isTop={p.id === topId} onReturn={returnNote} />
+              <Draggable key={p.id} palavra={p} pos={positions[p.id]} color={colorOf[p.id]} isTop={p.id === topId} onReturn={returnNote} showPinyin={prefs.showPinyin} showTraducao={prefs.showTraducao} />
             ))}
           </div>
         </div>
@@ -169,7 +175,7 @@ export function Board({ boardId }: { boardId: string }) {
         )}
         <SentencePanel sentences={sentences} />
         <DragOverlay dropAnimation={null} zIndex={3000}>
-          {active ? <StickyNote palavra={active} color={colorOf[active.id]} variant="overlay" /> : null}
+          {active ? <StickyNote palavra={active} color={colorOf[active.id]} variant="overlay" showPinyin={prefs.showPinyin} showTraducao={prefs.showTraducao} /> : null}
         </DragOverlay>
       </DndContext>
     </div>
