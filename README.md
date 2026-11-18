@@ -51,13 +51,13 @@ npm run build    # build estático em dist/
 
 O painel **Frase** fica recolhido numa faixa fina no rodapé. Ele sobe quando o mouse passa na faixa; no celular ou tablet, abre com um toque nela. O botão **Fixar frase** mantém o painel sempre aberto (preferência salva).
 
-Ele mostra o hanzi, o pinyin e a **tradução palavra por palavra** (a junção das traduções de cada cartão, sem tradução automática nem API externa).
+Cada **linha do quadro é uma frase**, mostrada num bloco próprio com hanzi, pinyin e a **tradução palavra por palavra** daquela linha (a junção das traduções de cada cartão, sem tradução automática nem API externa). O botão de zoom sobe junto, para nunca ficar por cima do painel aberto.
 
-**Regra de ordem da frase:** todos os cartões do quadro entram numa única frase, lida só pela posição.
+**Regra de ordem da frase:** os cartões do quadro são lidos só pela posição.
 
 1. Cartões com quase a mesma altura formam uma **linha** (até 53 px de diferença para baixo, contados a partir do cartão mais alto da linha).
 2. Dentro da linha, a ordem é **da esquerda para a direita**.
-3. Em linhas diferentes, a **de cima vem primeiro**.
+3. Em linhas diferentes, a **de cima vem primeiro**, e cada linha é uma frase separada (com a própria tradução).
 
 Cópias da mesma palavra aparecem de novo na frase.
 

@@ -47,6 +47,7 @@ export function Board({ boardId }: { boardId: string }) {
   const [query, setQuery] = useState('')
   const [hsk, setHsk] = useState<HskFilter>('all')
   const [legendOpen, setLegendOpen] = useState(false)
+  const [dockH, setDockH] = useState(28) // altura que o painel da frase ocupa na tela
   const isMobile = useMediaQuery(MOBILE_QUERY)
   // No celular o banco começa fechado (é uma gaveta que ocupa parte da tela).
   const [trayOpen, setTrayOpen] = useState(() => !window.matchMedia(MOBILE_QUERY).matches)
@@ -248,6 +249,7 @@ export function Board({ boardId }: { boardId: string }) {
           // desktop: barra lateral; celular: gaveta embaixo (altura em global.css)
           '--tray-w': trayOpen && !isMobile ? `${TRAY_W}px` : '0px',
           '--tray-h': trayOpen && isMobile ? 'var(--tray-sheet-h)' : '0px',
+          '--dock-h': `${dockH}px`,
         } as React.CSSProperties
       }
     >
@@ -309,7 +311,7 @@ export function Board({ boardId }: { boardId: string }) {
         />
         {placed.length === 0 && <p className={styles.hint}>Arraste palavras do banco para o quadro.</p>}
         {legendOpen && <Legend onClose={() => setLegendOpen(false)} />}
-        <SentencePanel sentence={sentence} pinned={prefs.pinFrase} />
+        <SentencePanel sentence={sentence} pinned={prefs.pinFrase} onVisibleHeight={setDockH} />
         <DragOverlay dropAnimation={null} zIndex={3000}>
           {activePalavra ? (
             // cartão do quadro: a caixa do overlay já vem com o tamanho com zoom, então escala o conteúdo igual

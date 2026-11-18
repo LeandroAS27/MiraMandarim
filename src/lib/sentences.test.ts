@@ -65,4 +65,22 @@ describe('buildSentence', () => {
     expect(s?.hanzi).toBe('我爱我')
     expect(s?.words).toHaveLength(3)
   })
+
+  it('cada linha do quadro vira uma frase, com a tradução separada por linha', () => {
+    const s = buildSentence([
+      w('累', 'lèi', 'cansado', 200, 0),
+      w('我', 'wǒ', 'eu', 0, 0),
+      w('好', 'hǎo', 'bom', 200, 300),
+      w('你', 'nǐ', 'você', 0, 300),
+    ])
+    expect(s?.lines.map((l) => l.hanzi)).toEqual(['我累', '你好'])
+    expect(s?.lines.map((l) => l.pinyin)).toEqual(['wǒ lèi', 'nǐ hǎo'])
+    expect(s?.lines.map((l) => l.gloss)).toEqual(['eu · cansado', 'você · bom'])
+  })
+
+  it('uma única linha gera uma única frase', () => {
+    const s = buildSentence([w('我', 'wǒ', 'eu', 0, 0), w('累', 'lèi', 'cansado', 150, 0)])
+    expect(s?.lines).toHaveLength(1)
+    expect(s?.lines[0].gloss).toBe('eu · cansado')
+  })
 })

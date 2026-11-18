@@ -6,7 +6,8 @@ export interface Placed {
   pos: Pos
 }
 
-export interface Sentence {
+/** Uma linha do quadro = uma frase. */
+export interface SentenceLine {
   words: Palavra[]
   hanzi: string
   pinyin: string
@@ -14,16 +15,33 @@ export interface Sentence {
   gloss: string
 }
 
+export interface Sentence {
+  /** Uma entrada por linha do quadro, de cima para baixo. */
+  lines: SentenceLine[]
+  /** Todas as palavras, na ordem de leitura. */
+  words: Palavra[]
+  /** Todas as linhas juntas, sem separador (hanzi) ou com espaço (pinyin). */
+  hanzi: string
+  pinyin: string
+  gloss: string
+}
+
 /** Diferença de y (px), a partir do cartão mais alto da linha, para ainda ser a mesma linha. */
 export const ROW_TOLERANCE = NOTE_H * 0.6
 
+const toLine = (words: Palavra[]): SentenceLine => ({
+  words,
+  hanzi: words.map((w) => w.hanzi).join(''),
+  pinyin: words.map((w) => w.pinyin).join(' '),
+  gloss: words.map((w) => w.traducao).join(' · '),
+})
+
 /**
- * Monta a frase formada pelos cartões do quadro, só pela posição:
+ * Monta as frases formadas pelos cartões do quadro, só pela posição:
  *  - cartões com quase a mesma altura (até ROW_TOLERANCE do mais alto da linha) formam uma
- *    linha, lida da esquerda para a direita;
+ *    linha, lida da esquerda para a direita; cada linha é uma frase, com sua própria tradução;
  *  - em linhas diferentes, a de cima vem primeiro.
- * Todos os cartões entram numa única frase (cópias da mesma palavra aparecem de novo).
- * Sem cartões, não há frase (null).
+ * Cópias da mesma palavra aparecem de novo. Sem cartões, não há frase (null).
  */
 export function buildSentence(placed: Placed[]): Sentence | null {
   if (placed.length === 0) return null
@@ -36,11 +54,13 @@ export function buildSentence(placed: Placed[]): Sentence | null {
     else rows.push([item])
   }
 
-  const words = rows.flatMap((row) => row.sort((a, b) => a.pos.x - b.pos.x).map((c) => c.palavra))
+  const lines = rows.map((row) => toLine(row.sort((a, b) => a.pos.x - b.pos.x).map((c) => c.palavra)))
+  const words = lines.flatMap((l) => l.words)
   return {
+    lines,
     words,
-    hanzi: words.map((w) => w.hanzi).join(''),
-    pinyin: words.map((w) => w.pinyin).join(' '),
-    gloss: words.map((w) => w.traducao).join(' · '),
+    hanzi: lines.map((l) => l.hanzi).join(''),
+    pinyin: lines.map((l) => l.pinyin).join(' '),
+    gloss: lines.map((l) => l.gloss).join(' · '),
   }
 }
