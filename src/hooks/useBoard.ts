@@ -7,8 +7,6 @@ import type { Palavra, Pos } from '../types'
 export const palavras = palavrasData.palavras as Palavra[]
 export const palavraById: Record<string, Palavra> = Object.fromEntries(palavras.map((p) => [p.id, p]))
 
-/** Cor do post-it (0–3), fixa por palavra. (Substituída pela cor por classe.) */
-export const colorOf: Record<string, number> = Object.fromEntries(palavras.map((p, i) => [p.id, i % 4]))
 
 export function useBoard(boardId: string) {
   // Um store novo a cada entrada: o quadro sempre começa vazio.

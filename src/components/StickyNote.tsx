@@ -1,4 +1,5 @@
 import { memo, useRef, useState } from 'react'
+import { CLASSES } from '../theme/classes'
 import type { Palavra } from '../types'
 import styles from './StickyNote.module.css'
 
@@ -7,7 +8,6 @@ const MOVE_TOLERANCE = 8
 
 interface Props {
   palavra: Palavra
-  color: number
   showPinyin: boolean
   showTraducao: boolean
   /**
@@ -18,10 +18,10 @@ interface Props {
 }
 
 /**
- * Visual do post-it. Memoizado: só re-renderiza se as props mudarem
- * (não re-renderiza durante o arraste).
+ * Visual do cartão. A cor vem da classe gramatical (src/theme/classes.ts).
+ * Memoizado: só re-renderiza se as props mudarem (não re-renderiza durante o arraste).
  */
-export const StickyNote = memo(function StickyNote({ palavra, color, showPinyin, showTraducao, variant = 'board' }: Props) {
+export const StickyNote = memo(function StickyNote({ palavra, showPinyin, showTraducao, variant = 'board' }: Props) {
   const [showTr, setShowTr] = useState(false)
   const press = useRef<{ t: number; x: number; y: number } | null>(null)
 
@@ -50,7 +50,9 @@ export const StickyNote = memo(function StickyNote({ palavra, color, showPinyin,
 
   return (
     <div
-      className={`${styles.note} ${styles['c' + color]} ${showTr && showTraducao ? styles.show : ''} ${variant === 'tray' ? styles.tray : ''} ${variant === 'overlay' ? styles.overlay : ''}`}
+      className={`${styles.note} ${showTr && showTraducao ? styles.show : ''} ${variant === 'tray' ? styles.tray : ''} ${variant === 'overlay' ? styles.overlay : ''}`}
+      style={{ background: CLASSES[palavra.classe].bg }}
+      data-classe={palavra.classe}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={clear}

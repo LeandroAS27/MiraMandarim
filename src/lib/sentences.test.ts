@@ -3,7 +3,7 @@ import { buildSentences, type Placed } from './sentences'
 import { NOTE_W } from './layout'
 
 const w = (hanzi: string, pinyin: string, traducao: string, x: number, y: number): Placed => ({
-  palavra: { id: hanzi, hanzi, pinyin, traducao, hsk: 1 },
+  palavra: { id: hanzi, hanzi, pinyin, traducao, hsk: 1, classe: 'outro' },
   pos: { x, y },
 })
 const step = NOTE_W + 10

@@ -1,3 +1,5 @@
+import type { Classe } from './theme/classes'
+
 export interface Palavra {
   id: string
   hanzi: string
@@ -5,6 +7,8 @@ export interface Palavra {
   traducao: string
   /** Nível HSK (padrão HSK 2.0). */
   hsk: 1 | 2
+  /** Classe gramatical (define a cor do cartão). Provisória: revisar com a professora. */
+  classe: Classe
 }
 
 export interface Pos {

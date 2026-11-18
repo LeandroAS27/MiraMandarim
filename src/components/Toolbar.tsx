@@ -6,6 +6,8 @@ interface Props {
   canUndo: boolean
   hasSaved: boolean
   trayOpen: boolean
+  legendOpen: boolean
+  onToggleLegend: () => void
   prefs: Prefs
   onPrefs: (patch: Partial<Prefs>) => void
   onToggleTray: () => void
@@ -14,7 +16,7 @@ interface Props {
   onOpenSaved: () => void
 }
 
-export function Toolbar({ canUndo, hasSaved, trayOpen, prefs, onPrefs, onToggleTray, onUndo, onSave, onOpenSaved }: Props) {
+export function Toolbar({ canUndo, hasSaved, trayOpen, legendOpen, onToggleLegend, prefs, onPrefs, onToggleTray, onUndo, onSave, onOpenSaved }: Props) {
   const [msg, setMsg] = useState('')
   const flash = (m: string) => {
     setMsg(m)
@@ -49,6 +51,9 @@ export function Toolbar({ canUndo, hasSaved, trayOpen, prefs, onPrefs, onToggleT
       </button>
       <button className={styles.toggle} aria-pressed={prefs.showTraducao} onClick={() => onPrefs({ showTraducao: !prefs.showTraducao })}>
         Tradução
+      </button>
+      <button className={styles.toggle} aria-pressed={legendOpen} onClick={onToggleLegend}>
+        Legenda
       </button>
       <span className={styles.msg} aria-live="polite">{msg}</span>
       <span className={styles.demo}>Demo: os movimentos ainda não são compartilhados entre dispositivos.</span>

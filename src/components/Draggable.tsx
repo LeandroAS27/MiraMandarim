@@ -7,7 +7,6 @@ import styles from './Draggable.module.css'
 interface Props {
   instance: Instance
   palavra: Palavra
-  color: number
   isTop: boolean
   showPinyin: boolean
   showTraducao: boolean
@@ -21,7 +20,7 @@ interface Props {
  * transform, e o DragOverlay precisa partir do ponto certo.
  * Durante o arraste quem aparece é o DragOverlay; este fica invisível no lugar.
  */
-export const Draggable = memo(function Draggable({ instance, palavra, color, isTop, showPinyin, showTraducao, onRemove }: Props) {
+export const Draggable = memo(function Draggable({ instance, palavra, isTop, showPinyin, showTraducao, onRemove }: Props) {
   const { instanceId, pos } = instance
   const { setNodeRef, attributes, listeners, isDragging } = useDraggable({
     id: instanceId,
@@ -46,7 +45,7 @@ export const Draggable = memo(function Draggable({ instance, palavra, color, isT
         opacity: isDragging ? 0 : 1,
       }}
     >
-      <StickyNote palavra={palavra} color={color} showPinyin={showPinyin} showTraducao={showTraducao} />
+      <StickyNote palavra={palavra} showPinyin={showPinyin} showTraducao={showTraducao} />
       <button
         type="button"
         className={styles.del}

@@ -14,20 +14,19 @@ const HSK_OPTIONS: { value: HskFilter; label: string }[] = [
 
 interface ItemProps {
   palavra: Palavra
-  color: number
   showPinyin: boolean
   showTraducao: boolean
 }
 
 /** Palavra do banco: arrastar para o quadro cria uma cópia; ela continua aqui. */
-const TrayItem = memo(function TrayItem({ palavra, color, showPinyin, showTraducao }: ItemProps) {
+const TrayItem = memo(function TrayItem({ palavra, showPinyin, showTraducao }: ItemProps) {
   const { setNodeRef, attributes, listeners } = useDraggable({
     id: `bank:${palavra.id}`,
     data: { kind: 'bank', palavraId: palavra.id },
   })
   return (
     <div ref={setNodeRef} {...attributes} {...listeners} style={{ touchAction: 'none' }}>
-      <StickyNote palavra={palavra} color={color} variant="tray" showPinyin={showPinyin} showTraducao={showTraducao} />
+      <StickyNote palavra={palavra} variant="tray" showPinyin={showPinyin} showTraducao={showTraducao} />
     </div>
   )
 })
@@ -37,7 +36,6 @@ interface Props {
   open: boolean
   items: Palavra[]
   total: number
-  colors: Record<string, number>
   query: string
   onQuery: (q: string) => void
   hsk: HskFilter
@@ -47,7 +45,7 @@ interface Props {
 }
 
 /** Banco de palavras: todas as palavras, para puxar quantas cópias quiser. */
-export function Tray({ trayRef, open, items, total, colors, query, onQuery, hsk, onHsk, showPinyin, showTraducao }: Props) {
+export function Tray({ trayRef, open, items, total, query, onQuery, hsk, onHsk, showPinyin, showTraducao }: Props) {
   return (
     <aside ref={trayRef} className={`${styles.tray} ${open ? '' : styles.closed}`} aria-label="Banco de palavras">
       <div className={styles.head}>
@@ -73,7 +71,7 @@ export function Tray({ trayRef, open, items, total, colors, query, onQuery, hsk,
       </div>
       <div className={styles.list}>
         {items.map((p) => (
-          <TrayItem key={p.id} palavra={p} color={colors[p.id]} showPinyin={showPinyin} showTraducao={showTraducao} />
+          <TrayItem key={p.id} palavra={p} showPinyin={showPinyin} showTraducao={showTraducao} />
         ))}
         {items.length === 0 && <p className={styles.empty}>Nenhuma palavra encontrada.</p>}
       </div>

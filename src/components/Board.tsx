@@ -9,7 +9,7 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core'
-import { colorOf, palavraById, palavras, useBoard } from '../hooks/useBoard'
+import { palavraById, palavras, useBoard } from '../hooks/useBoard'
 import { usePreferences } from '../hooks/usePreferences'
 import { CANVAS_H, CANVAS_W, TRAY_W, clampToCanvas } from '../lib/layout'
 import { matches } from '../lib/search'
@@ -17,6 +17,7 @@ import { buildSentences } from '../lib/sentences'
 import { Draggable } from './Draggable'
 import { SentencePanel } from './SentencePanel'
 import { StickyNote } from './StickyNote'
+import { Legend } from './Legend'
 import { Toolbar } from './Toolbar'
 import { Tray, type HskFilter } from './Tray'
 import styles from './Board.module.css'
@@ -42,6 +43,7 @@ export function Board({ boardId }: { boardId: string }) {
   const [activeId, setActiveId] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [hsk, setHsk] = useState<HskFilter>('all')
+  const [legendOpen, setLegendOpen] = useState(false)
   const [trayOpen, setTrayOpen] = useState(() => window.innerWidth >= 700)
   const viewport = useRef<HTMLDivElement>(null)
   const tray = useRef<HTMLElement>(null)
@@ -159,7 +161,6 @@ export function Board({ boardId }: { boardId: string }) {
           open={trayOpen}
           items={trayItems}
           total={palavras.length}
-          colors={colorOf}
           query={query}
           onQuery={setQuery}
           hsk={hsk}
@@ -171,6 +172,8 @@ export function Board({ boardId }: { boardId: string }) {
           canUndo={canUndo}
           hasSaved={hasSaved}
           trayOpen={trayOpen}
+          legendOpen={legendOpen}
+          onToggleLegend={() => setLegendOpen((o) => !o)}
           prefs={prefs}
           onPrefs={updatePrefs}
           onToggleTray={() => setTrayOpen((o) => !o)}
@@ -185,7 +188,6 @@ export function Board({ boardId }: { boardId: string }) {
                 key={i.instanceId}
                 instance={i}
                 palavra={palavraById[i.palavraId]}
-                color={colorOf[i.palavraId]}
                 isTop={i.instanceId === topId}
                 showPinyin={prefs.showPinyin}
                 showTraducao={prefs.showTraducao}
@@ -195,12 +197,12 @@ export function Board({ boardId }: { boardId: string }) {
           </div>
         </div>
         {placed.length === 0 && <p className={styles.hint}>Arraste palavras do banco para o quadro.</p>}
+        {legendOpen && <Legend onClose={() => setLegendOpen(false)} />}
         <SentencePanel sentences={sentences} />
         <DragOverlay dropAnimation={null} zIndex={3000}>
           {activePalavra ? (
             <StickyNote
               palavra={activePalavra}
-              color={colorOf[activePalavra.id]}
               variant="overlay"
               showPinyin={prefs.showPinyin}
               showTraducao={prefs.showTraducao}

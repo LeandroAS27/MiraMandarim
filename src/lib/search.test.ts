@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { matches } from './search'
 import type { Palavra } from '../types'
 
-const p = (hanzi: string, pinyin: string, traducao: string): Palavra => ({ id: hanzi, hanzi, pinyin, traducao, hsk: 1 })
+const p = (hanzi: string, pinyin: string, traducao: string): Palavra => ({ id: hanzi, hanzi, pinyin, traducao, hsk: 1, classe: 'outro' })
 const voce = p('你', 'nǐ', 'você')
 const filha = p('女儿', "nǚ'ér", 'filha')
 
