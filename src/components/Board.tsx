@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   DndContext,
   DragOverlay,
@@ -15,12 +15,14 @@ import { usePreferences } from '../hooks/usePreferences'
 import { CANVAS_H, CANVAS_W, TRAY_W, clampToCanvas } from '../lib/layout'
 import { matches } from '../lib/search'
 import { buildSentence } from '../lib/sentences'
+import { anchoredScroll, clampZoom, pinchZoom, screenToCanvas, stepZoom } from '../lib/zoom'
 import { Draggable } from './Draggable'
 import { SentencePanel } from './SentencePanel'
 import { StickyNote } from './StickyNote'
 import { Legend } from './Legend'
 import { Toolbar } from './Toolbar'
 import { Tray, type HskFilter } from './Tray'
+import { ZoomControls } from './ZoomControls'
 import styles from './Board.module.css'
 
 interface XY {
@@ -52,6 +54,80 @@ export function Board({ boardId }: { boardId: string }) {
   const tray = useRef<HTMLElement>(null)
   const pointer = useRef<XY>({ x: 0, y: 0 })
   const grab = useRef<XY>({ x: 0, y: 0 })
+
+  // Zoom: só visual (o quadro e as posições dos cartões continuam em coordenadas sem zoom).
+  const [zoom, setZoom] = useState(1)
+  const zoomRef = useRef(1)
+  const pendingScroll = useRef<{ left: number; top: number } | null>(null)
+
+  /** Troca o zoom mantendo o ponto sob `anchor` (tela) no lugar; sem âncora, usa o centro do quadro visível. */
+  const applyZoom = useCallback((next: number, anchor?: XY) => {
+    const vp = viewport.current
+    const nz = clampZoom(next)
+    if (!vp || nz === zoomRef.current) return
+    const r = vp.getBoundingClientRect()
+    pendingScroll.current = anchoredScroll({
+      scrollLeft: vp.scrollLeft,
+      scrollTop: vp.scrollTop,
+      anchorX: anchor ? anchor.x - r.left : r.width / 2,
+      anchorY: anchor ? anchor.y - r.top : r.height / 2,
+      from: zoomRef.current,
+      to: nz,
+    })
+    zoomRef.current = nz
+    setZoom(nz)
+  }, [])
+
+  // Ajusta o scroll depois que o quadro já está com o novo tamanho.
+  useLayoutEffect(() => {
+    const vp = viewport.current
+    const s = pendingScroll.current
+    pendingScroll.current = null
+    if (vp && s) {
+      vp.scrollLeft = s.left
+      vp.scrollTop = s.top
+    }
+  }, [zoom])
+
+  // Ctrl/Cmd + roda do mouse (e pinça no trackpad) e gesto de pinça com dois dedos.
+  useEffect(() => {
+    const vp = viewport.current
+    if (!vp) return
+    const onWheel = (e: WheelEvent) => {
+      if (!(e.ctrlKey || e.metaKey)) return
+      e.preventDefault()
+      applyZoom(zoomRef.current * Math.exp(-e.deltaY * 0.01), { x: e.clientX, y: e.clientY })
+    }
+    let pinch: { dist: number; zoom: number } | null = null
+    const dist = (t: TouchList) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY)
+    const onTouchStart = (e: TouchEvent) => {
+      pinch = e.touches.length === 2 ? { dist: dist(e.touches), zoom: zoomRef.current } : null
+    }
+    const onTouchMove = (e: TouchEvent) => {
+      if (!pinch || e.touches.length !== 2) return
+      e.preventDefault()
+      const mid = {
+        x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+        y: (e.touches[0].clientY + e.touches[1].clientY) / 2,
+      }
+      applyZoom(pinchZoom(pinch.zoom, pinch.dist, dist(e.touches)), mid)
+    }
+    const onTouchEnd = () => {
+      pinch = null
+    }
+    vp.addEventListener('wheel', onWheel, { passive: false })
+    vp.addEventListener('touchstart', onTouchStart, { passive: true })
+    vp.addEventListener('touchmove', onTouchMove, { passive: false })
+    vp.addEventListener('touchend', onTouchEnd)
+    vp.addEventListener('touchcancel', onTouchEnd)
+    return () => {
+      vp.removeEventListener('wheel', onWheel)
+      vp.removeEventListener('touchstart', onTouchStart)
+      vp.removeEventListener('touchmove', onTouchMove)
+      vp.removeEventListener('touchend', onTouchEnd)
+      vp.removeEventListener('touchcancel', onTouchEnd)
+    }
+  }, [applyZoom])
 
   const sensors = useSensors(
     // Mouse e toque separados: no toque, arrastar só começa após segurar um instante,
@@ -103,8 +179,8 @@ export function Board({ boardId }: { boardId: string }) {
     } else if (vp && inside(vp, p)) {
       const r = vp.getBoundingClientRect()
       const to = clampToCanvas({
-        x: p.x - grab.current.x - r.left + vp.scrollLeft,
-        y: p.y - grab.current.y - r.top + vp.scrollTop,
+        x: screenToCanvas(p.x - grab.current.x, r.left, vp.scrollLeft, zoomRef.current),
+        y: screenToCanvas(p.y - grab.current.y, r.top, vp.scrollTop, zoomRef.current),
       })
       if (data.kind === 'bank') setTopId(createInstance(data.palavraId, to).instanceId)
       else {
@@ -202,31 +278,47 @@ export function Board({ boardId }: { boardId: string }) {
           onOpenSaved={openSaved}
         />
         <div ref={viewport} className={styles.viewport}>
-          <div className={styles.canvas} style={{ width: CANVAS_W, height: CANVAS_H }} onPointerDown={onBgPointerDown}>
-            {placed.map((i) => (
-              <Draggable
-                key={i.instanceId}
-                instance={i}
-                palavra={palavraById[i.palavraId]}
-                isTop={i.instanceId === topId}
-                showPinyin={prefs.showPinyin}
-                showTraducao={prefs.showTraducao}
-                onRemove={removeNote}
-              />
-            ))}
+          {/* sizer: tamanho já com zoom, para o scroll; o canvas é só escalado por transform */}
+          <div style={{ width: CANVAS_W * zoom, height: CANVAS_H * zoom }}>
+            <div
+              className={styles.canvas}
+              style={{ width: CANVAS_W, height: CANVAS_H, transform: `scale(${zoom})` }}
+              onPointerDown={onBgPointerDown}
+            >
+              {placed.map((i) => (
+                <Draggable
+                  key={i.instanceId}
+                  instance={i}
+                  palavra={palavraById[i.palavraId]}
+                  isTop={i.instanceId === topId}
+                  showPinyin={prefs.showPinyin}
+                  showTraducao={prefs.showTraducao}
+                  onRemove={removeNote}
+                />
+              ))}
+            </div>
           </div>
         </div>
+        <ZoomControls
+          zoom={zoom}
+          onZoomIn={() => applyZoom(stepZoom(zoomRef.current, 1))}
+          onZoomOut={() => applyZoom(stepZoom(zoomRef.current, -1))}
+          onReset={() => applyZoom(1)}
+        />
         {placed.length === 0 && <p className={styles.hint}>Arraste palavras do banco para o quadro.</p>}
         {legendOpen && <Legend onClose={() => setLegendOpen(false)} />}
         <SentencePanel sentence={sentence} pinned={prefs.pinFrase} />
         <DragOverlay dropAnimation={null} zIndex={3000}>
           {activePalavra ? (
-            <StickyNote
-              palavra={activePalavra}
-              variant="overlay"
-              showPinyin={prefs.showPinyin}
-              showTraducao={prefs.showTraducao}
-            />
+            // cartão do quadro: a caixa do overlay já vem com o tamanho com zoom, então escala o conteúdo igual
+            <div style={{ transform: `scale(${activeId?.startsWith('bank:') ? 1 : zoom})`, transformOrigin: '0 0' }}>
+              <StickyNote
+                palavra={activePalavra}
+                variant="overlay"
+                showPinyin={prefs.showPinyin}
+                showTraducao={prefs.showTraducao}
+              />
+            </div>
           ) : null}
         </DragOverlay>
       </DndContext>

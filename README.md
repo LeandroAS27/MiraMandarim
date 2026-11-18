@@ -60,11 +60,17 @@ Ele mostra o hanzi, o pinyin e a **tradução palavra por palavra** (a junção 
 
 Cópias da mesma palavra aparecem de novo na frase.
 
+### Zoom do quadro
+
+- Controles **−**, **%** (clique para voltar a 100%) e **+** no canto inferior direito, de 40% a 200%.
+- **Ctrl/Cmd + roda do mouse** (ou pinça no trackpad) aproxima e afasta em torno do ponteiro. No celular, **pinça com dois dedos**.
+- O zoom é só visual: as posições dos cartões ficam em coordenadas do quadro, então a frase, o salvar e o desfazer não dependem dele. O zoom não é salvo e volta a 100% ao abrir o link.
+
 ### Celular e tablet
 
 - Abaixo de 700 px de largura, o banco vira uma gaveta embaixo (começa fechada) e a barra de ferramentas vira uma faixa que rola na horizontal.
 - No toque, arrastar um cartão começa ao **segurar um instante** (200 ms); antes disso, o dedo rola a lista ou o quadro normalmente.
-- Foi testado o layout em tela de 375 px e o arraste com mouse. O toque real (segurar para arrastar, toque rápido para ver a tradução) **ainda não foi testado em aparelho**.
+- Foi testado o layout em tela de 375 px e o arraste com mouse. O toque real (segurar para arrastar, toque rápido para ver a tradução, pinça para o zoom) **ainda não foi testado em aparelho**.
 
 ## Como publicar na Vercel
 
