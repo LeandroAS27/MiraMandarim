@@ -1,28 +1,29 @@
-import type { Move, Positions } from '../types'
+import type { BoardState, Move } from '../types'
 
-export type Listener = (positions: Positions) => void
+export type Listener = (state: BoardState) => void
 
 /**
  * Contrato do estado do quadro.
  *
- * O estado é o conjunto de post-its que estão no quadro (id → x/y).
- * Quem não está nele permanece na barra lateral.
+ * O estado é o conjunto de cópias de palavras que estão no quadro
+ * (instanceId → { palavraId, pos }). O banco de palavras (a coluna) não faz
+ * parte dele: ele sempre tem todas as palavras.
  *
  * MVP: implementado só com localStorage (LocalStorageBoardStore).
  * Futuro: uma implementação com WebSocket implementa a mesma interface,
  * então a UI não precisa ser reescrita.
  */
 export interface BoardStore {
-  /** Posições atuais dos post-its no quadro (em memória). */
-  getState(): Positions
+  /** Cópias atuais no quadro (em memória). */
+  getState(): BoardState
   /** Há um quadro salvo para este link? */
   hasSaved(): boolean
   /** Carrega o quadro salvo e o torna o estado atual. Retorna null se não houver. */
-  load(): Positions | null
+  load(): BoardState | null
   /** Grava o estado atual como o quadro salvo. */
   save(): void
   /** Observa mudanças do estado atual. Retorna a função de cancelar. */
   subscribe(listener: Listener): () => void
-  /** Aplica um movimento: `to` = nova posição no quadro, ou null para devolver à barra. */
+  /** Aplica um movimento: criar, mover ou remover uma cópia. */
   applyMove(move: Move): void
 }

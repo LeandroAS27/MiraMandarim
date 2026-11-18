@@ -5,6 +5,9 @@ export function newBoardId(len = 6): string {
   return Array.from(bytes, (b) => ALPHABET[b % ALPHABET.length]).join('')
 }
 
+/** Id de uma cópia (instância) de palavra no quadro. */
+export const newInstanceId = (): string => 'i' + newBoardId(10)
+
 /** Extrai o id de um hash como "#/quadro/abc123"; null se não for um quadro. */
 export function parseBoardId(hash: string): string | null {
   const m = /^#\/quadro\/([A-Za-z0-9_-]+)\/?$/.exec(hash)

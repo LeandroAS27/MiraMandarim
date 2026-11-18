@@ -24,3 +24,15 @@ export function popMove(h: History): { history: History; move: Move | null } {
 }
 
 export const canUndo = (h: History): boolean => h.past.length > 0
+
+/** O movimento que desfaz `m`: criar ↔ remover, mover volta ao ponto de origem. */
+export function invertMove(m: Move): Move {
+  switch (m.type) {
+    case 'create':
+      return { type: 'remove', instance: m.instance }
+    case 'remove':
+      return { type: 'create', instance: m.instance }
+    case 'move':
+      return { type: 'move', instanceId: m.instanceId, from: m.to, to: m.from }
+  }
+}

@@ -9,22 +9,25 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core'
-import { colorOf, palavras, useBoard } from '../hooks/useBoard'
+import { colorOf, palavraById, palavras, useBoard } from '../hooks/useBoard'
+import { usePreferences } from '../hooks/usePreferences'
 import { CANVAS_H, CANVAS_W, TRAY_W, clampToCanvas } from '../lib/layout'
 import { matches } from '../lib/search'
 import { buildSentences } from '../lib/sentences'
-import { SentencePanel } from './SentencePanel'
 import { Draggable } from './Draggable'
+import { SentencePanel } from './SentencePanel'
 import { StickyNote } from './StickyNote'
 import { Toolbar } from './Toolbar'
 import { Tray } from './Tray'
-import { usePreferences } from "../hooks/usePreferences"
 import styles from './Board.module.css'
 
 interface XY {
   x: number
   y: number
 }
+
+/** Dados anexados a cada item arrastável (ver Draggable e Tray). */
+type DragData = { kind: 'bank'; palavraId: string } | { kind: 'instance'; instanceId: string; palavraId: string }
 
 const inside = (el: Element | null, p: XY): boolean => {
   if (!el) return false
@@ -33,7 +36,7 @@ const inside = (el: Element | null, p: XY): boolean => {
 }
 
 export function Board({ boardId }: { boardId: string }) {
-  const { positions, moveNote, undo, canUndo, save, openSaved, hasSaved } = useBoard(boardId)
+  const { instances, createInstance, moveInstance, removeInstance, undo, canUndo, save, openSaved, hasSaved } = useBoard(boardId)
   const [prefs, updatePrefs] = usePreferences()
   const [topId, setTopId] = useState<string | null>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -49,12 +52,12 @@ export function Board({ boardId }: { boardId: string }) {
     useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 8 } }),
   )
 
-  // Posição atual do ponteiro: decide onde o post-it é solto (barra ou quadro).
+  // Posição atual do ponteiro: decide onde o cartão é solto (banco ou quadro).
   useEffect(() => {
     const track = (e: PointerEvent) => {
       pointer.current = { x: e.clientX, y: e.clientY }
     }
-    // Onde, dentro do post-it, o usuário o segurou (medido antes de qualquer movimento).
+    // Onde, dentro do cartão, o usuário o segurou (medido antes de qualquer movimento).
     const markGrab = (e: PointerEvent) => {
       track(e)
       const el = (e.target as Element | null)?.closest?.('[aria-roledescription="draggable"]')
@@ -74,22 +77,27 @@ export function Board({ boardId }: { boardId: string }) {
 
   // O estado global só muda ao soltar.
   const onDragEnd = ({ active }: DragEndEvent) => {
-    const id = String(active.id)
     setActiveId(null)
+    const data = active.data.current as DragData | undefined
+    if (!data) return
     const p = pointer.current
     const vp = viewport.current
     if (trayOpen && inside(tray.current, p)) {
-      moveNote(id, null) // devolve à barra
+      // solto no banco: remove a cópia (uma palavra do banco solta no banco não faz nada)
+      if (data.kind === 'instance') removeInstance(data.instanceId)
     } else if (vp && inside(vp, p)) {
       const r = vp.getBoundingClientRect()
       const to = clampToCanvas({
         x: p.x - grab.current.x - r.left + vp.scrollLeft,
         y: p.y - grab.current.y - r.top + vp.scrollTop,
       })
-      setTopId(id)
-      moveNote(id, to)
+      if (data.kind === 'bank') setTopId(createInstance(data.palavraId, to).instanceId)
+      else {
+        setTopId(data.instanceId)
+        moveInstance(data.instanceId, to)
+      }
     }
-    // solto fora de ambos: cancela (o post-it fica onde estava)
+    // solto fora de ambos: cancela
   }
 
   // Ctrl/Cmd+Z (não interfere ao digitar na busca)
@@ -125,18 +133,19 @@ export function Board({ boardId }: { boardId: string }) {
     window.addEventListener('pointerup', up)
   }
 
-  const returnNote = useCallback((id: string) => moveNote(id, null), [moveNote])
-  const placed = palavras.filter((p) => positions[p.id])
-  const remaining = palavras.length - placed.length
-  const trayItems = useMemo(
-    () => palavras.filter((p) => !positions[p.id] && matches(p, query)),
-    [positions, query],
-  )
+  const removeNote = useCallback((instanceId: string) => removeInstance(instanceId), [removeInstance])
+  const placed = Object.values(instances)
+  const trayItems = useMemo(() => palavras.filter((p) => matches(p, query)), [query])
   const sentences = useMemo(
-    () => buildSentences(palavras.filter((p) => positions[p.id]).map((p) => ({ palavra: p, pos: positions[p.id] }))),
-    [positions],
+    () => buildSentences(placed.map((i) => ({ palavra: palavraById[i.palavraId], pos: i.pos }))),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [instances],
   )
-  const active = activeId ? palavras.find((p) => p.id === activeId) : undefined
+  const activePalavra = useMemo(() => {
+    if (!activeId) return undefined
+    const palavraId = activeId.startsWith('bank:') ? activeId.slice(5) : instances[activeId]?.palavraId
+    return palavraId ? palavraById[palavraId] : undefined
+  }, [activeId, instances])
 
   return (
     <div style={{ '--tray-w': trayOpen ? `${TRAY_W}px` : '0px' } as React.CSSProperties}>
@@ -145,7 +154,7 @@ export function Board({ boardId }: { boardId: string }) {
           trayRef={tray}
           open={trayOpen}
           items={trayItems}
-          remaining={remaining}
+          total={palavras.length}
           colors={colorOf}
           query={query}
           onQuery={setQuery}
@@ -165,17 +174,32 @@ export function Board({ boardId }: { boardId: string }) {
         />
         <div ref={viewport} className={styles.viewport}>
           <div className={styles.canvas} style={{ width: CANVAS_W, height: CANVAS_H }} onPointerDown={onBgPointerDown}>
-            {placed.map((p) => (
-              <Draggable key={p.id} palavra={p} pos={positions[p.id]} color={colorOf[p.id]} isTop={p.id === topId} onReturn={returnNote} showPinyin={prefs.showPinyin} showTraducao={prefs.showTraducao} />
+            {placed.map((i) => (
+              <Draggable
+                key={i.instanceId}
+                instance={i}
+                palavra={palavraById[i.palavraId]}
+                color={colorOf[i.palavraId]}
+                isTop={i.instanceId === topId}
+                showPinyin={prefs.showPinyin}
+                showTraducao={prefs.showTraducao}
+                onRemove={removeNote}
+              />
             ))}
           </div>
         </div>
-        {placed.length === 0 && (
-          <p className={styles.hint}>Arraste palavras da barra lateral para o quadro.</p>
-        )}
+        {placed.length === 0 && <p className={styles.hint}>Arraste palavras do banco para o quadro.</p>}
         <SentencePanel sentences={sentences} />
         <DragOverlay dropAnimation={null} zIndex={3000}>
-          {active ? <StickyNote palavra={active} color={colorOf[active.id]} variant="overlay" showPinyin={prefs.showPinyin} showTraducao={prefs.showTraducao} /> : null}
+          {activePalavra ? (
+            <StickyNote
+              palavra={activePalavra}
+              color={colorOf[activePalavra.id]}
+              variant="overlay"
+              showPinyin={prefs.showPinyin}
+              showTraducao={prefs.showTraducao}
+            />
+          ) : null}
         </DragOverlay>
       </DndContext>
     </div>

@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { canUndo, emptyHistory, popMove, pushMove } from './history'
+import { canUndo, emptyHistory, invertMove, popMove, pushMove } from './history'
 import type { Move } from '../types'
 
-const mv = (n: number): Move => ({ id: `w${n}`, from: { x: n, y: n }, to: { x: n + 1, y: n + 1 } })
+const mv = (n: number): Move => ({ type: 'move', instanceId: `i${n}`, from: { x: n, y: n }, to: { x: n + 1, y: n + 1 } })
+const inst = { instanceId: 'i1', palavraId: 'p1', pos: { x: 5, y: 6 } }
 
 describe('history', () => {
   it('começa vazio e sem desfazer', () => {
@@ -34,5 +35,11 @@ describe('history', () => {
     const h = emptyHistory()
     pushMove(h, mv(1))
     expect(h.past.length).toBe(0)
+  })
+
+  it('invertMove: criar ↔ remover e mover volta ao ponto de origem', () => {
+    expect(invertMove({ type: 'create', instance: inst })).toEqual({ type: 'remove', instance: inst })
+    expect(invertMove({ type: 'remove', instance: inst })).toEqual({ type: 'create', instance: inst })
+    expect(invertMove(mv(1))).toEqual({ type: 'move', instanceId: 'i1', from: { x: 2, y: 2 }, to: { x: 1, y: 1 } })
   })
 })

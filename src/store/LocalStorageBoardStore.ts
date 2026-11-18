@@ -1,36 +1,53 @@
-import type { Move, Positions } from '../types'
+import type { BoardState, Instance, Move } from '../types'
 import type { BoardStore, Listener } from './BoardStore'
 
 export const storageKey = (boardId: string) => `miro-mandarim:quadro:${boardId}`
 
-const isPos = (v: unknown): boolean =>
-  !!v && typeof (v as { x: unknown }).x === 'number' && typeof (v as { y: unknown }).y === 'number'
+const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
+
+function isInstance(v: unknown): v is Instance {
+  const i = v as Instance | null
+  return (
+    !!i &&
+    typeof i.instanceId === 'string' &&
+    typeof i.palavraId === 'string' &&
+    !!i.pos &&
+    isNum(i.pos.x) &&
+    isNum(i.pos.y)
+  )
+}
 
 export class LocalStorageBoardStore implements BoardStore {
-  private current: Positions
+  private current: BoardState
   private listeners = new Set<Listener>()
 
   /** `initial` é a origem (quadro vazio); o reset a cada entrada vem daqui. */
   constructor(
     private boardId: string,
-    initial: Positions = {},
+    initial: BoardState = {},
     private storage: Storage = localStorage,
   ) {
     this.current = { ...initial }
   }
 
-  getState(): Positions {
+  getState(): BoardState {
     return this.current
   }
 
-  private readSaved(): Positions | null {
+  private readSaved(): BoardState | null {
     try {
       const raw = this.storage.getItem(storageKey(this.boardId))
       if (!raw) return null
       const parsed = JSON.parse(raw)
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null
-      const out: Positions = {}
-      for (const [id, pos] of Object.entries(parsed)) if (isPos(pos)) out[id] = pos as Positions[string]
+      const out: BoardState = {}
+      let total = 0
+      for (const v of Object.values(parsed)) {
+        total++
+        if (isInstance(v)) out[v.instanceId] = v
+      }
+      // Formato antigo/inválido (nenhuma cópia válida): não conta como quadro salvo.
+      if (total > 0 && Object.keys(out).length === 0) return null
       return out
     } catch {
       return null
@@ -41,7 +58,7 @@ export class LocalStorageBoardStore implements BoardStore {
     return this.readSaved() !== null
   }
 
-  load(): Positions | null {
+  load(): BoardState | null {
     const saved = this.readSaved()
     if (!saved) return null
     this.current = saved
@@ -62,8 +79,20 @@ export class LocalStorageBoardStore implements BoardStore {
 
   applyMove(move: Move): void {
     const next = { ...this.current }
-    if (move.to) next[move.id] = move.to
-    else delete next[move.id] // voltou para a barra lateral
+    switch (move.type) {
+      case 'create':
+        next[move.instance.instanceId] = move.instance
+        break
+      case 'remove':
+        delete next[move.instance.instanceId]
+        break
+      case 'move': {
+        const inst = next[move.instanceId]
+        if (!inst) return
+        next[move.instanceId] = { ...inst, pos: move.to }
+        break
+      }
+    }
     this.current = next
     this.emit()
   }

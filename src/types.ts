@@ -11,17 +11,20 @@ export interface Pos {
 }
 
 /**
- * Posição dos post-its que estão NO QUADRO, por id da palavra.
- * Palavra ausente = ainda está na barra lateral (a origem é o quadro vazio).
+ * Uma cópia de uma palavra no quadro. A mesma palavra pode ter várias cópias:
+ * `instanceId` identifica a cópia; `palavraId` é o id da palavra no banco.
  */
-export type Positions = Record<string, Pos>
-
-/**
- * Um movimento de um post-it. `null` significa "na barra lateral":
- * from null = veio da barra; to null = voltou para a barra.
- */
-export interface Move {
-  id: string
-  from: Pos | null
-  to: Pos | null
+export interface Instance {
+  instanceId: string
+  palavraId: string
+  pos: Pos
 }
+
+/** Cópias que estão no quadro, por instanceId. */
+export type BoardState = Record<string, Instance>
+
+/** Um movimento no quadro (usado no histórico de desfazer e no BoardStore). */
+export type Move =
+  | { type: 'create'; instance: Instance }
+  | { type: 'move'; instanceId: string; from: Pos; to: Pos }
+  | { type: 'remove'; instance: Instance } // guarda a cópia inteira para o desfazer recriá-la

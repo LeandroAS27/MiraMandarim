@@ -1,28 +1,32 @@
 import { memo } from 'react'
 import { useDraggable } from '@dnd-kit/core'
-import type { Palavra, Pos } from '../types'
+import type { Instance, Palavra } from '../types'
 import { StickyNote } from './StickyNote'
 import styles from './Draggable.module.css'
 
 interface Props {
+  instance: Instance
   palavra: Palavra
-  pos: Pos
   color: number
   isTop: boolean
   showPinyin: boolean
   showTraducao: boolean
-  /** Devolve a palavra à barra lateral (um único passo no histórico). */
-  onReturn: (id: string) => void
+  /** Remove esta cópia do quadro (um único passo no histórico). */
+  onRemove: (instanceId: string) => void
 }
 
 /**
- * Post-it posicionado no quadro (x/y livres).
+ * Cópia de uma palavra posicionada no quadro (x/y livres).
  * A posição usa left/top (não transform): o dnd-kit mede o retângulo ignorando
  * transform, e o DragOverlay precisa partir do ponto certo.
  * Durante o arraste quem aparece é o DragOverlay; este fica invisível no lugar.
  */
-export const Draggable = memo(function Draggable({ palavra, pos, color, isTop, onReturn, showPinyin, showTraducao }: Props) {
-  const { setNodeRef, attributes, listeners, isDragging } = useDraggable({ id: palavra.id })
+export const Draggable = memo(function Draggable({ instance, palavra, color, isTop, showPinyin, showTraducao, onRemove }: Props) {
+  const { instanceId, pos } = instance
+  const { setNodeRef, attributes, listeners, isDragging } = useDraggable({
+    id: instanceId,
+    data: { kind: 'instance', instanceId, palavraId: palavra.id },
+  })
   return (
     <div
       ref={setNodeRef}
@@ -32,7 +36,7 @@ export const Draggable = memo(function Draggable({ palavra, pos, color, isTop, o
       onKeyDown={(e) => {
         if (e.key === 'Delete' || e.key === 'Backspace') {
           e.preventDefault()
-          onReturn(palavra.id)
+          onRemove(instanceId)
         }
       }}
       style={{
@@ -46,13 +50,13 @@ export const Draggable = memo(function Draggable({ palavra, pos, color, isTop, o
       <button
         type="button"
         className={styles.del}
-        title="Devolver à barra"
-        aria-label={`Devolver ${palavra.hanzi} à barra`}
+        title="Remover do quadro"
+        aria-label={`Remover ${palavra.hanzi} do quadro`}
         // não deixa o clique virar arraste
         onPointerDown={(e) => e.stopPropagation()}
         onTouchStart={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
-        onClick={() => onReturn(palavra.id)}
+        onClick={() => onRemove(instanceId)}
       >
         ×
       </button>
