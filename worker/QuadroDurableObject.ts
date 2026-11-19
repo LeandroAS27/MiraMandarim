@@ -1,12 +1,14 @@
 import { DurableObject } from 'cloudflare:workers'
 import palavrasData from '../src/data/palavras.json'
-import { encode, parseClientMessage, type ErrorCode, type ServerMessage } from '../src/shared/protocol'
-import { decideRole, handleMessage, styleOf, toPresence, type RoomData } from '../src/shared/room'
+import { CLOSE_BAD_ID, CLOSE_NO_ROOM, CLOSE_REPLACED, encode, parseClientMessage, type ClientMessage, type ErrorCode, type ServerMessage } from '../src/shared/protocol'
+import { decideRole, handleMessage, snapshotFor, toPresence, type RoomData } from '../src/shared/room'
 import type { BoardState } from '../src/types'
 import type { Papel } from '../src/theme/presence'
 
 export interface Env {
   QUADRO: DurableObjectNamespace<QuadroDurableObject>
+  /** Segredo (wrangler secret put CHAVE_CRIACAO): chave para criar sala e para assinar códigos e tokens. */
+  CHAVE_CRIACAO?: string
 }
 
 const VALID_PALAVRAS = new Set((palavrasData.palavras as { id: string }[]).map((p) => p.id))
@@ -18,9 +20,6 @@ interface Attachment {
   papel: Papel
 }
 
-const CLOSE_REPLACED = 4000
-const CLOSE_BAD_ID = 4002
-
 /**
  * Um Durable Object por quadro. Usa a WebSocket Hibernation API (ctx.acceptWebSocket):
  * o objeto pode sair da memória entre mensagens sem derrubar as conexões.
@@ -28,12 +27,12 @@ const CLOSE_BAD_ID = 4002
  * Gravação (ctx.storage, 1 chave por valor = 1 escrita de linha):
  *  - "state": só no soltar, no add/remove e no reset (nunca a cada passo do arrasto);
  *  - "saved": no "Salvar quadro" da admin;
- *  - "teacherHash": uma vez, quando a admin entra com o token.
+ *  - "donoHash": uma vez, quando a sala é criada (hash do token da admin; o token em si nunca é guardado).
  * Cursores e presença são efêmeros: só memória/attachments + broadcast, nada em storage.
  */
 export class QuadroDurableObject extends DurableObject<Env> {
   private data: RoomData = { state: {}, saved: null }
-  private teacherHash: string | null = null
+  private donoHash: string | null = null
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env)
@@ -42,26 +41,34 @@ export class QuadroDurableObject extends DurableObject<Env> {
       const [state, saved, hash] = await Promise.all([
         ctx.storage.get<BoardState>('state'),
         ctx.storage.get<BoardState>('saved'),
-        ctx.storage.get<string>('teacherHash'),
+        ctx.storage.get<string>('donoHash'),
       ])
       this.data = { state: state ?? {}, saved: saved ?? null }
-      this.teacherHash = hash ?? null
+      this.donoHash = hash ?? null
     })
+  }
+
+  /** Chamado pelo Worker ao criar a sala: registra o dono (hash do token da admin). Só vale uma vez. */
+  async iniciar(donoHash: string): Promise<boolean> {
+    if (this.donoHash === null) {
+      this.donoHash = donoHash
+      await this.ctx.storage.put('donoHash', donoHash)
+    }
+    return this.donoHash === donoHash
   }
 
   async fetch(request: Request): Promise<Response> {
     if (request.headers.get('Upgrade') !== 'websocket') return new Response('Esperava uma conexão WebSocket.', { status: 426 })
 
-    const token = new URL(request.url).searchParams.get('token')
-    const { papel, claim } = await decideRole(token, this.teacherHash)
-    if (claim) {
-      this.teacherHash = claim
-      await this.ctx.storage.put('teacherHash', claim)
-    }
-
     const { 0: client, 1: server } = new WebSocketPair()
     this.ctx.acceptWebSocket(server)
-    server.serializeAttachment({ clientId: null, nome: null, papel } satisfies Attachment)
+    if (this.donoHash === null) {
+      // sala que nunca foi criada: o front não tenta reconectar nesse código
+      server.close(CLOSE_NO_ROOM, 'Sala não encontrada.')
+    } else {
+      // o papel só é decidido no join (o token vai na mensagem, nunca na URL)
+      server.serializeAttachment({ clientId: null, nome: null, papel: 'aluno' } satisfies Attachment)
+    }
     return new Response(null, { status: 101, webSocket: client })
   }
 
@@ -72,7 +79,7 @@ export class QuadroDurableObject extends DurableObject<Env> {
     if (!parsed.ok) return this.sendError(ws, att.clientId ?? 'server', parsed.code, parsed.message)
     const msg = parsed.msg
 
-    if (msg.type === 'join') return this.onJoin(ws, att, msg.clientId, msg.nome)
+    if (msg.type === 'join') return this.onJoin(ws, att, msg)
 
     // Antes do join não há clientId; depois dele, cada mensagem tem de vir com o mesmo.
     if (!att.clientId || !att.nome) return this.sendError(ws, msg.clientId, 'sem_entrada', 'Envie "join" primeiro.')
@@ -103,7 +110,9 @@ export class QuadroDurableObject extends DurableObject<Env> {
 
   // ---------------------------------------------------------------------------
 
-  private async onJoin(ws: WebSocket, att: Attachment, clientId: string, nome: string): Promise<void> {
+  private async onJoin(ws: WebSocket, att: Attachment, msg: Extract<ClientMessage, { type: 'join' }>): Promise<void> {
+    const { clientId, nome } = msg
+    const papel = await decideRole(msg.token, this.donoHash)
     // Mesmo clientId em outra conexão (ex.: aba duplicada): a mais nova assume, a antiga é fechada.
     for (const other of this.ctx.getWebSockets()) {
       if (other === ws) continue
@@ -119,9 +128,8 @@ export class QuadroDurableObject extends DurableObject<Env> {
       return
     }
 
-    ws.serializeAttachment({ ...att, clientId, nome } satisfies Attachment)
-    const { cor } = styleOf(att.papel, clientId)
-    ws.send(encode({ type: 'snapshot', clientId, papel: att.papel, cor, state: this.data.state, hasSaved: this.data.saved !== null }))
+    ws.serializeAttachment({ clientId, nome, papel } satisfies Attachment)
+    ws.send(encode(snapshotFor(papel, clientId, this.data)))
     this.broadcastPresence()
   }
 

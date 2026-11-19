@@ -14,6 +14,7 @@ import { palavraById, palavras, useBoard } from '../hooks/useBoard'
 import { MOBILE_QUERY, useMediaQuery } from '../hooks/useMediaQuery'
 import { usePreferences } from '../hooks/usePreferences'
 import { studentLink, adminLink } from '../lib/boardId'
+import { saveUltimaSala } from '../store/session'
 import { CANVAS_H, CANVAS_W, TRAY_W, clampToCanvas } from '../lib/layout'
 import { matches } from '../lib/search'
 import { buildSentence } from '../lib/sentences'
@@ -48,14 +49,22 @@ interface BoardProps {
   token: string | null
   clientId: string
   onChangeName: () => void
+  /** Ir para a tela inicial (criar outra sala). */
+  onNewRoom: () => void
+  /** "Sair": apaga a sessão de admin deste navegador. */
+  onLeave: () => void
 }
 
-export function Board({ boardId, nome, token, clientId, onChangeName }: BoardProps) {
+export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom, onLeave }: BoardProps) {
   const {
     instances, createInstance, moveInstance, removeInstance, clearBoard, save, openSaved, hasSaved,
     previewMove, cancelPreview, sendCursor, meta, store,
   } = useBoard(boardId, { clientId, nome, token })
   const isAdmin = meta.papel === 'admin'
+  // a admin volta direto para esta sala na próxima vez que abrir o site
+  useEffect(() => {
+    if (isAdmin) saveUltimaSala(boardId)
+  }, [isAdmin, boardId])
   const [prefs, updatePrefs] = usePreferences()
   const [topId, setTopId] = useState<string | null>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -324,6 +333,8 @@ export function Board({ boardId, nome, token, clientId, onChangeName }: BoardPro
           users={meta.users}
           myClientId={clientId}
           onChangeName={onChangeName}
+          onNewRoom={onNewRoom}
+          onLeave={onLeave}
           error={meta.error}
           adminLinkUrl={isAdmin && token ? adminLink(window.location.origin, boardId, token) : null}
           studentLinkUrl={studentLink(window.location.origin, boardId)}

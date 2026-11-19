@@ -4,3 +4,9 @@
 .cta { background: #23262b; color: #fff; border: 0; border-radius: 10px; padding: 12px 28px; font-size: 1.05rem; cursor: pointer; }
 .cta:hover { background: #3a3f47; }
 .note { color: var(--muted); }
+.form { display: grid; gap: 10px; justify-items: center; }
+.label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; font-weight: 600; text-align: left; }
+.label input { font: inherit; padding: 8px 10px; border: 1px solid #c4c8cf; border-radius: 8px; min-width: 260px; }
+.cta:disabled { opacity: 0.5; cursor: default; }
+.erro { color: #b42318; }
+.link { background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; font: inherit; }

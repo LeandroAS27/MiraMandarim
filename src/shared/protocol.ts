@@ -1,12 +1,18 @@
 import { CANVAS_H, CANVAS_W } from '../lib/layout'
 import type { BoardState, Instance, Pos } from '../types'
 import { isHexColor, type Papel } from '../theme/presence'
+import { TOKEN_RE } from './chaves'
 import { validateNome } from './nome'
 
 /**
  * Protocolo JSON do quadro em tempo real (contrato entre o front e o Durable Object).
  * Toda mensagem tem `type` e `clientId`. Os campos de cada tipo estão no README.
  */
+
+/** Códigos de fechamento do WebSocket que o front não tenta reconectar. */
+export const CLOSE_REPLACED = 4000
+export const CLOSE_BAD_ID = 4002
+export const CLOSE_NO_ROOM = 4004
 
 export const MAX_MESSAGE_BYTES = 64_000
 /** Máximo de cópias no quadro (protege a cota do plano grátis). */
@@ -18,7 +24,8 @@ const INSTANCE_ID_RE = /^[A-Za-z0-9_-]{4,40}$/
 const PALAVRA_ID_RE = /^[A-Za-z0-9_-]{1,32}$/
 
 export type ClientMessage =
-  | { type: 'join'; clientId: string; nome: string }
+  /** `token` (opcional) é o token de admin; só o servidor decide o papel a partir dele. */
+  | { type: 'join'; clientId: string; nome: string; token?: string }
   | { type: 'move'; clientId: string; instanceId: string; to: Pos; final: boolean }
   | { type: 'add'; clientId: string; instances: Instance[] }
   | { type: 'remove'; clientId: string; instanceIds: string[] }
@@ -101,7 +108,10 @@ export function parseClientMessage(raw: unknown): ParseResult<ClientMessage> {
   switch (d.type) {
     case 'join': {
       const n = validateNome(d.nome)
-      return n.ok ? { ok: true, msg: { type: 'join', clientId, nome: n.nome } } : bad(n.error)
+      if (!n.ok) return bad(n.error)
+      // token em formato inválido é ignorado (vira aluno), nunca um erro
+      const token = typeof d.token === 'string' && TOKEN_RE.test(d.token) ? d.token : undefined
+      return { ok: true, msg: token ? { type: 'join', clientId, nome: n.nome, token } : { type: 'join', clientId, nome: n.nome } }
     }
     case 'move': {
       const to = parsePos(d.to)

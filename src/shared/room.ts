@@ -1,5 +1,6 @@
 import type { BoardState, Instance } from '../types'
 import { colorFor, type Papel } from '../theme/presence'
+import { TOKEN_RE } from './chaves'
 import { MAX_INSTANCES, canSend, type ClientMessage, type ErrorCode, type PresenceUser, type ServerMessage } from './protocol'
 
 /**
@@ -7,7 +8,7 @@ import { MAX_INSTANCES, canSend, type ClientMessage, type ErrorCode, type Presen
  * Assim dá para testar com Vitest sem o runtime da Cloudflare.
  */
 
-export const TOKEN_RE = /^[A-Za-z0-9_-]{16,64}$/
+export { TOKEN_RE }
 
 export async function sha256Hex(text: string): Promise<string> {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))
@@ -23,22 +24,25 @@ export function safeEqual(a: string, b: string): boolean {
 }
 
 /**
- * O papel é decidido aqui, nunca pelo que o cliente diz.
- * - Sem token (ou token em formato inválido): aluno.
- * - Quadro ainda sem dona: o primeiro token enviado vira o da admin (`claim` = hash a guardar).
- * - Quadro com dona: só o mesmo token é admin.
+ * O papel é decidido aqui, no servidor, nunca pelo que o cliente diz.
+ * Só é admin quem manda o token cujo hash é o do dono da sala; todo o resto é aluno.
  */
-export async function decideRole(
-  token: string | null,
-  storedHash: string | null,
-): Promise<{ papel: Papel; claim: string | null }> {
-  if (!token || !TOKEN_RE.test(token)) return { papel: 'aluno', claim: null }
-  const hash = await sha256Hex(token)
-  if (storedHash === null) return { papel: 'admin', claim: hash }
-  return { papel: safeEqual(hash, storedHash) ? 'admin' : 'aluno', claim: null }
+export async function decideRole(token: string | null | undefined, donoHash: string | null): Promise<Papel> {
+  if (!token || !donoHash || !TOKEN_RE.test(token)) return 'aluno'
+  return safeEqual(await sha256Hex(token), donoHash) ? 'admin' : 'aluno'
 }
 
 export const styleOf = (papel: Papel, clientId: string): { cor: string } => ({ cor: colorFor(papel, clientId) })
+
+/** O que o servidor manda a quem acabou de entrar. Não leva token nem nada de outra pessoa. */
+export const snapshotFor = (papel: Papel, clientId: string, data: RoomData): ServerMessage => ({
+  type: 'snapshot',
+  clientId,
+  papel,
+  cor: colorFor(papel, clientId),
+  state: data.state,
+  hasSaved: data.saved !== null,
+})
 
 export const toPresence = (list: { clientId: string; nome: string; papel: Papel }[]): PresenceUser[] =>
   list.map((u) => ({ clientId: u.clientId, nome: u.nome, papel: u.papel, cor: colorFor(u.papel, u.clientId) }))

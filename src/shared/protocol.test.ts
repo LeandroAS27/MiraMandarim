@@ -30,6 +30,13 @@ describe('parseClientMessage', () => {
     expect(parseClientMessage(new ArrayBuffer(4)).ok).toBe(false)
   })
 
+  it('join aceita o token de admin; token em formato inválido é ignorado (vira aluno)', () => {
+    const token = 'abcdefghijklmnopqrstuvwxyz0123456789'
+    expect(parse({ type: 'join', clientId: CID, nome: 'Ana', token })).toEqual({ ok: true, msg: { type: 'join', clientId: CID, nome: 'Ana', token } })
+    expect(parse({ type: 'join', clientId: CID, nome: 'Ana', token: 'curto' })).toEqual({ ok: true, msg: { type: 'join', clientId: CID, nome: 'Ana' } })
+    expect(parse({ type: 'join', clientId: CID, nome: 'Ana', token: 123 })).toEqual({ ok: true, msg: { type: 'join', clientId: CID, nome: 'Ana' } })
+  })
+
   it('recusa nome inválido no join', () => {
     expect(parse({ type: 'join', clientId: CID, nome: '' }).ok).toBe(false)
     expect(parse({ type: 'join', clientId: CID, nome: 'x'.repeat(25) }).ok).toBe(false)

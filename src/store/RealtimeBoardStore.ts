@@ -1,6 +1,6 @@
 import { backoffDelay } from '../lib/backoff'
 import { throttle, type Throttled } from '../lib/throttle'
-import { encode, parseServerMessage, type ClientMessage, type PresenceUser, type ServerMessage } from '../shared/protocol'
+import { CLOSE_BAD_ID, CLOSE_NO_ROOM, CLOSE_REPLACED, encode, parseServerMessage, type ClientMessage, type PresenceUser, type ServerMessage } from '../shared/protocol'
 import type { Papel } from '../theme/presence'
 import type { BoardState, Instance, Move, Pos } from '../types'
 import { applyMoveToState } from './applyMove'
@@ -18,6 +18,8 @@ export interface Meta {
   users: PresenceUser[]
   /** Último erro vindo do servidor (ex.: sem permissão), para a barra mostrar. */
   error: string | null
+  /** Por que a conexão foi encerrada de vez (sem nova tentativa), se foi. */
+  motivo: 'substituida' | 'sala_inexistente' | null
 }
 
 export interface RemoteCursor {
@@ -43,7 +45,7 @@ export interface RealtimeOptions {
   boardId: string
   clientId: string
   nome: string
-  /** Token da admin (opcional). */
+  /** Token de admin (opcional): vai no join; o servidor decide o papel. */
   token?: string | null
   createSocket?: (url: string) => SocketLike
   location?: { protocol: string; host: string }
@@ -52,13 +54,13 @@ export interface RealtimeOptions {
 }
 
 export const SOCKET_OPEN = 1
-/** Fechamentos que não devem reconectar (outra aba assumiu o clientId; clientId recusado). */
-const NO_RETRY = new Set([4000, 4002])
+/** Fechamentos que não devem reconectar: outra aba assumiu o clientId, clientId recusado, sala inexistente. */
+const NO_RETRY = new Set([CLOSE_REPLACED, CLOSE_BAD_ID, CLOSE_NO_ROOM])
 
-export function socketUrl(boardId: string, loc: { protocol: string; host: string }, token?: string | null): string {
+/** O token de admin nunca vai na URL (ficaria em logs): vai dentro da mensagem join. */
+export function socketUrl(boardId: string, loc: { protocol: string; host: string }): string {
   const scheme = loc.protocol === 'https:' ? 'wss' : 'ws'
-  const q = token ? `?token=${encodeURIComponent(token)}` : ''
-  return `${scheme}://${loc.host}/api/quadro/${boardId}/ws${q}`
+  return `${scheme}://${loc.host}/api/quadro/${boardId}/ws`
 }
 
 /**
@@ -88,7 +90,7 @@ export class RealtimeBoardStore implements BoardStore {
 
   constructor(private opts: RealtimeOptions) {
     this.nome = opts.nome
-    this.meta = { status: 'connecting', papel: null, cor: null, clientId: opts.clientId, hasSaved: false, users: [], error: null }
+    this.meta = { status: 'connecting', papel: null, cor: null, clientId: opts.clientId, hasSaved: false, users: [], error: null, motivo: null }
     const ms = opts.throttleMs ?? 200
     this.sendCursorThrottled = throttle((p) => this.send({ type: 'cursor', clientId: this.opts.clientId, x: p.x, y: p.y }), ms)
     this.sendPreviewThrottled = throttle(
@@ -101,7 +103,7 @@ export class RealtimeBoardStore implements BoardStore {
 
   connect(): void {
     this.wanted = true
-    if (this.meta.status === 'closed') this.setMeta({ status: 'connecting' })
+    if (this.meta.status === 'closed') this.setMeta({ status: 'connecting', motivo: null })
     this.open()
   }
 
@@ -128,7 +130,7 @@ export class RealtimeBoardStore implements BoardStore {
   private open(): void {
     if (this.socket) return
     const loc = this.opts.location ?? window.location
-    const url = socketUrl(this.opts.boardId, loc, this.opts.token)
+    const url = socketUrl(this.opts.boardId, loc)
     let s: SocketLike
     try {
       s = (this.opts.createSocket ?? ((u) => new WebSocket(u) as unknown as SocketLike))(url)
@@ -139,7 +141,7 @@ export class RealtimeBoardStore implements BoardStore {
     this.socket = s
     s.onopen = () => {
       // O nome vai na entrada; o servidor guarda ligado a esta conexão.
-      this.send({ type: 'join', clientId: this.opts.clientId, nome: this.nome })
+      this.send(this.joinMessage(this.nome))
     }
     s.onmessage = (ev) => this.onMessage(ev.data)
     s.onclose = (ev) => {
@@ -147,7 +149,8 @@ export class RealtimeBoardStore implements BoardStore {
       this.socket = null
       this.setCursors({})
       if (!this.wanted || NO_RETRY.has(ev.code)) {
-        this.setMeta({ status: 'closed' })
+        const motivo = ev.code === CLOSE_NO_ROOM ? 'sala_inexistente' : ev.code === CLOSE_REPLACED ? 'substituida' : null
+        this.setMeta({ status: 'closed', motivo })
         return
       }
       this.scheduleRetry()
@@ -175,7 +178,12 @@ export class RealtimeBoardStore implements BoardStore {
   setNome(nome: string): void {
     if (nome === this.nome) return
     this.nome = nome
-    this.send({ type: 'join', clientId: this.opts.clientId, nome })
+    this.send(this.joinMessage(nome))
+  }
+
+  private joinMessage(nome: string): ClientMessage {
+    const { clientId, token } = this.opts
+    return token ? { type: 'join', clientId, nome, token } : { type: 'join', clientId, nome }
   }
 
   // --- mensagens do servidor ------------------------------------------------

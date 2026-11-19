@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { newBoardId, newClientId, newToken, parseBoardRoute, studentLink, adminLink } from './boardId'
+import { newBoardId, newClientId, parseBoardRoute, studentLink, adminLink } from './boardId'
 
 describe('boardId', () => {
   it('ids são longos e aleatórios', () => {
     const a = newBoardId()
     expect(a).toHaveLength(24)
     expect(newBoardId()).not.toBe(a)
-    expect(newToken()).toHaveLength(24)
     expect(newClientId()).toMatch(/^c[a-z0-9]{15}$/)
   })
 

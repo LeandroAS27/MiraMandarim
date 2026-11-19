@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { colorFor } from '../theme/presence'
 import type { Instance } from '../types'
-import { decideRole, handleMessage, sha256Hex, styleOf, toPresence, type RoomData } from './room'
+import { decideRole, handleMessage, sha256Hex, snapshotFor, styleOf, toPresence, type RoomData } from './room'
 
 const TOKEN = 'token-da-admin-123456'
 const A: Instance = { instanceId: 'i-aaaa1111', palavraId: 'p001', pos: { x: 0, y: 0 } }
@@ -11,22 +11,58 @@ const withA = (): RoomData => ({ state: { [A.instanceId]: A }, saved: null })
 
 describe('decideRole (o papel é decidido no servidor)', () => {
   it('sem token é aluno', async () => {
-    expect((await decideRole(null, null)).papel).toBe('aluno')
-    expect((await decideRole('', null)).papel).toBe('aluno')
+    const hash = await sha256Hex(TOKEN)
+    expect(await decideRole(null, hash)).toBe('aluno')
+    expect(await decideRole(undefined, hash)).toBe('aluno')
+    expect(await decideRole('', hash)).toBe('aluno')
   })
   it('token em formato inválido é aluno', async () => {
-    expect((await decideRole('curto', null)).papel).toBe('aluno')
+    expect(await decideRole('curto', await sha256Hex('curto'))).toBe('aluno')
   })
-  it('o primeiro token válido vira o da admin e devolve o hash para guardar', async () => {
-    const r = await decideRole(TOKEN, null)
-    expect(r.papel).toBe('admin')
-    expect(r.claim).toBe(await sha256Hex(TOKEN))
-  })
-  it('depois disso, só o mesmo token é admin', async () => {
+  it('só o token cujo hash é o do dono é admin', async () => {
     const hash = await sha256Hex(TOKEN)
-    expect(await decideRole(TOKEN, hash)).toEqual({ papel: 'admin', claim: null })
-    expect((await decideRole('outro-token-qualquer-123', hash)).papel).toBe('aluno')
-    expect((await decideRole(null, hash)).papel).toBe('aluno')
+    expect(await decideRole(TOKEN, hash)).toBe('admin')
+    expect(await decideRole('outro-token-qualquer-123', hash)).toBe('aluno')
+  })
+  it('sala sem dono não dá admin a ninguém (o primeiro a chegar não vira admin)', async () => {
+    expect(await decideRole(TOKEN, null)).toBe('aluno')
+  })
+})
+
+describe('o token de admin nunca sai do servidor', () => {
+  const SECRETO = 'token-secreto-da-admin-9999'
+  const data: RoomData = { state: { [A.instanceId]: A }, saved: null }
+
+  it('snapshot e presença não levam o token (nem o hash)', async () => {
+    const hash = await sha256Hex(SECRETO)
+    const saidas = [
+      snapshotFor('aluno', 'cliente-aluno-1', data),
+      snapshotFor('admin', 'cliente-admin-1', data),
+      { type: 'presence' as const, clientId: 'server', users: toPresence([{ clientId: 'cliente-admin-1', nome: 'Prof', papel: 'admin' }]) },
+    ]
+    for (const m of saidas) {
+      const texto = JSON.stringify(m)
+      expect(texto).not.toContain(SECRETO)
+      expect(texto).not.toContain(hash)
+      expect(texto).not.toContain('token')
+    }
+  })
+
+  it('nenhuma resposta do handleMessage leva o token', () => {
+    const msgs = [
+      { type: 'cursor' as const, clientId: 'c1', x: 1, y: 2 },
+      { type: 'move' as const, clientId: 'c1', instanceId: A.instanceId, to: { x: 5, y: 5 }, final: true },
+      { type: 'add' as const, clientId: 'c1', instances: [{ ...A, instanceId: 'i-bbbb2222' }] },
+      { type: 'remove' as const, clientId: 'c1', instanceIds: [A.instanceId] },
+      { type: 'save' as const, clientId: 'c1' },
+      { type: 'reset' as const, clientId: 'c1', to: 'empty' as const },
+    ]
+    for (const m of msgs) {
+      for (const papel of ['aluno', 'admin'] as const) {
+        const out = handleMessage(data, m, papel, ok, 1)
+        expect(JSON.stringify(out)).not.toContain('token')
+      }
+    }
   })
 })
 

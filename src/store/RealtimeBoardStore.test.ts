@@ -70,9 +70,30 @@ describe('RealtimeBoardStore', () => {
   })
   afterEach(() => vi.useRealTimers())
 
-  it('monta a URL do WebSocket (ws/wss + host + rota + token)', () => {
+  it('monta a URL do WebSocket (ws/wss + host + rota), sem token na URL', () => {
     expect(socketUrl('abc', { protocol: 'http:', host: 'localhost:8787' })).toBe('ws://localhost:8787/api/quadro/abc/ws')
-    expect(socketUrl('abc', { protocol: 'https:', host: 'x.workers.dev' }, 'tok')).toBe('wss://x.workers.dev/api/quadro/abc/ws?token=tok')
+    expect(socketUrl('abc', { protocol: 'https:', host: 'x.workers.dev' })).toBe('wss://x.workers.dev/api/quadro/abc/ws')
+  })
+
+  it('o token de admin vai dentro do join (nunca na URL); aluno entra sem token', () => {
+    const adm = make('token-da-admin-123456')
+    expect(adm.sock().url).not.toContain('token')
+    adm.sock().open()
+    expect(adm.sock().sent[0]).toMatchObject({ type: 'join', nome: 'Ana', token: 'token-da-admin-123456' })
+
+    FakeSocket.all = []
+    const aluno = make()
+    aluno.sock().open()
+    expect(aluno.sock().sent[0]).toEqual({ type: 'join', clientId: CID, nome: 'Ana' })
+  })
+
+  it('sala inexistente (4004): não reconecta e informa o motivo', () => {
+    const a = make()
+    a.sock().open()
+    a.sock().drop(4004)
+    vi.advanceTimersByTime(60_000)
+    expect(FakeSocket.all).toHaveLength(1)
+    expect(a.store.getMeta()).toMatchObject({ status: 'closed', motivo: 'sala_inexistente' })
   })
 
   it('só entra (join com o nome) depois que a conexão abre, e recebe o snapshot', () => {

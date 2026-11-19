@@ -8,9 +8,6 @@ export function newBoardId(len = 24): string {
 /** Id de uma cópia (instância) de palavra no quadro. */
 export const newInstanceId = (): string => 'i' + newBoardId(10)
 
-/** Token da admin (aleatório, 24 caracteres ≈ 120 bits). */
-export const newToken = (): string => newBoardId(24)
-
 /** Id de uma conexão: novo a cada carregamento da página (duas abas = duas pessoas). */
 export const newClientId = (): string => 'c' + newBoardId(15)
 

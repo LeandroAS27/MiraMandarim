@@ -23,6 +23,8 @@ interface Props {
   users: PresenceUser[]
   myClientId: string
   onChangeName: () => void
+  onNewRoom: () => void
+  onLeave: () => void
   /** Mensagem de erro do servidor (ex.: sem permissão). */
   error: string | null
   /** Link com o token da admin (só existe para ela). */
@@ -31,7 +33,7 @@ interface Props {
   studentLinkUrl: string
 }
 
-export function Toolbar({ canClear, onClear, hasSaved, trayOpen, legendOpen, onToggleLegend, prefs, onPrefs, onToggleTray, onSave, onOpenSaved, isAdmin, status, users, myClientId, onChangeName, error, adminLinkUrl, studentLinkUrl }: Props) {
+export function Toolbar({ canClear, onClear, hasSaved, trayOpen, legendOpen, onToggleLegend, prefs, onPrefs, onToggleTray, onSave, onOpenSaved, isAdmin, status, users, myClientId, onChangeName, onNewRoom, onLeave, error, adminLinkUrl, studentLinkUrl }: Props) {
   const [msg, setMsg] = useState('')
   const [hover, setHover] = useState(false)
   const [tapped, setTapped] = useState(false)
@@ -69,7 +71,11 @@ export function Toolbar({ canClear, onClear, hasSaved, trayOpen, legendOpen, onT
         </button>
         {isAdmin && (
           <>
-            <button onClick={onClear} disabled={!canClear} title="Esvazia o quadro de todos">
+            <button
+              onClick={() => window.confirm('Limpar o quadro de todos? Isso não pode ser desfeito.') && onClear()}
+              disabled={!canClear}
+              title="Esvazia o quadro de todos (não pode ser desfeito)"
+            >
               Limpar quadro
             </button>
             <button
@@ -84,11 +90,20 @@ export function Toolbar({ canClear, onClear, hasSaved, trayOpen, legendOpen, onT
             {hasSaved && <button onClick={onOpenSaved} title="Troca o quadro de todos pelo último salvo">Abrir quadro salvo</button>}
           </>
         )}
-        <button onClick={() => copy(studentLinkUrl, 'Link dos alunos copiado')}>Copiar link</button>
-        {adminLinkUrl && (
-          <button onClick={() => copy(adminLinkUrl, 'Link de admin copiado')} title="Guarde este link: ele dá o controle do quadro">
-            Copiar meu link (admin)
-          </button>
+        {isAdmin && (
+          <>
+            <button onClick={() => copy(studentLinkUrl, 'Link dos alunos copiado')}>Copiar link dos alunos</button>
+            {adminLinkUrl && (
+              <button
+                onClick={() => copy(adminLinkUrl, 'Link de admin copiado. Não envie aos alunos!')}
+                title="Este link dá o controle total. Não envie aos alunos; guarde só para você."
+              >
+                Copiar meu link (admin)
+              </button>
+            )}
+            <button onClick={onNewRoom}>Nova sala</button>
+            <button onClick={onLeave} title="Apaga a sua sessão de admin deste navegador">Sair</button>
+          </>
         )}
         <button className={styles.toggle} aria-pressed={prefs.showPinyin} onClick={() => onPrefs({ showPinyin: !prefs.showPinyin })}>
           Pinyin
