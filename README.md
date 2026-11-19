@@ -1,83 +1,148 @@
 # Quadro de Mandarim
 
-> **Status: EM ANDAMENTO.** Fase 2 (tempo real) implementada e ainda **não validada em produção**. Veja "O que ainda não foi testado".
+> **Status: EM ANDAMENTO.** Fases 2 (tempo real) e 3 (salas, admin, quadros salvos e palavras extras) implementadas e testadas com Vitest, mas **ainda não validadas em produção**. Veja "O que ainda não foi testado".
 
-Quadro branco que abre por um link, sem login. Um banco com as palavras de HSK 1 e HSK 2 fica ao lado do quadro: a pessoa arrasta cópias dos cartões para o quadro, forma frases e vê o resultado num painel embaixo. Agora o quadro é **compartilhado em tempo real**: professora e alunos mexem nos mesmos cartões e veem o cursor e o nome uns dos outros.
+Quadro branco compartilhado em tempo real. Um banco com as palavras de HSK 1 e HSK 2 fica ao lado do quadro: a pessoa arrasta cópias dos cartões para o quadro, forma frases e vê o resultado num painel embaixo. A professora (**admin**) cria a sala e manda o **link de aluno**; os **alunos** entram por ele, sem login, e todos veem os mesmos cartões, o cursor e o nome uns dos outros.
 
-## Como funciona (fase 2)
+## Nomenclatura
 
-- **Front:** React + TypeScript + Vite + dnd-kit (pasta `src/`). O estado do quadro continua atrás da interface `BoardStore`; a implementação em uso é `RealtimeBoardStore` (WebSocket). O `LocalStorageBoardStore` continua no código (testes e modo só-navegador), mas não é mais o padrão.
-- **Backend:** um Cloudflare Worker (`worker/index.ts`) recebe `/api/quadro/:id/ws` e repassa para um **Durable Object por quadro** (`worker/QuadroDurableObject.ts`), que usa a **WebSocket Hibernation API** (`ctx.acceptWebSocket`, `webSocketMessage`, `webSocketClose`). O estado fica em `ctx.storage` (SQLite). Sem banco separado, sem VPS.
-- O mesmo Worker serve o front (`dist/`) como assets (`wrangler.jsonc`: `assets.directory`, `not_found_handling: single-page-application`, `run_worker_first: ["/api/*"]`).
-- As regras do servidor ficam em funções puras (`src/shared/`), testadas com Vitest sem o runtime da Cloudflare.
+| Termo | Significa |
+| --- | --- |
+| **Sala** | um quadro compartilhado, identificado por um **código de sala** longo e aleatório |
+| **Link de admin** | código da sala + **token secreto de admin**. É o link da professora |
+| **Link de aluno** | só o código da sala, sem token |
+| **admin** | a professora. Papel decidido **só no servidor**, pelo token |
+| **aluno** | qualquer pessoa que entra sem token de admin |
 
-### Quadro e aula seguinte
+> ⚠️ **O link de admin nunca deve ser enviado aos alunos.** Quem o tem controla a sala, os quadros salvos e as palavras extras da professora. Mande aos alunos só o botão **"Copiar link dos alunos"**.
 
-O quadro ao vivo é **gravado no Durable Object** (no soltar um cartão, ao adicionar, remover e limpar). Por isso o link continua com o quadro como ficou: **abrir o mesmo link na aula seguinte mostra o quadro da aula anterior**. Quem entra no meio da aula recebe um `snapshot` com o estado atual.
+## Como funciona
 
-- **Salvar quadro** (professora) guarda um *ponto de restauração* para a turma toda.
-- **Abrir quadro salvo** (professora) troca o quadro de todos pelo último salvo.
-- **Limpar quadro** (professora) esvazia o quadro de todos. O desfazer dela traz tudo de volta.
-- Para começar uma aula do zero, a professora usa "Limpar quadro" ou cria um quadro novo.
+- **Front:** React + TypeScript + Vite + dnd-kit (`src/`). O estado do quadro fica atrás da interface `BoardStore`; a implementação em uso é `RealtimeBoardStore` (WebSocket).
+- **Backend:** um Cloudflare Worker (`worker/index.ts`) com dois tipos de **Durable Object** (SQLite, plano grátis):
+  - `QUADRO` (`QuadroDurableObject`): **um por sala**. Usa a **WebSocket Hibernation API** (`ctx.acceptWebSocket`, `webSocketMessage`, `webSocketClose`). Guarda o quadro ao vivo, o hash do dono e as sessões de aluno.
+  - `PROFESSORA` (`ProfessoraDurableObject`): **um por admin**, nomeado pelo SHA-256 do token dela (calculado no servidor). Guarda o que vale para **todas as salas dela**: os quadros salvos e as palavras extras.
+- O mesmo Worker serve o front (`dist/`) como assets (`assets.directory`, `not_found_handling: single-page-application`, `run_worker_first: ["/api/*"]`).
+- As regras do servidor são funções puras em `src/shared/`, testadas sem o runtime da Cloudflare.
 
-### Nome, papéis e cursores
+## Criar sala, links e sessões
 
-- Ao abrir o link, antes de entrar, aparece **"Como você quer aparecer?"** (1 a 24 caracteres, sem espaços nas pontas). Só depois disso o WebSocket conecta. O nome é guardado no `localStorage` deste navegador e **clicar no próprio nome na barra** abre a tela para trocar. Nomes repetidos são permitidos: o `clientId` identifica a conexão. O servidor valida o nome de novo e o trata sempre como texto.
-- **Dois papéis, decididos só no servidor:**
-  - **professora:** conexão com token válido. Só ela pode `save` e `reset` (Salvar, Abrir salvo, Limpar). Um aluno que tentar recebe `error`.
-  - **aluno:** qualquer conexão sem token (ou com token errado).
-- **Token da professora:** quem usa "Criar quadro" ganha um id longo e aleatório (24 caracteres) e um token guardado no navegador dela. Na primeira conexão com token, o servidor grava só o **hash SHA-256** dele; depois disso só o mesmo token é professora. Sem segredo para configurar no Worker.
-  - A barra tem **Copiar link** (alunos, sem token) e **Copiar link da professora** (`#/quadro/<id>?token=<token>`, para abrir em outro aparelho: o token é guardado no navegador e sai da barra de endereço). **Guarde o link da professora:** quem perder o token perde o controle daquele quadro.
-- **Cursores ao vivo:** cada pessoa vê o cursor das outras com o nome. O seu próprio não é redesenhado. A posição vai em **coordenadas do quadro**, então vale com pan e zoom diferentes em cada aparelho. Envio no máximo a cada ~200 ms e só se mudou; quem recebe suaviza o movimento. Parado por ~10 s, o cursor desbota; ao desconectar, some na hora. Cursores não são gravados.
-- **Estilo por papel** (arquivo único de tokens: `src/theme/presence.ts`): professora com cor fixa (dourado) e ícone ★; alunos com ícone ● e cores claras diferentes (paleta fixa, sorteada pelo `clientId`). Texto escuro sobre todas as cores, contraste ≥ 7:1 (testado).
-- **Arrasto ao vivo:** ao arrastar um cartão do quadro, os outros o veem andar (envio a cada ~200 ms, só em memória). A posição final é gravada ao soltar.
-- A barra mostra quem está **online** (nome e papel) e o estado da conexão (Ao vivo / Reconectando / Desconectado). A conexão reconecta sozinha com backoff exponencial (0,5 s → 15 s, com sorteio).
+### Criar sala
 
-### Desfazer em quadro compartilhado
+1. Na tela inicial, a professora digita a **chave de criação** (só ela tem) e clica em **Criar sala**.
+2. O servidor gera um **código de sala** novo e, na primeira vez, o **token de admin**. Os dois são aleatórios e **assinados** com o segredo do servidor (HMAC-SHA256), então o Worker reconhece o que emitiu sem acordar nenhum Durable Object.
+3. A professora entra na sala já como admin. Nas próximas vezes, o token guardado no navegador dispensa a chave de criação: **Nova sala** (na barra) cria outra, e todas valem para a mesma admin.
 
-O desfazer (Ctrl/Cmd+Z, até 100 passos) é **local**: cada pessoa desfaz só os próprios passos, e o desfazer vira mensagens normais para a turma. Se outra pessoa já tiver removido o cartão, o servidor ignora o passo.
+### Os dois botões da admin
+
+Na barra, só a admin vê:
+
+- **Copiar link dos alunos:** o link com o código da sala, sem token. É o que se manda à turma.
+- **Copiar meu link (admin):** o link com o token, com aviso para não enviar aos alunos. Serve de backup (outro computador, navegador limpo).
+
+Quem entra pelo link de aluno **não vê nenhum desses botões**. O token de admin **nunca** é enviado ao navegador de aluno (nem em `snapshot`, `presence`, `cursor` ou qualquer outra mensagem; há teste para isso). Ele sai do servidor uma única vez, para quem acabou de criá-lo.
+
+### Sessão da admin
+
+- O token fica no `localStorage` da admin. Ao **abrir o site**, ela volta direto para a última sala, sem colar o link.
+- O link de admin (`#/quadro/<codigo>?token=<token>`) continua valendo: ao abri-lo, o navegador guarda a sessão e **tira o token da barra de endereço**.
+- **Sair** apaga a sessão de admin deste navegador (o nome continua). Para voltar, é preciso do link de admin. **Não há recuperação do token:** quem perder o token e o link perde o controle.
+- O token vai **dentro da mensagem `join`** do WebSocket, nunca na URL (URLs aparecem em logs).
+- Se a professora abrir um link de aluno da própria sala no mesmo navegador, ela entra como admin (o token guardado vale). Para testar como aluno, use uma janela anônima.
+
+### Sessão do aluno (4 horas)
+
+- Ao entrar, o servidor emite uma **sessão de aluno com validade de 4 horas**, contada a partir da primeira entrada (reentrar não a estende). O navegador guarda o id da sessão; o servidor guarda só o **hash** dele e a validade.
+- A expiração é conferida **no servidor**, com o relógio dele, na entrada e **a cada mensagem**. Vencida (ou desconhecida), o servidor fecha a conexão (código 4003) e o aluno volta para a tela de nome, com o aviso de sessão expirada.
+- Os links continuam **permanentes**: depois de expirar, o aluno entra de novo pelo mesmo link, confirmando o nome.
+- Admin não tem expiração (a sessão dela é o token).
+
+### Salas e abuso
+
+- A criação de sala exige a **chave de criação** (segredo do servidor) ou um token de admin válido. Sem isso, ninguém cria sala.
+- O código de sala é assinado: o Worker recusa códigos que ele nunca emitiu **antes de tocar em qualquer Durable Object**, então inventar códigos não custa requisições de Durable Object. Uma sala que não foi criada responde com o código de fechamento 4004 ("sala não encontrada") e o front não fica reconectando.
+- Limites que continuam: a chave de criação pode ser tentada por força bruta (use uma frase longa) e ainda não há limitação de requisições por IP. Outra forma de autenticação poderá substituir a chave no futuro.
+
+## Ações da admin
+
+Só a admin vê e pode usar. O servidor **rejeita** essas mensagens quando vêm de um aluno e responde com `error` (`sem_permissao`).
+
+- **Limpar quadro:** esvazia o quadro de todos, com **confirmação** (não há desfazer).
+- **Salvar quadro:** pede um **nome** (ex.: "Aula 3 - verbos") e guarda o quadro atual. Um nome que já existe é substituído. Máximo de 50 quadros, nome de até 40 caracteres.
+- **Abrir quadro salvo:** lista os quadros da admin (todos, de qualquer sala dela). **Abrir** troca o quadro de todos os conectados (com confirmação se já houver cartões); **Excluir** apaga o quadro salvo (com confirmação).
+- **Adicionar palavra:** abre o formulário de palavras extras (abaixo).
+
+Os quadros salvos pertencem à admin (Durable Object `PROFESSORA`), não à sala.
+
+### O quadro ao vivo e a aula seguinte
+
+O quadro ao vivo é gravado no Durable Object da sala (ao soltar um cartão, adicionar, remover, limpar ou abrir um quadro salvo; nunca a cada passo do arrasto). Abrir o mesmo link na aula seguinte mostra o quadro como ficou. Quem entra no meio da aula recebe um `snapshot` com o estado atual.
+
+## Palavras extras
+
+- Só a admin adiciona: hanzi, pinyin, tradução e **classe gramatical** (lista fechada, a mesma das cores dos cartões), todos obrigatórios. Limites: hanzi 12, pinyin 40 e tradução 60 caracteres; sem `<` nem `>` (nada de HTML: tudo é texto puro). **Validação no navegador e no servidor.**
+- A palavra entra no banco com o selo **"E"** no lugar do selo de HSK, com a cor da classe, e ganha o filtro **Extras** ao lado de Todos, HSK 1 e HSK 2.
+- Ficam no **dicionário da admin** (`PROFESSORA`, um único registro, até 300 palavras) e aparecem em **todas as salas dela**, separadas das 300 originais (a lista original nunca é alterada). Quem entra na sala (aluno ou admin) recebe as extras no `snapshot`.
+- A admin pode **editar** e **excluir** uma palavra extra. Excluir tira os cartões dela da sala atual; em outras salas e quadros salvos, o cartão de uma palavra que não existe mais simplesmente não aparece (e é descartado ao abrir um quadro salvo).
+- Limite conhecido: uma palavra nova só aparece em **outra sala já aberta** quando alguém entra de novo nela (a sala consulta o dicionário a cada entrada).
+
+## Nome, cursores e papéis na tela
+
+- Antes de entrar, aparece **"Como você quer aparecer?"** (1 a 24 caracteres). O nome fica no `localStorage`; clicar no próprio nome na barra troca. O servidor valida o nome de novo e o trata como texto.
+- **Cursores ao vivo:** cada pessoa vê o cursor das outras com o nome, em coordenadas do quadro (vale com pan e zoom diferentes). Envio a cada ~200 ms e só se mudou; o movimento é suavizado; parado por ~10 s o cursor desbota; ao desconectar, some. Cursores não são gravados.
+- **Estilo por papel** (`src/theme/presence.ts`): admin com cor fixa (dourado) e ícone ★; alunos com ícone ● e cores claras sorteadas pelo `clientId`. Contraste ≥ 7:1 (testado). Na lista de online, a admin aparece como "(admin)".
+- **Arrasto ao vivo:** os outros veem o cartão andar (a cada ~200 ms, só em memória); a posição final é gravada ao soltar.
+- A conexão reconecta sozinha com backoff exponencial (0,5 s → 15 s, com sorteio).
+
+## Preferências locais
+
+Mostrar/esconder **pinyin**, **tradução**, **legenda**, **fixar frase** e **fixar a barra de ferramentas** são **individuais**: valem só na tela de quem mudou, ficam no `localStorage` (`miro-mandarim:prefs`) e **nunca** são enviadas pelo WebSocket nem sincronizadas (há teste para isso). O mesmo vale para o zoom.
 
 ## Protocolo JSON
 
-Toda mensagem tem `type` e `clientId`. O `clientId` é gerado pelo navegador a cada carregamento da página (duas abas = duas pessoas) e o servidor confere que cada mensagem vem com o mesmo da conexão. `Pos` = `{ x, y }` em coordenadas do quadro (0–2700 × 0–1900). `Instance` = `{ instanceId, palavraId, pos }`. Limites: 64 000 caracteres por mensagem, 400 cartões no quadro.
+Toda mensagem tem `type` e `clientId`. O `clientId` é gerado a cada carregamento da página (duas abas = duas pessoas) e o servidor confere que cada mensagem vem com o mesmo da conexão. `Pos` = `{ x, y }` (0–2700 × 0–1900). `Instance` = `{ instanceId, palavraId, pos }`. Limites: 64 000 caracteres por mensagem, 400 cartões no quadro.
 
 **Navegador → servidor**
 
 | type | campos | quem pode |
 | --- | --- | --- |
-| `join` | `nome` (1–24 caracteres) | todos; também troca o nome |
-| `move` | `instanceId`, `to: Pos`, `final: boolean` (`false` durante o arrasto, `true` ao soltar) | todos |
-| `add` | `instances: Instance[]` | todos |
-| `remove` | `instanceIds: string[]` | todos |
+| `join` | `nome`, `token?` (admin), `sessao?` (aluno) | todos; também troca o nome |
+| `move` | `instanceId`, `to`, `final` | todos |
+| `add` | `instances` | todos |
+| `remove` | `instanceIds` | todos |
 | `cursor` | `x`, `y` | todos |
-| `save` | — | só professora |
-| `reset` | `to: "empty" \| "saved"` (padrão `"empty"`) | só professora |
+| `reset` | `to: "empty"` | só admin |
+| `save` | `nome` | só admin |
+| `listSaved` | — | só admin |
+| `open` | `id` do quadro salvo | só admin |
+| `deleteSaved` | `id` | só admin |
+| `addPalavra` | `palavra: { hanzi, pinyin, traducao, classe }` | só admin |
+| `editPalavra` | `id`, `palavra` | só admin |
+| `removePalavra` | `id` | só admin |
 
 **Servidor → navegador**
 
-| type | clientId | campos |
+| type | para quem | campos |
 | --- | --- | --- |
-| `snapshot` | o seu | `papel`, `cor`, `state` (`{instanceId: Instance}`), `hasSaved` |
-| `presence` | `"server"` | `users: [{ clientId, nome, papel, cor }]` |
-| `move`, `add`, `remove`, `cursor` | quem fez | os mesmos campos da mensagem original (não voltam para quem enviou) |
-| `saved` | professora | `at` (ms) — vale para todos |
-| `reset` | professora | `to`, `state` (novo quadro) — vale para todos |
-| `leave` | quem saiu | — |
-| `error` | o seu | `code` (`mensagem_invalida`, `sem_permissao`, `sem_entrada`, `sem_salvo`, `limite`, `client_id_em_uso`), `message` |
+| `snapshot` | quem entrou | `papel`, `cor`, `state`, `palavras` (extras), `sessao?` (`{ id?, expiraEm }`, só alunos) |
+| `presence` | todos | `users: [{ clientId, nome, papel, cor }]` |
+| `move`, `add`, `remove`, `cursor` | os outros | os mesmos campos da mensagem original |
+| `reset` | todos | `to` (`"empty"` ou `"saved"`), `state` |
+| `palavras` | todos | `items`: lista completa das palavras extras |
+| `saved` | quem salvou | `meta: { id, nome, em, total }` |
+| `savedList` | quem pediu | `items: [{ id, nome, em, total }]` |
+| `leave` | os outros | — |
+| `error` | quem enviou | `code` (`mensagem_invalida`, `sem_permissao`, `sem_entrada`, `limite`, `client_id_em_uso`, `sessao_expirada`, `nao_encontrado`), `message` |
 
-`reset` com `to: "saved"` é extensão do nosso contrato (não é da Cloudflare): serve para "Abrir quadro salvo".
+Códigos de fechamento do WebSocket (o front **não** reconecta): 4000 (outra aba assumiu o `clientId`), 4002 (`clientId` recusado), 4003 (sessão de aluno expirada), 4004 (sala inexistente).
+
+Rota HTTP: `POST /api/salas` com `{ chave? , token? }` → `{ codigo, token? }` (o `token` só vem quando é emitido pela primeira vez).
 
 ## Como rodar
 
 ### Comandos que você executa (passo a passo)
 
-1. **Conta e Node.** Crie uma conta gratuita em <https://dash.cloudflare.com/sign-up>. Confira o Node.js:
-
-   ```bash
-   node --version
-   ```
-
-   (precisa ser uma versão atual; o projeto foi feito com Node 24). Se não tiver, instale em <https://nodejs.org>.
+1. **Conta e Node.** Conta gratuita em <https://dash.cloudflare.com/sign-up>. Confira o Node.js (`node --version`; o projeto foi feito com Node 24).
 
 2. **Dependências e build:**
 
@@ -86,150 +151,152 @@ Toda mensagem tem `type` e `clientId`. O `clientId` é gerado pelo navegador a c
    npm run build
    ```
 
-   O build roda `tsc` no front, `tsc` no Worker e `vite build` (gera `dist/`).
-
-3. **Login na Cloudflare** (só uma vez):
+3. **Login na Cloudflare** (uma vez):
 
    ```bash
    npx wrangler login
    ```
 
-   O navegador abre para você autorizar. Se aparecer só uma URL no terminal, copie e cole no navegador.
+4. **Chave de criação para rodar localmente.** Crie o arquivo `.dev.vars` na raiz (ele está no `.gitignore`; **nunca** o publique) com uma frase longa só sua:
 
-4. **Rodar localmente** (depois do build):
-
-   ```bash
-   npx wrangler dev
+   ```
+   CHAVE_CRIACAO=troque-por-uma-frase-longa-so-sua
    ```
 
-   (ou `npm run dev`, que faz o build e roda o `wrangler dev`). Abra <http://localhost:8787>. Você deve ver a home; "Criar quadro" abre o quadro e pede seu nome. Abra o **mesmo link em dois navegadores** (ou uma janela anônima, para ter outro nome): cada um vê o cartão do outro andando e o cursor com o nome. O link sem token é o de aluno; "Copiar link da professora" dá o de professora.
+   Depois rode `npx wrangler dev` (ou `npm run dev`) e abra <http://localhost:8787>. Digite a chave, clique em **Criar sala**, use **Copiar link dos alunos** e abra numa janela anônima.
 
-   Mudou o front? Rode `npm run build` de novo e recarregue (o Worker serve o `dist/`).
-
-5. **Publicar** (só quando você decidir):
+5. **Chave de criação em produção** (uma vez, antes de publicar; o comando pede o valor, que não fica em nenhum arquivo):
 
    ```bash
-   npx wrangler deploy
+   npx wrangler secret put CHAVE_CRIACAO
    ```
 
-   Na primeira vez o Wrangler pode pedir para você configurar um subdomínio `workers.dev`. O endereço final fica no formato `<worker>.<subdominio>.workers.dev`.
+6. **Publicar** (só quando você decidir):
+
+   ```bash
+   npm run deploy
+   ```
+
+   (faz o build e o `wrangler deploy`). Na primeira vez o Wrangler pode pedir um subdomínio `workers.dev`. Esta versão cria o Durable Object novo `PROFESSORA`. **Salas criadas antes desta versão deixam de funcionar** (o código delas não tem assinatura): crie salas novas.
+
+Não coloque a chave de criação, tokens ou senhas em código, README ou commits.
 
 ### Outros comandos
 
 ```bash
 npm test         # testes (Vitest)
 npm run build    # tsc (front e Worker) + vite build
-npm run deploy   # build + wrangler deploy
 ```
 
 ## Limites do plano grátis da Cloudflare
 
 Segundo a [página de preços dos Durable Objects](https://developers.cloudflare.com/durable-objects/platform/pricing/):
 
-- **100 mil requisições de Durable Object por dia.** Cada mensagem WebSocket **recebida** pelo servidor conta com razão de **20 por 1** (100 mensagens = 5 requisições). Mensagens **enviadas** pelo servidor não são cobradas.
-- **100 mil escritas de linha (SQLite) por dia**, 5 milhões de leituras por dia e **5 GB** de armazenamento no total. Cada `put()` conta.
+- **100 mil requisições de Durable Object por dia.** Cada mensagem WebSocket **recebida** conta com razão de **20 por 1**. Mensagens **enviadas** não são cobradas.
+- **100 mil escritas de linha por dia**, 5 milhões de leituras e **5 GB** de armazenamento.
 - 13 000 GB-s de duração por dia; um objeto ocioso, elegível para hibernar, não paga duração.
-- Passou da cota: as operações daquele tipo falham até a cota zerar. A cota diária **zera às 00:00 UTC (21h em Brasília)**.
-- O plano pago, **Workers Paid, custa US$ 5 por mês** e amplia esses limites.
+- A cota diária **zera às 00:00 UTC (21h em Brasília)**. O plano **Workers Paid** custa **US$ 5 por mês**.
+
+### O que grava no armazenamento
+
+Só estas ações escrevem (uma linha por chave): soltar/adicionar/remover cartão e limpar (sala), abrir quadro salvo (sala), salvar ou excluir quadro salvo (`PROFESSORA`), adicionar/editar/excluir palavra extra (`PROFESSORA`), criar sala (1 linha) e **cada aluno novo** (1 linha da sessão). **Nunca** gravam: cursor, arrasto, presença e preferências locais.
 
 ### Estimativa: aula de 30 alunos (60 min)
 
-Premissas: cada pessoa move o mouse sobre o quadro em 30% do tempo e o cursor sai no máximo 5 vezes por segundo (throttle de 200 ms).
+Premissas: cada pessoa move o mouse sobre o quadro em 30% do tempo, cursor a no máximo 5 envios por segundo.
 
-| Origem | Mensagens recebidas | Contam como requisições (÷ 20) |
-| --- | --- | --- |
-| Cursores: 30 × 5 × 0,3 × 3 600 s | ~162 000 | **~8 100** |
-| Arrasto ao vivo: ~20 arrastos de 3 s por pessoa | ~9 000 | ~450 |
-| Entradas, adds, drops, presença | poucas centenas | < 50 |
-| **Total** | | **~8 600 (≈ 9% das 100 mil)** |
+| Origem | Contam como requisições |
+| --- | --- |
+| Cursores: 30 × 5 × 0,3 × 3 600 s ≈ 162 000 mensagens ÷ 20 | **~8 100** |
+| Arrasto ao vivo: ~20 arrastos de 3 s por pessoa ≈ 9 000 mensagens ÷ 20 | ~450 |
+| Entradas (cada `join` consulta o dicionário da admin: +1 requisição), adds, drops, presença | < 150 |
+| **Total** | **~8 700 (≈ 9% das 100 mil)** |
 
-- **Pior caso** (todos movendo o cursor o tempo todo): 30 × 5 × 3 600 = 540 000 mensagens ≈ 27 000 requisições (**≈ 27%**). Dá para **3 aulas assim por dia** no plano grátis no pior caso, e mais de 10 nas condições acima.
-- **Escritas:** um `put` por soltar/adicionar/remover (e um por salvar/limpar): ~30 alunos × 20 ações ≈ **600 por aula** (< 1% das 100 mil). O arrasto e os cursores **não gravam**.
-- O que cresce com a turma é o *broadcast* (cada mensagem vira até 29 envios), mas isso não é cobrado como requisição; é só CPU do objeto.
-- Isto é uma estimativa por conta, não uma medição. Esta conta considera só a página de preços dos Durable Objects; o Worker de entrada tem a própria cota de requisições, que não foi estimada aqui.
+- **Pior caso** (todos movendo o cursor o tempo todo): ≈ 27 000 requisições (**≈ 27%**), ou seja, ~3 aulas por dia.
+- **Escritas:** ~30 alunos × 20 ações + 30 sessões ≈ **630 por aula** (< 1%).
+- Estimativa por conta, não medição. Considera só os Durable Objects; o Worker de entrada tem cota própria, não estimada aqui.
 
 ## Pendências e limites conhecidos
 
-- **Conflitos:** vale a última mensagem que chega ao servidor (sem fusão). Dois alunos movendo o mesmo cartão ao mesmo tempo: o cartão fica com quem soltou por último.
-- **Sem rede:** enquanto desconectado, as mudanças locais não são enviadas; ao reconectar, o `snapshot` do servidor substitui o estado local.
-- **Sem proteção contra abuso** além do tamanho da mensagem, do limite de 400 cartões e da conferência de origem (`Origin`) da conexão. Quem sabe o id do quadro (24 caracteres aleatórios) consegue entrar como aluno.
-- **Token:** o primeiro token enviado a um quadro novo vira o da professora. Sem ele não há como recuperar o controle (não há login).
-- O quadro **não expira**: fica gravado no Durable Object até alguém limpar.
+- **Conflitos:** vale a última mensagem que chega ao servidor (sem fusão).
+- **Sem rede:** enquanto desconectado, as mudanças locais não são enviadas; ao reconectar, o `snapshot` substitui o estado local.
+- **Sem desfazer:** o desfazer foi removido. Por isso Limpar, Abrir quadro salvo e Excluir pedem confirmação.
+- **Sem recuperação de token:** quem perde o token e o link de admin perde o acesso à conta de admin (salas, quadros salvos, palavras extras).
+- **O link de admin é a conta inteira:** o mesmo token vale em todas as salas da admin. Se vazar, trate como perdido.
+- **Expiração do aluno:** vale na entrada e a cada mensagem; um aluno parado só recebendo é desconectado no próximo broadcast. Quem tem o link de aluno pode entrar de novo e ganhar outra sessão.
+- A criação de sala só é protegida pela chave de criação (sem limitação por IP). O quadro de uma sala **não expira**.
 
 ## O que ainda não foi testado
 
-- **`wrangler dev` e `wrangler deploy` ainda não foram executados.** O front, o protocolo, as regras do servidor, o throttle e o `RealtimeBoardStore` (com WebSocket falso) têm testes; o Durable Object em si (Hibernation API, `serializeAttachment`, gravação em `ctx.storage`) só foi escrito conforme a documentação e precisa ser validado rodando.
-- Dois navegadores no mesmo quadro, cursores, reconexão e a hibernação real.
-- Toque real em celular (segurar para arrastar, pinça) e o arrasto ao vivo no celular.
+- **`wrangler dev` e `wrangler deploy` desta versão ainda não foram executados.** As regras (papéis, sessões, quadros salvos, palavras extras, protocolo, store com WebSocket falso) têm testes; os Durable Objects em si (Hibernation API, `serializeAttachment`, `ctx.storage`, chamadas RPC da sala para `PROFESSORA`, o `POST /api/salas` e o fechamento 4004 pelo Worker) só foram escritos conforme a documentação e precisam ser validados rodando.
+- Dois navegadores na mesma sala, sessão de aluno vencendo de verdade (4 horas), reconexão e hibernação reais.
+- Toque real em celular (segurar para arrastar, pinça) e os formulários/janelas novos no celular.
 
 ## Como usar o quadro
 
-- Na raiz, "Criar quadro" gera um id longo e abre `/#/quadro/<id>`.
-- Para compartilhar com os alunos, use **Copiar link**.
-
 ### Banco de palavras (cópias)
 
-- A coluna ao lado (no celular, uma gaveta embaixo) é um **banco**: arrastar uma palavra dela para o quadro cria uma **cópia**, e a palavra continua no banco. Dá para puxar a mesma palavra quantas vezes quiser.
-- Cada cópia no quadro tem um `instanceId` próprio, separado do `id` da palavra.
-- Para remover uma cópia: arraste-a de volta para o banco, ou passe o mouse e clique no **×** (ou selecione e aperte Delete). No toque o × fica sempre visível.
-- **Busca** no banco: por hanzi, pinyin (com ou sem tom, ex.: `ni`, `nǐ`) ou tradução (com ou sem acento).
-- **Filtro de nível:** Todos, HSK 1 ou HSK 2. Cada cartão tem um selo pequeno "1" ou "2" no canto superior direito.
-- **Desfazer** (botão ou Ctrl/Cmd+Z): até 100 passos, só dos seus próprios passos.
+- A coluna ao lado (no celular, uma gaveta embaixo) é um **banco**: arrastar uma palavra para o quadro cria uma **cópia**, e a palavra continua no banco. Cada cópia tem um `instanceId` próprio.
+- Para remover uma cópia: arraste-a de volta para o banco, ou clique no **×** (ou selecione e aperte Delete). No toque o × fica sempre visível.
+- **Busca:** por hanzi, pinyin (com ou sem tom, ex.: `ni`, `nǐ`) ou tradução (com ou sem acento).
+- **Filtro:** Todos, HSK 1, HSK 2 ou **Extras**. Cada cartão tem um selo no canto superior direito: **1** ou **2** nas originais, **E** nas extras.
 
 ### Pinyin, tradução e cores
 
-- Botões **Pinyin** e **Tradução** (ligados por padrão) mostram ou escondem o texto em todos os cartões. A tradução aparece ao passar o mouse; **no celular, com um toque rápido**.
-- A escolha fica no localStorage (chave `miro-mandarim:prefs`) e vale só para você: não é compartilhada com a turma.
-- **Cor por classe gramatical:** cada cartão é pintado pela classe da palavra. As cores ficam em `src/theme/classes.ts`. O botão **Legenda** abre e fecha a legenda.
+- **Pinyin** e **Tradução** (ligados por padrão) mostram ou escondem o texto nos cartões. A tradução aparece ao passar o mouse; **no celular, com um toque rápido**.
+- **Cor por classe gramatical** (`src/theme/classes.ts`). O botão **Legenda** abre e fecha a legenda.
+
+### Barra de ferramentas
+
+A barra fica **escondida**: só uma aba pequena aparece no topo ("Ferramentas · N online", com o estado da conexão). Ela abre ao **passar o mouse** (no celular, ao tocar na aba). O ícone de **pin** na aba **fixa** a barra aberta (preferência sua).
 
 ### Frase formada
 
-O painel **Frase** fica recolhido numa faixa fina no rodapé. Ele sobe quando o mouse passa na faixa; no celular ou tablet, abre com um toque nela. **Fixar frase** mantém o painel aberto (preferência sua).
+O painel **Frase** fica recolhido numa faixa no rodapé e sobe ao passar o mouse (no celular, ao tocar). **Fixar frase** mantém o painel aberto. O quadro termina **acima** do painel, então a frase nunca cobre as palavras da lousa.
 
-Cada **linha do quadro é uma frase**, com hanzi, pinyin e a **tradução palavra por palavra** daquela linha (sem tradução automática). O painel é calculado no navegador de cada pessoa a partir do quadro compartilhado.
+Cada **frase** tem hanzi, pinyin e a **tradução palavra por palavra** (sem tradução automática). Regra de ordem, só pela posição:
 
-**Regra de ordem da frase:** os cartões são lidos só pela posição.
+1. Cartões com quase a mesma altura (até 53 px de diferença, a partir do cartão mais alto) formam uma **linha**, lida da esquerda para a direita.
+2. Na mesma linha, um **vão maior que 72 px** entre dois cartões vizinhos separa em **outra frase**: palavras distantes não se misturam.
+3. Em linhas diferentes, a **de cima vem primeiro**.
 
-1. Cartões com quase a mesma altura formam uma **linha** (até 53 px de diferença para baixo, a partir do cartão mais alto da linha).
-2. Dentro da linha, a ordem é **da esquerda para a direita**.
-3. Em linhas diferentes, a **de cima vem primeiro**, e cada linha é uma frase separada.
+### Zoom, celular e tablet
 
-### Zoom do quadro
-
-- Controles **−**, **%** (clique para voltar a 100%) e **+** no canto inferior direito, de 40% a 200%.
-- **Ctrl/Cmd + roda do mouse** (ou pinça no trackpad) aproxima e afasta em torno do ponteiro. No celular, **pinça com dois dedos**.
-- O zoom é só visual e individual: as posições ficam em coordenadas do quadro, então a frase, os cursores e o desfazer não dependem dele.
-
-### Celular e tablet
-
-- Abaixo de 700 px de largura, o banco vira uma gaveta embaixo (começa fechada) e a barra de ferramentas vira uma faixa que rola na horizontal.
-- No toque, arrastar um cartão começa ao **segurar um instante** (200 ms); antes disso, o dedo rola a lista ou o quadro.
+- **−**, **%** (volta a 100%) e **+** no canto inferior direito, de 40% a 200%; **Ctrl/Cmd + roda** (ou pinça no trackpad) e pinça com dois dedos no celular. O zoom é só visual e individual.
+- As barras de rolagem do quadro ficam escondidas; dá para arrastar o fundo, usar a roda/trackpad ou o dedo.
+- Abaixo de 700 px de largura, o banco vira uma gaveta embaixo (começa fechada). No toque, arrastar um cartão começa ao **segurar um instante** (200 ms).
 
 ## Estrutura
 
 ```
-wrangler.jsonc                  assets + Durable Object QUADRO (SQLite)
+wrangler.jsonc                  assets + Durable Objects QUADRO e PROFESSORA (SQLite)
 worker/
-  index.ts                      porta de entrada: /api/quadro/:id/ws → getByName(id)
-  QuadroDurableObject.ts        Hibernation API, estado, papéis, presença
+  index.ts                      POST /api/salas e /api/quadro/:codigo/ws (confere a assinatura)
+  env.ts                        bindings e segredo (CHAVE_CRIACAO)
+  QuadroDurableObject.ts        um por sala: Hibernation API, papéis, sessões, presença
+  ProfessoraDurableObject.ts    um por admin: quadros salvos e palavras extras
 src/
   shared/                       usado no front E no servidor
     protocol.ts                 tipos, parse e validação das mensagens
     room.ts                     regras do quadro e do papel (funções puras)
+    acoes.ts                    ações da admin (quadros salvos, palavras extras)
+    professora.ts               lógica do que a admin guarda (sobre um Kv abstrato)
+    palavras.ts, texto.ts       validação das palavras extras e de textos
+    sessoes.ts                  sessão de aluno de 4 horas
+    chaves.ts                   códigos e tokens assinados (HMAC)
     nome.ts                     validação do nome
   theme/                        classes.ts (cores gramaticais), presence.ts (cursores)
   store/                        BoardStore (interface), RealtimeBoardStore,
-                                LocalStorageBoardStore, BoardController (desfazer),
-                                preferences, session (nome e token)
-  lib/                          histórico, busca, frase, zoom, throttle, backoff, ids
+                                LocalStorageBoardStore (MVP), BoardController,
+                                preferences, session (nome, admin, sessão de aluno)
+  lib/                          busca, frase, zoom, throttle, backoff, ids, api, palavrasView
   hooks/                        useBoard, usePreferences, useMediaQuery
-  components/                   Home, NameGate, Board, Tray, Toolbar, PresenceBar,
-                                Cursors, Draggable, StickyNote, Legend, SentencePanel
-  data/palavras.json            300 palavras (HSK 1 e 2), com hsk e classe (provisório)
+  components/                   Home, NameGate, Board, Tray, Toolbar, PresenceBar, Cursors,
+                                Draggable, StickyNote, Legend, SentencePanel,
+                                QuadrosSalvos, PalavrasExtras
+  data/palavras.json            300 palavras originais (HSK 1 e 2), com hsk e classe
 dist/                           saída do vite build (servida pelo Worker)
 ```
-
-Desempenho: durante o arrasto só o `DragOverlay` se move localmente; o estado só muda ao soltar. Os cursores ficam numa camada isolada (`Cursors`), que re-renderiza sozinha a cada mensagem, sem tocar no resto do quadro.
 
 ## ⚠️ Pendências para a professora revisar
 
@@ -237,13 +304,13 @@ Desempenho: durante o arrasto só o `DragOverlay` se move localmente; o estado s
 
 - A lista tem **300 palavras: HSK 1 (150) e HSK 2 (150), no padrão HSK 2.0**, tiradas de uma lista pública (`github.com/clem109/hsk-vocabulary`). Não foi comparada com uma fonte oficial do Hanban/HSK.
 - As **traduções em português** foram escritas por nós e são **provisórias**.
-- Algumas entradas do HSK 2.0 são frases ou formas compostas (ex.: 打电话, 打篮球, 火车站); homógrafos com leituras diferentes aparecem como entradas separadas (长 cháng/zhǎng, 还 hái/huán, 得 de/děi).
+- Algumas entradas do HSK 2.0 são frases ou formas compostas (ex.: 打电话, 打篮球, 火车站); homógrafos aparecem como entradas separadas (长 cháng/zhǎng, 还 hái/huán, 得 de/děi).
 - O pinyin vem da lista pública, sem espaços entre sílabas e em forma de dicionário (sem sândi tonal, ex.: 不客气 = bùkèqi).
-- Palavras comuns de aula que **não** estão no HSK 1–2 (por exemplo 你们, 他们, 这儿, 那儿, 为什么) ficaram de fora.
+- Palavras comuns de aula que **não** estão no HSK 1–2 (por exemplo 你们, 他们, 这儿, 那儿, 为什么) ficaram de fora. Agora a admin pode acrescentá-las como **palavras extras**.
 
 ### Classes gramaticais (provisórias)
 
-O campo `classe` de cada palavra foi atribuído por nós, e **a professora precisa revisar**. Palavras que podem ter mais de uma classe usam a mais comum no nível HSK delas. Escolhas a conferir:
+O campo `classe` de cada palavra foi atribuído por nós, e **a professora precisa revisar**. Palavras com mais de uma classe usam a mais comum no nível HSK delas:
 
 | Palavra | Classe usada | Outras possíveis |
 | --- | --- | --- |
@@ -269,5 +336,6 @@ O campo `classe` de cada palavra foi atribuído por nós, e **a professora preci
 ## Próximos passos
 
 - Validar o fluxo completo com a professora e uma turma pequena (dois a três aparelhos) antes de uma aula real.
-- Trocar a lista provisória pela lista definitiva da professora e revisar as classes gramaticais.
-- Possíveis melhorias: agrupar os envios de cursor no servidor (reduz o tráfego com turmas grandes), expirar quadros antigos, recuperar o controle de um quadro sem o token.
+- Trocar a chave de criação por outra forma de autenticação, com limitação de requisições.
+- Recuperação do token de admin; expirar salas antigas.
+- Agrupar os envios de cursor no servidor (menos tráfego em turmas grandes).
