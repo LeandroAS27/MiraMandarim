@@ -12,14 +12,17 @@ export interface BoardSession {
   nome: string
   /** Token da admin (opcional): decide o papel no servidor. */
   token: string | null
+  /** Sessão de aluno guardada deste navegador (se houver) e como guardar uma nova. */
+  sessao?: string | null
+  onSessao?: (id: string) => void
 }
 
 export function useBoard(boardId: string, session: BoardSession) {
-  const { clientId, nome, token } = session
+  const { clientId, nome, token, sessao, onSessao } = session
   // O quadro agora é compartilhado: o estado vem do servidor (BoardStore em tempo real).
   // Para voltar ao modo só-navegador, basta trocar esta linha por LocalStorageBoardStore.
   const { store, ctl } = useMemo(() => {
-    const store = new RealtimeBoardStore({ boardId, clientId, nome, token })
+    const store = new RealtimeBoardStore({ boardId, clientId, nome, token, sessao, onSessao })
     return { store, ctl: new BoardController(store) }
     // o nome pode mudar sem reconectar (setNome, abaixo)
     // eslint-disable-next-line react-hooks/exhaustive-deps

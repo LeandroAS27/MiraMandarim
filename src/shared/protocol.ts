@@ -12,6 +12,7 @@ import { validateNome } from './nome'
 /** Códigos de fechamento do WebSocket que o front não tenta reconectar. */
 export const CLOSE_REPLACED = 4000
 export const CLOSE_BAD_ID = 4002
+export const CLOSE_SESSION_EXPIRED = 4003
 export const CLOSE_NO_ROOM = 4004
 
 export const MAX_MESSAGE_BYTES = 64_000
@@ -24,8 +25,9 @@ const INSTANCE_ID_RE = /^[A-Za-z0-9_-]{4,40}$/
 const PALAVRA_ID_RE = /^[A-Za-z0-9_-]{1,32}$/
 
 export type ClientMessage =
-  /** `token` (opcional) é o token de admin; só o servidor decide o papel a partir dele. */
-  | { type: 'join'; clientId: string; nome: string; token?: string }
+  /** `token` (opcional) é o token de admin; só o servidor decide o papel a partir dele.
+   *  `sessao` é a sessão de aluno que o servidor emitiu antes (vale 4 horas). */
+  | { type: 'join'; clientId: string; nome: string; token?: string; sessao?: string }
   | { type: 'move'; clientId: string; instanceId: string; to: Pos; final: boolean }
   | { type: 'add'; clientId: string; instances: Instance[] }
   | { type: 'remove'; clientId: string; instanceIds: string[] }
@@ -40,6 +42,12 @@ export interface PresenceUser {
   cor: string
 }
 
+/** Sessão de aluno: `id` só vem quando o servidor acabou de emitir uma nova. */
+export interface SessaoInfo {
+  id?: string
+  expiraEm: number
+}
+
 export type ErrorCode =
   | 'mensagem_invalida'
   | 'sem_permissao'
@@ -47,9 +55,10 @@ export type ErrorCode =
   | 'sem_salvo'
   | 'limite'
   | 'client_id_em_uso'
+  | 'sessao_expirada'
 
 export type ServerMessage =
-  | { type: 'snapshot'; clientId: string; papel: Papel; cor: string; state: BoardState; hasSaved: boolean }
+  | { type: 'snapshot'; clientId: string; papel: Papel; cor: string; state: BoardState; hasSaved: boolean; sessao?: SessaoInfo }
   | { type: 'presence'; clientId: string; users: PresenceUser[] }
   | { type: 'move'; clientId: string; instanceId: string; to: Pos; final: boolean }
   | { type: 'add'; clientId: string; instances: Instance[] }
@@ -111,7 +120,8 @@ export function parseClientMessage(raw: unknown): ParseResult<ClientMessage> {
       if (!n.ok) return bad(n.error)
       // token em formato inválido é ignorado (vira aluno), nunca um erro
       const token = typeof d.token === 'string' && TOKEN_RE.test(d.token) ? d.token : undefined
-      return { ok: true, msg: token ? { type: 'join', clientId, nome: n.nome, token } : { type: 'join', clientId, nome: n.nome } }
+      const sessao = typeof d.sessao === 'string' && TOKEN_RE.test(d.sessao) ? d.sessao : undefined
+      return { ok: true, msg: { type: 'join', clientId, nome: n.nome, ...(token ? { token } : {}), ...(sessao ? { sessao } : {}) } }
     }
     case 'move': {
       const to = parsePos(d.to)
@@ -173,7 +183,9 @@ export function parseServerMessage(raw: unknown): ParseResult<ServerMessage> {
     case 'snapshot': {
       const state = parseState(d.state)
       if (!state || (d.papel !== 'admin' && d.papel !== 'aluno') || !isHexColor(d.cor)) return bad('snapshot inválido.')
-      return { ok: true, msg: { type: 'snapshot', clientId, papel: d.papel, cor: d.cor, state, hasSaved: d.hasSaved === true } }
+      const si = d.sessao
+      const sessao: SessaoInfo | undefined = isObj(si) && isNum(si.expiraEm) ? { expiraEm: si.expiraEm, ...(isStr(si.id) ? { id: si.id } : {}) } : undefined
+      return { ok: true, msg: { type: 'snapshot', clientId, papel: d.papel, cor: d.cor, state, hasSaved: d.hasSaved === true, ...(sessao ? { sessao } : {}) } }
     }
     case 'presence': {
       if (!Array.isArray(d.users)) return bad('presence inválido.')

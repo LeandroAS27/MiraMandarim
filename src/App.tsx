@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { boardHash, newClientId, parseBoardRoute } from './lib/boardId'
 import { Home } from './components/Home'
 import { Board } from './components/Board'
@@ -6,10 +6,13 @@ import { NameGate } from './components/NameGate'
 import {
   clearAdminSession,
   loadAdminToken,
+  clearSessao,
   loadNome,
+  loadSessao,
   loadUltimaSala,
   saveAdminToken,
   saveNome,
+  saveSessao,
   saveUltimaSala,
 } from './store/session'
 
@@ -20,6 +23,8 @@ export function App() {
   const [hash, setHash] = useState(window.location.hash)
   const [nome, setNome] = useState<string | null>(loadNome)
   const [editingName, setEditingName] = useState(false)
+  // sessão de aluno vencida (4 horas): mostra a tela de nome de novo
+  const [expirada, setExpirada] = useState(false)
   // Sessão da admin: fica neste navegador, então ao abrir o site ela entra direto.
   const [adminToken, setAdminToken] = useState<string | null>(loadAdminToken)
 
@@ -31,6 +36,10 @@ export function App() {
 
   const route = parseBoardRoute(hash)
   const routeId = route?.id
+  const onSessaoExpirada = useCallback(() => {
+    if (routeId) clearSessao(routeId)
+    setExpirada(true)
+  }, [routeId])
   const routeToken = route?.token ?? null
 
   // Link de admin (#/quadro/<codigo>?token=…): guarda a sessão neste navegador e tira o token da barra
@@ -66,7 +75,7 @@ export function App() {
   // key: trocar de link recomeça a conexão do zero.
   return (
     <>
-      {nome && (
+      {nome && !expirada && (
         <Board
           key={route.id}
           boardId={route.id}
@@ -78,17 +87,22 @@ export function App() {
             window.location.hash = '#/'
           }}
           onLeave={sair}
+          sessao={loadSessao(route.id)}
+          onSessao={(id) => saveSessao(route.id, id)}
+          onSessaoExpirada={onSessaoExpirada}
         />
       )}
-      {(!nome || editingName) && (
+      {(!nome || editingName || expirada) && (
         <NameGate
           initial={nome ?? ''}
+          aviso={expirada ? 'Sua sessão expirou. Confirme seu nome para entrar de novo.' : undefined}
           onSubmit={(n) => {
             saveNome(n)
             setNome(n)
             setEditingName(false)
+            setExpirada(false)
           }}
-          onCancel={nome ? () => setEditingName(false) : undefined}
+          onCancel={nome && !expirada ? () => setEditingName(false) : undefined}
         />
       )}
     </>

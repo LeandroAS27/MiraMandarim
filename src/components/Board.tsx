@@ -53,14 +53,22 @@ interface BoardProps {
   onNewRoom: () => void
   /** "Sair": apaga a sessão de admin deste navegador. */
   onLeave: () => void
+  /** Sessão de aluno deste navegador (se houver), como guardar uma nova e o que fazer quando vence. */
+  sessao: string | null
+  onSessao: (id: string) => void
+  onSessaoExpirada: () => void
 }
 
-export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom, onLeave }: BoardProps) {
+export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom, onLeave, sessao, onSessao, onSessaoExpirada }: BoardProps) {
   const {
     instances, createInstance, moveInstance, removeInstance, clearBoard, save, openSaved, hasSaved,
     previewMove, cancelPreview, sendCursor, meta, store,
-  } = useBoard(boardId, { clientId, nome, token })
+  } = useBoard(boardId, { clientId, nome, token, sessao, onSessao })
   const isAdmin = meta.papel === 'admin'
+  // sessão de aluno vencida: volta para a tela de nome
+  useEffect(() => {
+    if (meta.motivo === 'sessao_expirada') onSessaoExpirada()
+  }, [meta.motivo, onSessaoExpirada])
   // a admin volta direto para esta sala na próxima vez que abrir o site
   useEffect(() => {
     if (isAdmin) saveUltimaSala(boardId)

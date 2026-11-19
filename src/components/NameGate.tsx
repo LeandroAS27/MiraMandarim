@@ -4,6 +4,8 @@ import styles from './NameGate.module.css'
 
 interface Props {
   initial?: string
+  /** Aviso acima do campo (ex.: sessão expirada). */
+  aviso?: string
   /** Chamada com o nome já validado e sem espaços nas pontas. */
   onSubmit: (nome: string) => void
   /** Só ao trocar de nome (a primeira entrada não pode ser cancelada). */
@@ -11,7 +13,7 @@ interface Props {
 }
 
 /** Tela de nome: aparece antes de entrar no quadro (e ao clicar no próprio nome na barra). */
-export function NameGate({ initial = '', onSubmit, onCancel }: Props) {
+export function NameGate({ initial = '', aviso, onSubmit, onCancel }: Props) {
   const [value, setValue] = useState(initial)
   const [error, setError] = useState('')
 
@@ -26,6 +28,11 @@ export function NameGate({ initial = '', onSubmit, onCancel }: Props) {
     <div className={styles.backdrop} role="dialog" aria-modal="true" aria-labelledby="name-title">
       <form className={styles.card} onSubmit={submit}>
         <h1 id="name-title">Como você quer aparecer?</h1>
+        {aviso && (
+          <p role="status">
+            <strong>{aviso}</strong>
+          </p>
+        )}
         <p>Os outros no quadro vão ver este nome ao lado do seu cursor.</p>
         <label className={styles.label}>
           Seu nome

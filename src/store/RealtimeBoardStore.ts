@@ -1,6 +1,6 @@
 import { backoffDelay } from '../lib/backoff'
 import { throttle, type Throttled } from '../lib/throttle'
-import { CLOSE_BAD_ID, CLOSE_NO_ROOM, CLOSE_REPLACED, encode, parseServerMessage, type ClientMessage, type PresenceUser, type ServerMessage } from '../shared/protocol'
+import { CLOSE_BAD_ID, CLOSE_NO_ROOM, CLOSE_REPLACED, CLOSE_SESSION_EXPIRED, encode, parseServerMessage, type ClientMessage, type PresenceUser, type ServerMessage } from '../shared/protocol'
 import type { Papel } from '../theme/presence'
 import type { BoardState, Instance, Move, Pos } from '../types'
 import { applyMoveToState } from './applyMove'
@@ -19,7 +19,7 @@ export interface Meta {
   /** Último erro vindo do servidor (ex.: sem permissão), para a barra mostrar. */
   error: string | null
   /** Por que a conexão foi encerrada de vez (sem nova tentativa), se foi. */
-  motivo: 'substituida' | 'sala_inexistente' | null
+  motivo: 'substituida' | 'sala_inexistente' | 'sessao_expirada' | null
 }
 
 export interface RemoteCursor {
@@ -47,6 +47,10 @@ export interface RealtimeOptions {
   nome: string
   /** Token de admin (opcional): vai no join; o servidor decide o papel. */
   token?: string | null
+  /** Sessão de aluno guardada de uma visita anterior (vale 4 horas no servidor). */
+  sessao?: string | null
+  /** Chamada quando o servidor emite uma sessão nova (o front guarda no navegador). */
+  onSessao?: (id: string) => void
   createSocket?: (url: string) => SocketLike
   location?: { protocol: string; host: string }
   /** Intervalo mínimo entre envios de cursor e de movimento durante o arrasto (ms). */
@@ -55,7 +59,7 @@ export interface RealtimeOptions {
 
 export const SOCKET_OPEN = 1
 /** Fechamentos que não devem reconectar: outra aba assumiu o clientId, clientId recusado, sala inexistente. */
-const NO_RETRY = new Set([CLOSE_REPLACED, CLOSE_BAD_ID, CLOSE_NO_ROOM])
+const NO_RETRY = new Set([CLOSE_REPLACED, CLOSE_BAD_ID, CLOSE_NO_ROOM, CLOSE_SESSION_EXPIRED])
 
 /** O token de admin nunca vai na URL (ficaria em logs): vai dentro da mensagem join. */
 export function socketUrl(boardId: string, loc: { protocol: string; host: string }): string {
@@ -81,6 +85,7 @@ export class RealtimeBoardStore implements BoardStore {
   private retryTimer: ReturnType<typeof setTimeout> | null = null
   private wanted = false
   private nome: string
+  private sessao: string | null
 
   private readonly sendCursorThrottled: Throttled<Pos>
   private readonly sendPreviewThrottled: Throttled<{ instanceId: string; to: Pos }>
@@ -90,6 +95,7 @@ export class RealtimeBoardStore implements BoardStore {
 
   constructor(private opts: RealtimeOptions) {
     this.nome = opts.nome
+    this.sessao = opts.sessao ?? null
     this.meta = { status: 'connecting', papel: null, cor: null, clientId: opts.clientId, hasSaved: false, users: [], error: null, motivo: null }
     const ms = opts.throttleMs ?? 200
     this.sendCursorThrottled = throttle((p) => this.send({ type: 'cursor', clientId: this.opts.clientId, x: p.x, y: p.y }), ms)
@@ -149,7 +155,8 @@ export class RealtimeBoardStore implements BoardStore {
       this.socket = null
       this.setCursors({})
       if (!this.wanted || NO_RETRY.has(ev.code)) {
-        const motivo = ev.code === CLOSE_NO_ROOM ? 'sala_inexistente' : ev.code === CLOSE_REPLACED ? 'substituida' : null
+        const motivo =
+          ev.code === CLOSE_NO_ROOM ? 'sala_inexistente' : ev.code === CLOSE_REPLACED ? 'substituida' : ev.code === CLOSE_SESSION_EXPIRED ? 'sessao_expirada' : null
         this.setMeta({ status: 'closed', motivo })
         return
       }
@@ -183,7 +190,8 @@ export class RealtimeBoardStore implements BoardStore {
 
   private joinMessage(nome: string): ClientMessage {
     const { clientId, token } = this.opts
-    return token ? { type: 'join', clientId, nome, token } : { type: 'join', clientId, nome }
+    const sessao = this.sessao
+    return { type: 'join', clientId, nome, ...(token ? { token } : {}), ...(sessao ? { sessao } : {}) }
   }
 
   // --- mensagens do servidor ------------------------------------------------
@@ -198,6 +206,10 @@ export class RealtimeBoardStore implements BoardStore {
     switch (m.type) {
       case 'snapshot':
         this.attempt = 0
+        if (m.sessao?.id) {
+          this.sessao = m.sessao.id
+          this.opts.onSessao?.(m.sessao.id)
+        }
         this.setState(m.state)
         this.setMeta({ status: 'open', papel: m.papel, cor: m.cor, hasSaved: m.hasSaved, error: null })
         break

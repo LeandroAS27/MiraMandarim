@@ -87,6 +87,55 @@ describe('RealtimeBoardStore', () => {
     expect(aluno.sock().sent[0]).toEqual({ type: 'join', clientId: CID, nome: 'Ana' })
   })
 
+  it('guarda a sessão de aluno emitida e a manda nos próximos joins (reconexão e troca de nome)', () => {
+    const guardadas: string[] = []
+    const store = new RealtimeBoardStore({
+      boardId: 'quadro-id-muito-longo-123',
+      clientId: CID,
+      nome: 'Ana',
+      location: { protocol: 'http:', host: 'localhost:8787' },
+      createSocket: (u) => new FakeSocket(u),
+      onSessao: (id) => guardadas.push(id),
+    })
+    store.connect()
+    const sock = () => FakeSocket.all[FakeSocket.all.length - 1]
+    sock().open()
+    expect(sock().sent[0]).not.toHaveProperty('sessao')
+    sock().receive(snapshot({ sessao: { id: 'sessao-emitida-pelo-servidor-1', expiraEm: Date.now() + 1000 } }))
+    expect(guardadas).toEqual(['sessao-emitida-pelo-servidor-1'])
+
+    store.setNome('Ana Maria')
+    expect(sock().sent[sock().sent.length - 1]).toMatchObject({ type: 'join', nome: 'Ana Maria', sessao: 'sessao-emitida-pelo-servidor-1' })
+
+    sock().drop(1006)
+    vi.advanceTimersByTime(BACKOFF_BASE_MS * 2)
+    sock().open()
+    expect(sock().sent[0]).toMatchObject({ type: 'join', sessao: 'sessao-emitida-pelo-servidor-1' })
+  })
+
+  it('usa a sessão guardada de uma visita anterior', () => {
+    const store = new RealtimeBoardStore({
+      boardId: 'quadro-id-muito-longo-123',
+      clientId: CID,
+      nome: 'Ana',
+      sessao: 'sessao-antiga-guardada-123',
+      location: { protocol: 'http:', host: 'localhost:8787' },
+      createSocket: (u) => new FakeSocket(u),
+    })
+    store.connect()
+    FakeSocket.all[0].open()
+    expect(FakeSocket.all[0].sent[0]).toMatchObject({ type: 'join', sessao: 'sessao-antiga-guardada-123' })
+  })
+
+  it('sessão expirada (4003): não reconecta e informa o motivo', () => {
+    const a = make()
+    a.sock().open()
+    a.sock().drop(4003)
+    vi.advanceTimersByTime(60_000)
+    expect(FakeSocket.all).toHaveLength(1)
+    expect(a.store.getMeta()).toMatchObject({ status: 'closed', motivo: 'sessao_expirada' })
+  })
+
   it('sala inexistente (4004): não reconecta e informa o motivo', () => {
     const a = make()
     a.sock().open()

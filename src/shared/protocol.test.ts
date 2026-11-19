@@ -37,6 +37,12 @@ describe('parseClientMessage', () => {
     expect(parse({ type: 'join', clientId: CID, nome: 'Ana', token: 123 })).toEqual({ ok: true, msg: { type: 'join', clientId: CID, nome: 'Ana' } })
   })
 
+  it('join leva a sessão de aluno (formato inválido é ignorado)', () => {
+    const sessao = 'sessao-valida-1234567890'
+    expect(parse({ type: 'join', clientId: CID, nome: 'Ana', sessao })).toEqual({ ok: true, msg: { type: 'join', clientId: CID, nome: 'Ana', sessao } })
+    expect(parse({ type: 'join', clientId: CID, nome: 'Ana', sessao: 'x' })).toEqual({ ok: true, msg: { type: 'join', clientId: CID, nome: 'Ana' } })
+  })
+
   it('recusa nome inválido no join', () => {
     expect(parse({ type: 'join', clientId: CID, nome: '' }).ok).toBe(false)
     expect(parse({ type: 'join', clientId: CID, nome: 'x'.repeat(25) }).ok).toBe(false)

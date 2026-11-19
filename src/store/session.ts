@@ -45,6 +45,12 @@ export const saveAdminToken = (token: string) => write(ADMIN_KEY, token)
 export const loadUltimaSala = (): string | null => read(SALA_KEY)
 export const saveUltimaSala = (codigo: string) => write(SALA_KEY, codigo)
 
+/** Sessão de aluno (a que o servidor emite, válida por 4 horas), uma por sala. */
+const sessaoKey = (codigo: string) => `miro-mandarim:sessao:${codigo}`
+export const loadSessao = (codigo: string): string | null => read(sessaoKey(codigo))
+export const saveSessao = (codigo: string, id: string) => write(sessaoKey(codigo), id)
+export const clearSessao = (codigo: string) => remove(sessaoKey(codigo))
+
 /** "Sair": apaga a sessão da admin deste navegador (o nome continua). */
 export function clearAdminSession(): void {
   remove(ADMIN_KEY)

@@ -1,7 +1,7 @@
 import type { BoardState, Instance } from '../types'
 import { colorFor, type Papel } from '../theme/presence'
 import { TOKEN_RE } from './chaves'
-import { MAX_INSTANCES, canSend, type ClientMessage, type ErrorCode, type PresenceUser, type ServerMessage } from './protocol'
+import { MAX_INSTANCES, canSend, type ClientMessage, type ErrorCode, type PresenceUser, type ServerMessage, type SessaoInfo } from './protocol'
 
 /**
  * Regras do quadro no servidor, como funções puras (o Durable Object só cuida de I/O).
@@ -35,13 +35,14 @@ export async function decideRole(token: string | null | undefined, donoHash: str
 export const styleOf = (papel: Papel, clientId: string): { cor: string } => ({ cor: colorFor(papel, clientId) })
 
 /** O que o servidor manda a quem acabou de entrar. Não leva token nem nada de outra pessoa. */
-export const snapshotFor = (papel: Papel, clientId: string, data: RoomData): ServerMessage => ({
+export const snapshotFor = (papel: Papel, clientId: string, data: RoomData, sessao?: SessaoInfo): ServerMessage => ({
   type: 'snapshot',
   clientId,
   papel,
   cor: colorFor(papel, clientId),
   state: data.state,
   hasSaved: data.saved !== null,
+  ...(sessao ? { sessao } : {}),
 })
 
 export const toPresence = (list: { clientId: string; nome: string; papel: Papel }[]): PresenceUser[] =>

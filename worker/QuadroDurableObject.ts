@@ -1,7 +1,8 @@
 import { DurableObject } from 'cloudflare:workers'
 import palavrasData from '../src/data/palavras.json'
-import { CLOSE_BAD_ID, CLOSE_NO_ROOM, CLOSE_REPLACED, encode, parseClientMessage, type ClientMessage, type ErrorCode, type ServerMessage } from '../src/shared/protocol'
+import { CLOSE_BAD_ID, CLOSE_NO_ROOM, CLOSE_REPLACED, CLOSE_SESSION_EXPIRED, encode, parseClientMessage, type ClientMessage, type ErrorCode, type ServerMessage } from '../src/shared/protocol'
 import { decideRole, handleMessage, snapshotFor, toPresence, type RoomData } from '../src/shared/room'
+import { entrarComoAluno, expirou, type SessaoStore } from '../src/shared/sessoes'
 import type { BoardState } from '../src/types'
 import type { Papel } from '../src/theme/presence'
 
@@ -18,6 +19,8 @@ interface Attachment {
   clientId: string | null
   nome: string | null
   papel: Papel
+  /** Fim da sessão de aluno (ms). Admin não tem. */
+  expiraEm: number | null
 }
 
 /**
@@ -67,7 +70,7 @@ export class QuadroDurableObject extends DurableObject<Env> {
       server.close(CLOSE_NO_ROOM, 'Sala não encontrada.')
     } else {
       // o papel só é decidido no join (o token vai na mensagem, nunca na URL)
-      server.serializeAttachment({ clientId: null, nome: null, papel: 'aluno' } satisfies Attachment)
+      server.serializeAttachment({ clientId: null, nome: null, papel: 'aluno', expiraEm: null } satisfies Attachment)
     }
     return new Response(null, { status: 101, webSocket: client })
   }
@@ -84,6 +87,9 @@ export class QuadroDurableObject extends DurableObject<Env> {
     // Antes do join não há clientId; depois dele, cada mensagem tem de vir com o mesmo.
     if (!att.clientId || !att.nome) return this.sendError(ws, msg.clientId, 'sem_entrada', 'Envie "join" primeiro.')
     if (msg.clientId !== att.clientId) return this.sendError(ws, att.clientId, 'mensagem_invalida', 'clientId não confere.')
+
+    // A sessão de aluno é conferida pelo relógio do servidor a cada mensagem.
+    if (att.expiraEm !== null && expirou(att.expiraEm, Date.now())) return this.expulsar(ws)
 
     const out = handleMessage(this.data, msg, att.papel, (id) => VALID_PALAVRAS.has(id), Date.now())
     if (out.error) return this.sendError(ws, att.clientId, out.error.code, out.error.message)
@@ -113,6 +119,13 @@ export class QuadroDurableObject extends DurableObject<Env> {
   private async onJoin(ws: WebSocket, att: Attachment, msg: Extract<ClientMessage, { type: 'join' }>): Promise<void> {
     const { clientId, nome } = msg
     const papel = await decideRole(msg.token, this.donoHash)
+    // Aluno: sessão de 4 horas emitida (e conferida) aqui. Admin entra pelo token e não expira.
+    let sessao: { id?: string; expiraEm: number } | undefined
+    if (papel === 'aluno') {
+      const r = await entrarComoAluno(msg.sessao, this.sessoes, Date.now())
+      if (!r.ok) return this.expulsar(ws)
+      sessao = { expiraEm: r.expiraEm, ...(r.novaId ? { id: r.novaId } : {}) }
+    }
     // Mesmo clientId em outra conexão (ex.: aba duplicada): a mais nova assume, a antiga é fechada.
     for (const other of this.ctx.getWebSockets()) {
       if (other === ws) continue
@@ -128,9 +141,38 @@ export class QuadroDurableObject extends DurableObject<Env> {
       return
     }
 
-    ws.serializeAttachment({ clientId, nome, papel } satisfies Attachment)
-    ws.send(encode(snapshotFor(papel, clientId, this.data)))
+    ws.serializeAttachment({ clientId, nome, papel, expiraEm: sessao?.expiraEm ?? null } satisfies Attachment)
+    ws.send(encode(snapshotFor(papel, clientId, this.data, sessao)))
     this.broadcastPresence()
+  }
+
+  /** Sessões de aluno: uma chave por sessão (hash do id → validade). Expiradas são apagadas de tempos em tempos. */
+  private sessoes: SessaoStore = {
+    get: async (hash) => (await this.ctx.storage.get<number>('sessao:' + hash)) ?? null,
+    put: async (hash, expiraEm) => {
+      await this.ctx.storage.put('sessao:' + hash, expiraEm)
+      void this.limparSessoes()
+    },
+  }
+  private ultimaLimpeza = 0
+
+  private async limparSessoes(): Promise<void> {
+    const agora = Date.now()
+    if (agora - this.ultimaLimpeza < 60 * 60 * 1000) return
+    this.ultimaLimpeza = agora
+    const todas = await this.ctx.storage.list<number>({ prefix: 'sessao:', limit: 1000 })
+    const velhas = [...todas].filter(([, e]) => expirou(e, agora)).map(([k]) => k)
+    if (velhas.length > 0) await this.ctx.storage.delete(velhas)
+  }
+
+  /** Sessão de aluno vencida (ou desconhecida): avisa e fecha; o front volta para a tela de nome. */
+  private expulsar(ws: WebSocket): void {
+    try {
+      ws.send(encode({ type: 'error', clientId: 'server', code: 'sessao_expirada', message: 'Sua sessão expirou. Entre de novo.' }))
+      ws.close(CLOSE_SESSION_EXPIRED, 'Sessão expirada.')
+    } catch {
+      // já fechada
+    }
   }
 
   private onGone(ws: WebSocket): void {
@@ -161,6 +203,10 @@ export class QuadroDurableObject extends DurableObject<Env> {
       if (s === skip || s.readyState !== WebSocket.OPEN) continue
       const a = s.deserializeAttachment() as Attachment | null
       if (!a?.clientId) continue
+      if (a.expiraEm !== null && expirou(a.expiraEm, Date.now())) {
+        this.expulsar(s)
+        continue
+      }
       try {
         s.send(text)
       } catch {
