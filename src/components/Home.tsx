@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useConfirm } from '../hooks/useConfirm'
 import { arquivarSala, criarSala, excluirSala, listarSalas, renomearSala } from '../lib/api'
 import { NOME_SALA_MAX, type SalaMeta } from '../shared/professora'
 import { boardHash } from '../lib/boardId'
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function Home({ adminToken, onAdminToken, onSair }: Props) {
+  const { pedir, dialogo } = useConfirm()
   const [chave, setChave] = useState('')
   const [erro, setErro] = useState<string | null>(null)
   const [criando, setCriando] = useState(false)
@@ -53,9 +55,15 @@ export function Home({ adminToken, onAdminToken, onSair }: Props) {
     } else setErroSalas(r.erro)
   }
   const arquivar = (s: SalaMeta, arquivada: boolean) => adminToken && aplicar(arquivarSala(adminToken, s.codigo, arquivada))
-  const excluir = (s: SalaMeta) => {
+  const excluir = async (s: SalaMeta) => {
     if (!adminToken) return
-    const ok = window.confirm(`Excluir a sala "${s.nome}"? O quadro e os dados dela são apagados, quem estiver nela é desconectado e o link de aluno deixa de funcionar. Isso não pode ser desfeito.`)
+    const ok = await pedir({
+      titulo: 'Excluir esta sala?',
+      mensagem: `O quadro e os dados da sala "${s.nome}" serão apagados, quem estiver nela será desconectado e o link de aluno deixará de funcionar. Isso não pode ser desfeito.`,
+      confirmar: 'Excluir esta sala',
+      perigo: true,
+      exigir: s.nome,
+    })
     if (ok) void aplicar(excluirSala(adminToken, s.codigo))
   }
   const entrar = (codigo: string) => {
@@ -170,6 +178,7 @@ export function Home({ adminToken, onAdminToken, onSair }: Props) {
           Sair
         </button>
       )}
+      {dialogo}
       <small className={styles.note}>Sala compartilhada em tempo real. Quem abre o link vê e move os mesmos cartões.</small>
     </main>
   )

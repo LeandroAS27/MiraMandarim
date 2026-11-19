@@ -37,7 +37,7 @@ Quadro branco compartilhado em tempo real. Um banco com as palavras de HSK 1 e H
 
 - A tela inicial, para quem tem sessão de admin, mostra **Minhas salas**: cada sala com seu nome (padrão "Sala 1", "Sala 2"…), a data de criação e os botões **Entrar** e **Renomear** (até 40 caracteres, sem HTML). **Criar sala** acrescenta mais uma à lista.
 - **Arquivar** tira a sala da lista principal (ela vai para "Arquivadas", com **Desarquivar**). É só organização: o link de aluno **continua funcionando**. Só as salas ativas contam para o limite de 100.
-- **Excluir** apaga de verdade, com confirmação: a sala apaga tudo o que guarda (quadro, sessões de aluno, dono), **desconecta quem estiver nela** e passa a responder "Sala não encontrada" (o front mostra o aviso e não fica reconectando). O link de aluno deixa de funcionar e não há como desfazer. Quadros salvos e palavras extras **não** são afetados (pertencem à admin, não à sala). Teto total de 300 salas no registro, arquivadas incluídas.
+- **Excluir** apaga de verdade, com um cartão de confirmação em que é preciso **digitar o nome da sala** (como no GitHub): a sala apaga tudo o que guarda (quadro, sessões de aluno, dono), **desconecta quem estiver nela** e passa a responder "Sala não encontrada" (o front mostra o aviso e não fica reconectando). O link de aluno deixa de funcionar e não há como desfazer. Quadros salvos e palavras extras **não** são afetados (pertencem à admin, não à sala). Teto total de 300 salas no registro, arquivadas incluídas.
 - Dentro de uma sala, o botão **Minhas salas** da barra volta a essa lista.
 - A lista fica no Durable Object `PROFESSORA` (uma chave, até 100 salas) e só quem tem o token de admin a lê ou renomeia (`POST /api/salas/lista` e `POST /api/salas/nome`).
 - Salas criadas antes desta versão não aparecem na lista; abra-as pelo link de admin ou crie uma nova.
@@ -348,3 +348,7 @@ O campo `classe` de cada palavra foi atribuído por nós, e **a professora preci
 - Trocar a chave de criação por outra forma de autenticação, com limitação de requisições.
 - Recuperação do token de admin; expirar salas antigas.
 - Agrupar os envios de cursor no servidor (menos tráfego em turmas grandes).
+
+### Confirmações
+
+As ações destrutivas (Sair, Limpar quadro, Excluir sala, quadro salvo ou palavra extra, Abrir quadro salvo sobre um quadro com cartões) usam um **cartão de confirmação do próprio app**, não a janela do navegador. Ele fecha com Esc ou clicando fora, o foco começa em "Cancelar" e, na exclusão de sala, o botão só libera depois de digitar o nome.

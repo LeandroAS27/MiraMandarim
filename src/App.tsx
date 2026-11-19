@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { boardHash, newClientId, parseBoardRoute } from './lib/boardId'
+import { useConfirm } from './hooks/useConfirm'
 import { Home } from './components/Home'
 import { Board } from './components/Board'
 import { NameGate } from './components/NameGate'
@@ -61,14 +62,28 @@ export function App() {
     if (!parseBoardRoute(window.location.hash) && loadAdminToken() && sala) window.location.hash = boardHash(sala)
   }, [])
 
-  const sair = () => {
-    if (!window.confirm('Sair apaga a sua sessão de admin deste navegador. Para voltar, você precisará do seu link de admin. Sair mesmo?')) return
+  const { pedir, dialogo } = useConfirm()
+  const sair = async () => {
+    const ok = await pedir({
+      titulo: 'Sair da sessão de admin?',
+      mensagem: 'Isso apaga a sua sessão de admin deste navegador. Para voltar, você vai precisar do seu link de admin.',
+      confirmar: 'Sair',
+      perigo: true,
+    })
+    if (!ok) return
     clearAdminSession()
     setAdminToken(null)
     window.location.hash = '#/'
   }
 
-  if (!route) return <Home adminToken={adminToken} onAdminToken={setAdminToken} onSair={sair} />
+  if (!route) {
+    return (
+      <>
+        <Home adminToken={adminToken} onAdminToken={setAdminToken} onSair={sair} />
+        {dialogo}
+      </>
+    )
+  }
   const token = routeToken ?? adminToken
 
   // O quadro só abre (e o WebSocket só conecta) depois que a pessoa diz o nome.
@@ -92,6 +107,7 @@ export function App() {
           onSessaoExpirada={onSessaoExpirada}
         />
       )}
+      {dialogo}
       {(!nome || editingName || expirada) && (
         <NameGate
           initial={nome ?? ''}

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useConfirm } from '../hooks/useConfirm'
 import { HANZI_MAX, PINYIN_MAX, TRADUCAO_MAX, validarPalavra, type PalavraInput } from '../shared/palavras'
 import { CLASS_ORDER, CLASSES, type Classe } from '../theme/classes'
 import type { Palavra } from '../types'
@@ -20,6 +21,7 @@ export function PalavrasExtras({ extras, erro, onAdicionar, onEditar, onExcluir,
   const [campos, setCampos] = useState(VAZIO)
   const [editando, setEditando] = useState<string | null>(null)
   const [erroLocal, setErroLocal] = useState<string | null>(null)
+  const { pedir, dialogo } = useConfirm()
 
   const salvar = (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,8 +39,14 @@ export function PalavrasExtras({ extras, erro, onAdicionar, onEditar, onExcluir,
     setErroLocal(null)
     setCampos({ hanzi: p.hanzi, pinyin: p.pinyin, traducao: p.traducao, classe: p.classe })
   }
-  const excluir = (p: Palavra) => {
-    if (window.confirm(`Excluir a palavra extra "${p.hanzi}"? Os cartões dela saem do quadro desta sala. Isso não pode ser desfeito.`)) {
+  const excluir = async (p: Palavra) => {
+    const ok = await pedir({
+      titulo: 'Excluir palavra extra?',
+      mensagem: `A palavra "${p.hanzi}" será apagada e os cartões dela saem do quadro desta sala. Isso não pode ser desfeito.`,
+      confirmar: 'Excluir',
+      perigo: true,
+    })
+    if (ok) {
       onExcluir(p.id)
       if (editando === p.id) {
         setEditando(null)
@@ -124,6 +132,7 @@ export function PalavrasExtras({ extras, erro, onAdicionar, onEditar, onExcluir,
           </ul>
         )}
 
+        {dialogo}
         <div className={styles.row}>
           <button type="button" onClick={onFechar}>
             Fechar

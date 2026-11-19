@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { PresenceUser } from '../shared/protocol'
 import type { ConnStatus } from '../store/RealtimeBoardStore'
 import type { Prefs } from '../store/preferences'
+import { useConfirm } from '../hooks/useConfirm'
 import { PresenceBar } from './PresenceBar'
 import styles from './Toolbar.module.css'
 
@@ -35,6 +36,7 @@ interface Props {
 
 export function Toolbar({ canClear, onClear, trayOpen, legendOpen, onToggleLegend, prefs, onPrefs, onToggleTray, onSave, onOpenSaved, onPalavras, isAdmin, status, users, myClientId, onChangeName, onNewRoom, onLeave, error, adminLinkUrl, studentLinkUrl }: Props) {
   const [msg, setMsg] = useState('')
+  const { pedir, dialogo } = useConfirm()
   const [hover, setHover] = useState(false)
   const [tapped, setTapped] = useState(false)
   const [focused, setFocused] = useState(false)
@@ -72,7 +74,15 @@ export function Toolbar({ canClear, onClear, trayOpen, legendOpen, onToggleLegen
         {isAdmin && (
           <>
             <button
-              onClick={() => window.confirm('Limpar o quadro de todos? Isso não pode ser desfeito.') && onClear()}
+              onClick={async () => {
+                const ok = await pedir({
+                  titulo: 'Limpar o quadro de todos?',
+                  mensagem: 'Todos os cartões saem do quadro, para todos os conectados. Isso não pode ser desfeito.',
+                  confirmar: 'Limpar quadro',
+                  perigo: true,
+                })
+                if (ok) onClear()
+              }}
               disabled={!canClear}
               title="Esvazia o quadro de todos (não pode ser desfeito)"
             >
@@ -122,6 +132,7 @@ export function Toolbar({ canClear, onClear, trayOpen, legendOpen, onToggleLegen
         {error && <span className={styles.err} role="alert">{error}</span>}
         <PresenceBar status={status} users={users} myClientId={myClientId} onChangeName={onChangeName} />
       </div>
+      {dialogo}
       {/* aba que fica visível com a barra escondida */}
       <div className={styles.tab}>
         <span className={styles.tabDot} data-status={status} aria-hidden="true" />

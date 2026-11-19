@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useConfirm } from '../hooks/useConfirm'
 import { NOME_QUADRO_MAX, type SavedMeta } from '../shared/professora'
 import styles from './QuadrosSalvos.module.css'
 
@@ -22,16 +23,30 @@ const quando = (ms: number) => new Date(ms).toLocaleString('pt-BR', { dateStyle:
 /** Janela da admin para salvar o quadro com um nome, abrir um quadro salvo ou excluí-lo. */
 export function QuadrosSalvos({ modo, quadros, cartoesNoQuadro, aviso, erro, onSalvar, onAbrir, onExcluir, onFechar }: Props) {
   const [nome, setNome] = useState('')
+  const { pedir, dialogo } = useConfirm()
 
-  const abrir = (q: SavedMeta) => {
-    const aviso = cartoesNoQuadro > 0 ? `Abrir "${q.nome}" troca o quadro de todos agora (o quadro atual é substituído). Continuar?` : null
-    if (aviso === null || window.confirm(aviso)) {
+  const abrir = async (q: SavedMeta) => {
+    const ok =
+      cartoesNoQuadro === 0 ||
+      (await pedir({
+        titulo: 'Abrir este quadro salvo?',
+        mensagem: `Abrir "${q.nome}" troca o quadro de todos agora: o quadro atual é substituído e não pode ser recuperado.`,
+        confirmar: 'Abrir quadro',
+        perigo: true,
+      }))
+    if (ok) {
       onAbrir(q.id)
       onFechar()
     }
   }
-  const excluir = (q: SavedMeta) => {
-    if (window.confirm(`Excluir o quadro salvo "${q.nome}"? Isso não pode ser desfeito.`)) onExcluir(q.id)
+  const excluir = async (q: SavedMeta) => {
+    const ok = await pedir({
+      titulo: 'Excluir quadro salvo?',
+      mensagem: `O quadro salvo "${q.nome}" será apagado. Isso não pode ser desfeito.`,
+      confirmar: 'Excluir',
+      perigo: true,
+    })
+    if (ok) onExcluir(q.id)
   }
 
   return (
@@ -90,6 +105,7 @@ export function QuadrosSalvos({ modo, quadros, cartoesNoQuadro, aviso, erro, onS
           </ul>
         )}
 
+        {dialogo}
         <div className={styles.row}>
           <button type="button" onClick={onFechar}>
             Fechar
