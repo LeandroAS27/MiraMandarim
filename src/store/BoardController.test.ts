@@ -38,102 +38,38 @@ describe('BoardController: cópias de palavras', () => {
   })
 })
 
-describe('BoardController: desfazer', () => {
+describe('BoardController: remover e limpar', () => {
   beforeEach(() => localStorage.clear())
 
-  it('desfazer criar remove só aquela cópia', () => {
+  it('remover tira só aquela cópia', () => {
     const { store, ctl } = setup()
     const a = ctl.create('p001', { x: 0, y: 0 })
     const b = ctl.create('p001', { x: 10, y: 10 })
-    expect(ctl.undo()).toBe(true)
-    expect(Object.keys(store.getState())).toEqual([a.instanceId])
-    expect(store.getState()[b.instanceId]).toBeUndefined()
-  })
-
-  it('desfazer mover volta à posição anterior', () => {
-    const { store, ctl } = setup()
-    const a = ctl.create('p001', { x: 1, y: 2 })
-    ctl.move(a.instanceId, { x: 500, y: 600 })
-    ctl.undo()
-    expect(store.getState()[a.instanceId].pos).toEqual({ x: 1, y: 2 })
-  })
-
-  it('desfazer remover recria a cópia, com o mesmo instanceId e posição', () => {
-    const { store, ctl } = setup()
-    const a = ctl.create('p007', { x: 40, y: 50 })
-    ctl.move(a.instanceId, { x: 70, y: 80 })
     ctl.remove(a.instanceId)
-    expect(store.getState()).toEqual({})
-    ctl.undo()
-    expect(store.getState()[a.instanceId]).toEqual({ instanceId: a.instanceId, palavraId: 'p007', pos: { x: 70, y: 80 } })
+    expect(Object.keys(store.getState())).toEqual([b.instanceId])
   })
 
-  it('remover é um único passo de desfazer', () => {
-    const { ctl } = setup()
-    const a = ctl.create('p001', { x: 0, y: 0 })
-    ctl.remove(a.instanceId)
-    expect(ctl.undo()).toBe(true) // volta a cópia
-    expect(ctl.undo()).toBe(true) // desfaz a criação
-    expect(ctl.undo()).toBe(false)
-  })
-
-  it('criar, mover e remover desfeitos em sequência voltam ao quadro vazio', () => {
+  it('mover para a mesma posição, ou uma cópia inexistente, não muda nada', () => {
     const { store, ctl } = setup()
-    const a = ctl.create('p001', { x: 0, y: 0 })
-    const b = ctl.create('p002', { x: 10, y: 0 })
-    ctl.move(a.instanceId, { x: 5, y: 5 })
-    ctl.remove(b.instanceId)
-    while (ctl.undo());
-    expect(store.getState()).toEqual({})
-    expect(ctl.canUndo()).toBe(false)
-  })
-
-  it('mover para a mesma posição, ou uma cópia inexistente, não entra no histórico', () => {
-    const { ctl } = setup()
     const a = ctl.create('p001', { x: 5, y: 5 })
+    const antes = store.getState()
     ctl.move(a.instanceId, { x: 5, y: 5 })
     ctl.move('nada', { x: 1, y: 1 })
     ctl.remove('nada')
-    expect(ctl.undo()).toBe(true) // só a criação
-    expect(ctl.undo()).toBe(false)
+    expect(store.getState()).toBe(antes)
   })
 
-  it('limpar quadro remove todas as cópias e é um único passo de desfazer', () => {
+  it('limpar remove todas as cópias', () => {
     const { store, ctl } = setup()
-    const a = ctl.create('p001', { x: 1, y: 1 })
-    const b = ctl.create('p001', { x: 2, y: 2 })
-    const c = ctl.create('p002', { x: 3, y: 3 })
-    ctl.move(c.instanceId, { x: 30, y: 30 })
+    ctl.create('p001', { x: 1, y: 1 })
+    ctl.create('p002', { x: 2, y: 2 })
     ctl.clear()
     expect(store.getState()).toEqual({})
-    expect(ctl.undo()).toBe(true) // um passo recria tudo
-    expect(Object.keys(store.getState()).sort()).toEqual([a.instanceId, b.instanceId, c.instanceId].sort())
-    expect(store.getState()[c.instanceId].pos).toEqual({ x: 30, y: 30 })
-    expect(store.getState()[a.instanceId]).toEqual(a)
   })
 
-  it('limpar um quadro vazio não entra no histórico', () => {
+  it('o desfazer não existe mais', () => {
     const { ctl } = setup()
-    ctl.clear()
-    expect(ctl.canUndo()).toBe(false)
-  })
-
-  it('depois de limpar dá para criar de novo e desfazer na ordem', () => {
-    const { store, ctl } = setup()
-    ctl.create('p001', { x: 0, y: 0 })
-    ctl.clear()
-    const n = ctl.create('p009', { x: 5, y: 5 })
-    ctl.undo() // desfaz a nova cópia
-    expect(store.getState()).toEqual({})
-    ctl.undo() // desfaz o limpar
-    expect(Object.keys(store.getState())).toHaveLength(1)
-    expect(store.getState()[n.instanceId]).toBeUndefined()
-  })
-
-  it('clearHistory zera o desfazer', () => {
-    const { ctl } = setup()
-    ctl.create('p001', { x: 0, y: 0 })
-    ctl.clearHistory()
-    expect(ctl.canUndo()).toBe(false)
+    expect('undo' in ctl).toBe(false)
+    expect('canUndo' in ctl).toBe(false)
   })
 })

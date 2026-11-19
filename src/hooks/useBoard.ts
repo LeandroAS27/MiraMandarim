@@ -41,28 +41,22 @@ export function useBoard(boardId: string, session: BoardSession) {
   const moveInstance = useCallback((instanceId: string, to: Pos) => ctl.move(instanceId, to), [ctl])
   const removeInstance = useCallback((instanceId: string) => ctl.remove(instanceId), [ctl])
   const clearBoard = useCallback(() => ctl.clear(), [ctl])
-  const undo = useCallback(() => void ctl.undo(), [ctl])
   const save = useCallback(() => store.save(), [store])
   const openSaved = useCallback(() => {
-    if (!store.hasSaved()) return
-    ctl.clearHistory()
-    store.load()
-  }, [store, ctl])
+    if (store.hasSaved()) store.load()
+  }, [store])
 
-  // Arrasto ao vivo e cursor: efêmeros, não entram no histórico do desfazer.
+  // Arrasto ao vivo e cursor: efêmeros (não são gravados).
   const previewMove = useCallback((instanceId: string, to: Pos) => store.previewMove(instanceId, to), [store])
   const cancelPreview = useCallback((instanceId: string) => store.cancelPreview(instanceId), [store])
   const sendCursor = useCallback((x: number, y: number) => store.sendCursor(x, y), [store])
 
-  // canUndo é lido a cada render; toda operação muda o estado e re-renderiza.
   return {
     instances,
     createInstance,
     moveInstance,
     removeInstance,
     clearBoard,
-    undo,
-    canUndo: ctl.canUndo(),
     save,
     openSaved,
     hasSaved: meta.hasSaved,

@@ -6,7 +6,6 @@ import { PresenceBar } from './PresenceBar'
 import styles from './Toolbar.module.css'
 
 interface Props {
-  canUndo: boolean
   canClear: boolean
   onClear: () => void
   hasSaved: boolean
@@ -16,7 +15,6 @@ interface Props {
   prefs: Prefs
   onPrefs: (patch: Partial<Prefs>) => void
   onToggleTray: () => void
-  onUndo: () => void
   onSave: () => void
   onOpenSaved: () => void
   /** Só a professora salva, abre o salvo e limpa o quadro de todos. */
@@ -33,7 +31,7 @@ interface Props {
   studentLinkUrl: string
 }
 
-export function Toolbar({ canUndo, canClear, onClear, hasSaved, trayOpen, legendOpen, onToggleLegend, prefs, onPrefs, onToggleTray, onUndo, onSave, onOpenSaved, isTeacher, status, users, myClientId, onChangeName, error, teacherLinkUrl, studentLinkUrl }: Props) {
+export function Toolbar({ canClear, onClear, hasSaved, trayOpen, legendOpen, onToggleLegend, prefs, onPrefs, onToggleTray, onSave, onOpenSaved, isTeacher, status, users, myClientId, onChangeName, error, teacherLinkUrl, studentLinkUrl }: Props) {
   const [msg, setMsg] = useState('')
   const [hover, setHover] = useState(false)
   const [tapped, setTapped] = useState(false)
@@ -69,10 +67,9 @@ export function Toolbar({ canUndo, canClear, onClear, hasSaved, trayOpen, legend
         <button onClick={onToggleTray} aria-pressed={trayOpen}>
           {trayOpen ? 'Ocultar palavras' : 'Mostrar palavras'}
         </button>
-        <button onClick={onUndo} disabled={!canUndo}>Desfazer</button>
         {isTeacher && (
           <>
-            <button onClick={onClear} disabled={!canClear} title="Esvazia o quadro de todos (você pode desfazer)">
+            <button onClick={onClear} disabled={!canClear} title="Esvazia o quadro de todos">
               Limpar quadro
             </button>
             <button

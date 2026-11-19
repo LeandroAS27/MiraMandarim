@@ -52,7 +52,7 @@ interface BoardProps {
 
 export function Board({ boardId, nome, token, clientId, onChangeName }: BoardProps) {
   const {
-    instances, createInstance, moveInstance, removeInstance, clearBoard, undo, canUndo, save, openSaved, hasSaved,
+    instances, createInstance, moveInstance, removeInstance, clearBoard, save, openSaved, hasSaved,
     previewMove, cancelPreview, sendCursor, meta, store,
   } = useBoard(boardId, { clientId, nome, token })
   const isTeacher = meta.papel === 'professora'
@@ -246,20 +246,6 @@ export function Board({ boardId, nome, token, clientId, onChangeName }: BoardPro
     if (data?.kind === 'instance') cancelPreview(data.instanceId)
   }
 
-  // Ctrl/Cmd+Z (não interfere ao digitar na busca)
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const t = e.target as HTMLElement | null
-      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return
-      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
-        e.preventDefault()
-        undo()
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [undo])
-
   // Pan arrastando o fundo (mouse). No toque, o scroll nativo cuida disso.
   const onBgPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     const vp = viewport.current
@@ -321,7 +307,6 @@ export function Board({ boardId, nome, token, clientId, onChangeName }: BoardPro
           showTraducao={prefs.showTraducao}
         />
         <Toolbar
-          canUndo={canUndo}
           canClear={placed.length > 0}
           onClear={clearBoard}
           hasSaved={hasSaved}
@@ -331,7 +316,6 @@ export function Board({ boardId, nome, token, clientId, onChangeName }: BoardPro
           prefs={prefs}
           onPrefs={updatePrefs}
           onToggleTray={() => setTrayOpen((o) => !o)}
-          onUndo={undo}
           onSave={save}
           onOpenSaved={openSaved}
           isTeacher={isTeacher}

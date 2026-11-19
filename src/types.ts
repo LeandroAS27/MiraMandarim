@@ -29,10 +29,10 @@ export interface Instance {
 /** Cópias que estão no quadro, por instanceId. */
 export type BoardState = Record<string, Instance>
 
-/** Um movimento no quadro (usado no histórico de desfazer e no BoardStore). */
+/** Um movimento no quadro (usado no BoardStore). */
 export type Move =
   | { type: 'create'; instance: Instance }
   | { type: 'move'; instanceId: string; from: Pos; to: Pos }
-  | { type: 'remove'; instance: Instance } // guarda a cópia inteira para o desfazer recriá-la
+  | { type: 'remove'; instance: Instance }
   | { type: 'clear'; instances: Instance[] } // limpar quadro: guarda todas as cópias removidas
-  | { type: 'restore'; instances: Instance[] } // desfazer de 'clear': recria todas de uma vez
+  | { type: 'restore'; instances: Instance[] } // recria várias cópias de uma vez (ex.: cópias que chegam de outras pessoas)
