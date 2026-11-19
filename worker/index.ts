@@ -60,8 +60,36 @@ async function criarSala(request: Request, env: Env): Promise<Response> {
   }
 
   const codigo = await criarAssinado(segredo, 'sala')
-  await env.QUADRO.getByName(codigo).iniciar(await sha256Hex(token))
+  const donoHash = await sha256Hex(token)
+  // a sala entra na lista da admin (nome padrão "Sala N"); só depois o objeto da sala é criado
+  const reg = await env.PROFESSORA.getByName(donoHash).registrarSala(codigo)
+  if (!reg.ok) return json({ erro: reg.message }, 409)
+  await env.QUADRO.getByName(codigo).iniciar(donoHash)
   return json(novo ? { codigo, token } : { codigo })
+}
+
+/**
+ * Lista as salas da admin ou renomeia uma. Quem pede prova que é a admin com o token (assinado pelo servidor);
+ * o objeto consultado é o dela (nomeado pelo hash do token), então ninguém lê nem muda as salas de outra admin.
+ */
+async function gerenciarSalas(request: Request, env: Env, acao: 'lista' | 'nome'): Promise<Response> {
+  const segredo = env.CHAVE_CRIACAO
+  if (!segredo) return json({ erro: 'O servidor ainda não tem a chave de criação configurada.' }, 503)
+  const texto = await request.text()
+  if (texto.length > MAX_BODY) return json({ erro: 'Pedido grande demais.' }, 413)
+  let corpo: { token?: unknown; codigo?: unknown; nome?: unknown } = {}
+  try {
+    const v: unknown = JSON.parse(texto || '{}')
+    if (typeof v === 'object' && v !== null) corpo = v as typeof corpo
+  } catch {
+    return json({ erro: 'Pedido inválido.' }, 400)
+  }
+  if (!(await validarAssinado(segredo, 'admin', corpo.token))) return json({ erro: 'Sessão de admin inválida.' }, 401)
+  const prof = env.PROFESSORA.getByName(await sha256Hex(corpo.token as string))
+  if (acao === 'lista') return json({ salas: await prof.listarSalas() })
+  if (typeof corpo.codigo !== 'string' || typeof corpo.nome !== 'string') return json({ erro: 'Pedido inválido.' }, 400)
+  const r = await prof.renomearSala(corpo.codigo, corpo.nome)
+  return r.ok ? json({ salas: r.salas }) : json({ erro: r.message }, r.code === 'nao_encontrado' ? 404 : 400)
 }
 
 /**
@@ -71,6 +99,12 @@ async function criarSala(request: Request, env: Env): Promise<Response> {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url)
+
+    if (url.pathname === '/api/salas/lista' || url.pathname === '/api/salas/nome') {
+      if (request.method !== 'POST') return json({ erro: 'Use POST.' }, 405)
+      if (!originOk(request, url)) return json({ erro: 'Origem não permitida.' }, 403)
+      return gerenciarSalas(request, env, url.pathname.endsWith('/lista') ? 'lista' : 'nome')
+    }
 
     if (url.pathname === '/api/salas') {
       if (request.method !== 'POST') return json({ erro: 'Use POST.' }, 405)

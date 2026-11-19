@@ -120,3 +120,58 @@ export async function excluirPalavra(kv: Kv, id: string): Promise<Palavra[] | nu
   await kv.put(CHAVE_PALAVRAS, dic)
   return lista(dic)
 }
+
+// --- salas da admin (para escolher e nomear) ------------------------------------
+
+export const MAX_SALAS = 100
+export const NOME_SALA_MAX = 40
+const CHAVE_SALAS = 'salas'
+const CODIGO_RE = /^[A-Za-z0-9_-]{16,64}$/
+
+/** Uma sala da admin: o código (para abrir) e o nome que ela deu. */
+export interface SalaMeta {
+  codigo: string
+  nome: string
+  /** Quando foi criada (ms). */
+  em: number
+}
+
+type Registro_Salas = Record<string, SalaMeta>
+const lerSalas = async (kv: Kv): Promise<Registro_Salas> => (await kv.get<Registro_Salas>(CHAVE_SALAS)) ?? {}
+const ordenar = (r: Registro_Salas): SalaMeta[] => Object.values(r).sort((a, b) => b.em - a.em)
+
+export async function listarSalas(kv: Kv): Promise<SalaMeta[]> {
+  return ordenar(await lerSalas(kv))
+}
+
+/** Registra uma sala nova com o nome padrão "Sala N". Repetir o mesmo código não muda nada. */
+export async function registrarSala(
+  kv: Kv,
+  codigo: string,
+  agora: number,
+): Promise<{ ok: true; salas: SalaMeta[] } | Falha> {
+  if (!CODIGO_RE.test(codigo)) return { ok: false, code: 'mensagem_invalida', message: 'Código de sala inválido.' }
+  const salas = await lerSalas(kv)
+  if (!salas[codigo]) {
+    if (Object.keys(salas).length >= MAX_SALAS) {
+      return { ok: false, code: 'limite', message: `Você pode ter até ${MAX_SALAS} salas.` }
+    }
+    salas[codigo] = { codigo, nome: `Sala ${Object.keys(salas).length + 1}`, em: agora }
+    await kv.put(CHAVE_SALAS, salas)
+  }
+  return { ok: true, salas: ordenar(salas) }
+}
+
+export async function renomearSala(
+  kv: Kv,
+  codigo: string,
+  nomeBruto: unknown,
+): Promise<{ ok: true; salas: SalaMeta[] } | { ok: false; code: 'mensagem_invalida' | 'nao_encontrado'; message: string }> {
+  const n = validarTexto(nomeBruto, NOME_SALA_MAX, 'O nome da sala')
+  if (!n.ok) return { ok: false, code: 'mensagem_invalida', message: n.erro }
+  const salas = await lerSalas(kv)
+  if (!CODIGO_RE.test(codigo) || !salas[codigo]) return { ok: false, code: 'nao_encontrado', message: 'Sala não encontrada.' }
+  salas[codigo] = { ...salas[codigo], nome: n.texto }
+  await kv.put(CHAVE_SALAS, salas)
+  return { ok: true, salas: ordenar(salas) }
+}

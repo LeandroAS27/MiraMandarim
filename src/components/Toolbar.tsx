@@ -100,7 +100,7 @@ export function Toolbar({ canClear, onClear, trayOpen, legendOpen, onToggleLegen
                 Copiar meu link (admin)
               </button>
             )}
-            <button onClick={onNewRoom}>Nova sala</button>
+            <button onClick={onNewRoom} title="Ver, nomear e escolher suas salas, ou criar uma nova">Minhas salas</button>
             <button onClick={onLeave} title="Apaga a sua sessão de admin deste navegador">Sair</button>
           </>
         )}

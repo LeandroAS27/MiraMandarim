@@ -10,3 +10,13 @@
 .cta:disabled { opacity: 0.5; cursor: default; }
 .erro { color: #b42318; }
 .link { background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; font: inherit; }
+.salas { width: min(520px, 100%); display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.salas h2 { margin: 0; font-size: 1.05rem; text-align: center; }
+.salas ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.salas li { display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: #fff; border: 1px solid #e3e6eb; border-radius: 10px; }
+.salas button { font: inherit; padding: 5px 10px; border: 1px solid #c9ced6; border-radius: 8px; background: #fff; cursor: pointer; }
+.salas button:disabled { opacity: 0.45; cursor: default; }
+.nomeSala { flex: 1; min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
+.nomeSala small, .salas > small { font-weight: 400; color: var(--muted); }
+.renomear { display: flex; flex: 1; gap: 6px; }
+.renomear input { flex: 1; min-width: 0; font: inherit; padding: 6px 8px; border: 1px solid #c4c8cf; border-radius: 8px; }

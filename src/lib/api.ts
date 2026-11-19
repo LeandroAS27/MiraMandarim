@@ -1,3 +1,5 @@
+import type { SalaMeta } from '../shared/professora'
+
 export type CriarSalaResultado = { ok: true; codigo: string; token?: string } | { ok: false; erro: string }
 
 /**
@@ -23,3 +25,22 @@ export async function criarSala(
     return { ok: false, erro: 'Sem conexão com o servidor.' }
   }
 }
+
+export type SalasResultado = { ok: true; salas: SalaMeta[] } | { ok: false; erro: string }
+
+async function pedirSalas(rota: string, corpo: object, f: typeof fetch): Promise<SalasResultado> {
+  try {
+    const res = await f(rota, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) })
+    const dados = (await res.json().catch(() => null)) as { salas?: unknown; erro?: unknown } | null
+    if (res.ok && dados && Array.isArray(dados.salas)) return { ok: true, salas: dados.salas as SalaMeta[] }
+    return { ok: false, erro: typeof dados?.erro === 'string' ? dados.erro : 'Não foi possível carregar as salas.' }
+  } catch {
+    return { ok: false, erro: 'Sem conexão com o servidor.' }
+  }
+}
+
+/** Salas da admin (mais nova primeiro). O token prova quem é a admin. */
+export const listarSalas = (token: string, f: typeof fetch = (...a) => fetch(...a)) => pedirSalas('/api/salas/lista', { token }, f)
+
+export const renomearSala = (token: string, codigo: string, nome: string, f: typeof fetch = (...a) => fetch(...a)) =>
+  pedirSalas('/api/salas/nome', { token, codigo, nome }, f)

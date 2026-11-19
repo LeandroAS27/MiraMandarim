@@ -31,7 +31,14 @@ Quadro branco compartilhado em tempo real. Um banco com as palavras de HSK 1 e H
 
 1. Na tela inicial, a professora digita a **chave de criação** (só ela tem) e clica em **Criar sala**.
 2. O servidor gera um **código de sala** novo e, na primeira vez, o **token de admin**. Os dois são aleatórios e **assinados** com o segredo do servidor (HMAC-SHA256), então o Worker reconhece o que emitiu sem acordar nenhum Durable Object.
-3. A professora entra na sala já como admin. Nas próximas vezes, o token guardado no navegador dispensa a chave de criação: **Nova sala** (na barra) cria outra, e todas valem para a mesma admin.
+3. A professora entra na sala já como admin. Nas próximas vezes, o token guardado no navegador dispensa a chave de criação, e todas as salas valem para a mesma admin.
+
+### Minhas salas (escolher e nomear)
+
+- A tela inicial, para quem tem sessão de admin, mostra **Minhas salas**: cada sala com seu nome (padrão "Sala 1", "Sala 2"…), a data de criação e os botões **Entrar** e **Renomear** (até 40 caracteres, sem HTML). **Criar sala** acrescenta mais uma à lista.
+- Dentro de uma sala, o botão **Minhas salas** da barra volta a essa lista.
+- A lista fica no Durable Object `PROFESSORA` (uma chave, até 100 salas) e só quem tem o token de admin a lê ou renomeia (`POST /api/salas/lista` e `POST /api/salas/nome`).
+- Salas criadas antes desta versão não aparecem na lista; abra-as pelo link de admin ou crie uma nova.
 
 ### Os dois botões da admin
 
@@ -136,7 +143,7 @@ Toda mensagem tem `type` e `clientId`. O `clientId` é gerado a cada carregament
 
 Códigos de fechamento do WebSocket (o front **não** reconecta): 4000 (outra aba assumiu o `clientId`), 4002 (`clientId` recusado), 4003 (sessão de aluno expirada), 4004 (sala inexistente).
 
-Rota HTTP: `POST /api/salas` com `{ chave? , token? }` → `{ codigo, token? }` (o `token` só vem quando é emitido pela primeira vez).
+Rotas HTTP: `POST /api/salas` com `{ chave?, token? }` → `{ codigo, token? }` (o `token` só vem quando é emitido pela primeira vez); `POST /api/salas/lista` com `{ token }` → `{ salas }`; `POST /api/salas/nome` com `{ token, codigo, nome }` → `{ salas }`.
 
 ## Como rodar
 

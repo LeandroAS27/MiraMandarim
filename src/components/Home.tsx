@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { criarSala } from '../lib/api'
+import { useEffect, useState } from 'react'
+import { criarSala, listarSalas, renomearSala } from '../lib/api'
+import { NOME_SALA_MAX, type SalaMeta } from '../shared/professora'
 import { boardHash } from '../lib/boardId'
 import { loadUltimaSala, saveAdminToken, saveUltimaSala } from '../store/session'
 import styles from './Home.module.css'
@@ -15,6 +16,39 @@ export function Home({ adminToken, onAdminToken, onSair }: Props) {
   const [erro, setErro] = useState<string | null>(null)
   const [criando, setCriando] = useState(false)
   const ultima = adminToken ? loadUltimaSala() : null
+
+  // Salas da admin: escolher e dar nome
+  const [salas, setSalas] = useState<SalaMeta[] | null>(null)
+  const [erroSalas, setErroSalas] = useState<string | null>(null)
+  const [editando, setEditando] = useState<string | null>(null)
+  const [nomeEdit, setNomeEdit] = useState('')
+  useEffect(() => {
+    if (!adminToken) return setSalas(null)
+    let vivo = true
+    listarSalas(adminToken).then((r) => {
+      if (!vivo) return
+      if (r.ok) setSalas(r.salas)
+      else setErroSalas(r.erro)
+    })
+    return () => {
+      vivo = false
+    }
+  }, [adminToken])
+
+  const renomear = async (e: React.FormEvent, codigo: string) => {
+    e.preventDefault()
+    if (!adminToken) return
+    const r = await renomearSala(adminToken, codigo, nomeEdit)
+    if (r.ok) {
+      setSalas(r.salas)
+      setErroSalas(null)
+      setEditando(null)
+    } else setErroSalas(r.erro)
+  }
+  const entrar = (codigo: string) => {
+    saveUltimaSala(codigo)
+    window.location.hash = boardHash(codigo)
+  }
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -53,10 +87,46 @@ export function Home({ adminToken, onAdminToken, onSair }: Props) {
         </button>
         {erro && <small className={styles.erro} role="alert">{erro}</small>}
       </form>
-      {ultima && (
-        <button className={styles.link} onClick={() => (window.location.hash = boardHash(ultima))}>
-          Voltar para a última sala
-        </button>
+      {adminToken && (
+        <section className={styles.salas} aria-label="Minhas salas">
+          <h2>Minhas salas</h2>
+          {erroSalas && <small className={styles.erro} role="alert">{erroSalas}</small>}
+          {salas === null && !erroSalas && <small>Carregando…</small>}
+          {salas !== null && salas.length === 0 && <small>Você ainda não criou nenhuma sala.</small>}
+          <ul>
+            {(salas ?? []).map((s) => (
+              <li key={s.codigo}>
+                {editando === s.codigo ? (
+                  <form className={styles.renomear} onSubmit={(e) => renomear(e, s.codigo)}>
+                    <input autoFocus value={nomeEdit} onChange={(e) => setNomeEdit(e.target.value)} aria-label="Nome da sala" />
+                    <button type="submit" disabled={nomeEdit.trim() === ''}>Salvar</button>
+                    <button type="button" onClick={() => setEditando(null)}>Cancelar</button>
+                  </form>
+                ) : (
+                  <>
+                    <span className={styles.nomeSala}>
+                      {s.nome}
+                      {s.codigo === ultima && <small> · última</small>}
+                      <small> · criada em {new Date(s.em).toLocaleDateString('pt-BR')}</small>
+                    </span>
+                    <button type="button" onClick={() => entrar(s.codigo)}>Entrar</button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditando(s.codigo)
+                        setNomeEdit(s.nome)
+                        setErroSalas(null)
+                      }}
+                    >
+                      Renomear
+                    </button>
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
+          <small>Até {NOME_SALA_MAX} caracteres no nome. Para voltar a esta lista de dentro de uma sala, use "Minhas salas" na barra.</small>
+        </section>
       )}
       {adminToken && (
         <button className={styles.link} onClick={onSair}>
