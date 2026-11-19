@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "quadro-mandarim",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  // Um Durable Object por quadro, com armazenamento SQLite (único aceito no plano grátis).
+  "exports": {
+    "QuadroDurableObject": {
+      "type": "durable-object",
+      "storage": "sqlite"
+    }
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "QUADRO", "class_name": "QuadroDurableObject" }]
+  }
+}
