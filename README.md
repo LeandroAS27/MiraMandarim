@@ -36,6 +36,8 @@ Quadro branco compartilhado em tempo real. Um banco com as palavras de HSK 1 e H
 ### Minhas salas (escolher e nomear)
 
 - A tela inicial, para quem tem sessão de admin, mostra **Minhas salas**: cada sala com seu nome (padrão "Sala 1", "Sala 2"…), a data de criação e os botões **Entrar** e **Renomear** (até 40 caracteres, sem HTML). **Criar sala** acrescenta mais uma à lista.
+- **Arquivar** tira a sala da lista principal (ela vai para "Arquivadas", com **Desarquivar**). É só organização: o link de aluno **continua funcionando**. Só as salas ativas contam para o limite de 100.
+- **Excluir** apaga de verdade, com confirmação: a sala apaga tudo o que guarda (quadro, sessões de aluno, dono), **desconecta quem estiver nela** e passa a responder "Sala não encontrada" (o front mostra o aviso e não fica reconectando). O link de aluno deixa de funcionar e não há como desfazer. Quadros salvos e palavras extras **não** são afetados (pertencem à admin, não à sala). Teto total de 300 salas no registro, arquivadas incluídas.
 - Dentro de uma sala, o botão **Minhas salas** da barra volta a essa lista.
 - A lista fica no Durable Object `PROFESSORA` (uma chave, até 100 salas) e só quem tem o token de admin a lê ou renomeia (`POST /api/salas/lista` e `POST /api/salas/nome`).
 - Salas criadas antes desta versão não aparecem na lista; abra-as pelo link de admin ou crie uma nova.
@@ -143,7 +145,7 @@ Toda mensagem tem `type` e `clientId`. O `clientId` é gerado a cada carregament
 
 Códigos de fechamento do WebSocket (o front **não** reconecta): 4000 (outra aba assumiu o `clientId`), 4002 (`clientId` recusado), 4003 (sessão de aluno expirada), 4004 (sala inexistente).
 
-Rotas HTTP: `POST /api/salas` com `{ chave?, token? }` → `{ codigo, token? }` (o `token` só vem quando é emitido pela primeira vez); `POST /api/salas/lista` com `{ token }` → `{ salas }`; `POST /api/salas/nome` com `{ token, codigo, nome }` → `{ salas }`.
+Rotas HTTP: `POST /api/salas` com `{ chave?, token? }` → `{ codigo, token? }` (o `token` só vem quando é emitido pela primeira vez); `POST /api/salas/lista` com `{ token }` → `{ salas }`; `POST /api/salas/nome` com `{ token, codigo, nome }`, `POST /api/salas/arquivar` com `{ token, codigo, arquivada }` e `POST /api/salas/excluir` com `{ token, codigo }` → `{ salas }`.
 
 ## Como rodar
 

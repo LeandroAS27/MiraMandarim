@@ -314,6 +314,17 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
     return palavraId ? palavraById[palavraId] : undefined
   }, [activeId, instances])
 
+  // sala que não existe (ou foi excluída): sem reconexão, só um aviso
+  if (meta.status === 'closed' && meta.motivo === 'sala_inexistente') {
+    return (
+      <main style={{ minHeight: '100%', display: 'grid', placeContent: 'center', justifyItems: 'center', gap: 12, padding: 24, textAlign: 'center' }}>
+        <h1 style={{ margin: 0 }}>Sala não encontrada</h1>
+        <p style={{ margin: 0, color: 'var(--muted)', maxWidth: 420 }}>Esta sala não existe ou foi excluída pela professora.</p>
+        <button onClick={onNewRoom}>Voltar ao início</button>
+      </main>
+    )
+  }
+
   return (
     <div
       style={

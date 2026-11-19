@@ -20,3 +20,6 @@
 .nomeSala small, .salas > small { font-weight: 400; color: var(--muted); }
 .renomear { display: flex; flex: 1; gap: 6px; }
 .renomear input { flex: 1; min-width: 0; font: inherit; padding: 6px 8px; border: 1px solid #c4c8cf; border-radius: 8px; }
+.salas .perigo { color: #b42318; border-color: #e7b7b2; }
+.arquivadas { margin-top: 6px; }
+.arquivadas summary { cursor: pointer; color: var(--muted); margin-bottom: 6px; }

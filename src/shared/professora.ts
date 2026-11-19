@@ -123,7 +123,10 @@ export async function excluirPalavra(kv: Kv, id: string): Promise<Palavra[] | nu
 
 // --- salas da admin (para escolher e nomear) ------------------------------------
 
+/** Salas ativas (não arquivadas). Arquivar libera espaço. */
 export const MAX_SALAS = 100
+/** Teto de salas no registro, arquivadas incluídas (excluir libera espaço). */
+export const MAX_SALAS_TOTAL = 300
 export const NOME_SALA_MAX = 40
 const CHAVE_SALAS = 'salas'
 const CODIGO_RE = /^[A-Za-z0-9_-]{16,64}$/
@@ -134,6 +137,8 @@ export interface SalaMeta {
   nome: string
   /** Quando foi criada (ms). */
   em: number
+  /** Arquivada: some da lista principal (o link continua funcionando). */
+  arquivada?: true
 }
 
 type Registro_Salas = Record<string, SalaMeta>
@@ -153,8 +158,12 @@ export async function registrarSala(
   if (!CODIGO_RE.test(codigo)) return { ok: false, code: 'mensagem_invalida', message: 'Código de sala inválido.' }
   const salas = await lerSalas(kv)
   if (!salas[codigo]) {
-    if (Object.keys(salas).length >= MAX_SALAS) {
-      return { ok: false, code: 'limite', message: `Você pode ter até ${MAX_SALAS} salas.` }
+    const todas = Object.values(salas)
+    if (todas.filter((x) => !x.arquivada).length >= MAX_SALAS) {
+      return { ok: false, code: 'limite', message: `Você pode ter até ${MAX_SALAS} salas ativas. Arquive ou exclua alguma.` }
+    }
+    if (todas.length >= MAX_SALAS_TOTAL) {
+      return { ok: false, code: 'limite', message: `Você chegou a ${MAX_SALAS_TOTAL} salas. Exclua alguma.` }
     }
     salas[codigo] = { codigo, nome: `Sala ${Object.keys(salas).length + 1}`, em: agora }
     await kv.put(CHAVE_SALAS, salas)
@@ -172,6 +181,31 @@ export async function renomearSala(
   const salas = await lerSalas(kv)
   if (!CODIGO_RE.test(codigo) || !salas[codigo]) return { ok: false, code: 'nao_encontrado', message: 'Sala não encontrada.' }
   salas[codigo] = { ...salas[codigo], nome: n.texto }
+  await kv.put(CHAVE_SALAS, salas)
+  return { ok: true, salas: ordenar(salas) }
+}
+
+type FalhaSala = { ok: false; code: 'nao_encontrado' | 'limite'; message: string }
+
+/** Arquiva (ou desarquiva) uma sala: só muda onde ela aparece na lista. */
+export async function arquivarSala(kv: Kv, codigo: string, arquivada: boolean): Promise<{ ok: true; salas: SalaMeta[] } | FalhaSala> {
+  const salas = await lerSalas(kv)
+  const atual = salas[codigo]
+  if (!CODIGO_RE.test(codigo) || !atual) return { ok: false, code: 'nao_encontrado', message: 'Sala não encontrada.' }
+  if (!arquivada && atual.arquivada && Object.values(salas).filter((x) => !x.arquivada).length >= MAX_SALAS) {
+    return { ok: false, code: 'limite', message: `Você já tem ${MAX_SALAS} salas ativas. Arquive ou exclua alguma antes.` }
+  }
+  const { arquivada: _antes, ...resto } = atual
+  salas[codigo] = arquivada ? { ...resto, arquivada: true } : resto
+  await kv.put(CHAVE_SALAS, salas)
+  return { ok: true, salas: ordenar(salas) }
+}
+
+/** Tira a sala do registro da admin. Apagar os dados da sala em si é com o objeto dela (encerrar). */
+export async function excluirSala(kv: Kv, codigo: string): Promise<{ ok: true; salas: SalaMeta[] } | FalhaSala> {
+  const salas = await lerSalas(kv)
+  if (!CODIGO_RE.test(codigo) || !salas[codigo]) return { ok: false, code: 'nao_encontrado', message: 'Sala não encontrada.' }
+  delete salas[codigo]
   await kv.put(CHAVE_SALAS, salas)
   return { ok: true, salas: ordenar(salas) }
 }

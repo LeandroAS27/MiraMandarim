@@ -1,6 +1,6 @@
 import { DurableObject } from 'cloudflare:workers'
 import type { PalavraInput } from '../src/shared/palavras'
-import { abrirQuadro, adicionarPalavra, editarPalavra, excluirPalavra, excluirQuadro, listarPalavras, listarQuadros, listarSalas, registrarSala, renomearSala, salvarQuadro, type Kv } from '../src/shared/professora'
+import { abrirQuadro, adicionarPalavra, arquivarSala, excluirSala, editarPalavra, excluirPalavra, excluirQuadro, listarPalavras, listarQuadros, listarSalas, registrarSala, renomearSala, salvarQuadro, type Kv } from '../src/shared/professora'
 import type { BoardState } from '../src/types'
 import type { Env } from './env'
 
@@ -46,6 +46,14 @@ export class ProfessoraDurableObject extends DurableObject<Env> {
 
   renomearSala(codigo: string, nome: string) {
     return renomearSala(this.kv, codigo, nome)
+  }
+
+  arquivarSala(codigo: string, arquivada: boolean) {
+    return arquivarSala(this.kv, codigo, arquivada)
+  }
+
+  excluirSala(codigo: string) {
+    return excluirSala(this.kv, codigo)
   }
 
   // Palavras extras: um único registro (o dicionário). Gravação só ao adicionar, editar ou excluir.

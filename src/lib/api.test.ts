@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { criarSala, listarSalas, renomearSala } from './api'
+import { arquivarSala, criarSala, excluirSala, listarSalas, renomearSala } from './api'
 
 const resposta = (status: number, corpo: unknown) => new Response(JSON.stringify(corpo), { status })
 
@@ -50,5 +50,15 @@ describe('salas da admin', () => {
   it('mostra o erro do servidor e trata falta de rede', async () => {
     expect(await listarSalas('x', vi.fn().mockResolvedValue(resposta(401, { erro: 'Sessão de admin inválida.' })))).toEqual({ ok: false, erro: 'Sessão de admin inválida.' })
     expect(await renomearSala('x', 'c', 'n', vi.fn().mockRejectedValue(new Error('offline')))).toEqual({ ok: false, erro: 'Sem conexão com o servidor.' })
+  })
+
+  it('arquivar e excluir mandam as rotas certas', async () => {
+    const f = vi.fn().mockResolvedValue(resposta(200, { salas: [] }))
+    await arquivarSala('tok', 'c'.repeat(36), true, f)
+    expect(f.mock.calls[0][0]).toBe('/api/salas/arquivar')
+    expect(JSON.parse(f.mock.calls[0][1].body)).toEqual({ token: 'tok', codigo: 'c'.repeat(36), arquivada: true })
+    await excluirSala('tok', 'c'.repeat(36), f)
+    expect(f.mock.calls[1][0]).toBe('/api/salas/excluir')
+    expect(JSON.parse(f.mock.calls[1][1].body)).toEqual({ token: 'tok', codigo: 'c'.repeat(36) })
   })
 })

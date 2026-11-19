@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { criarSala, listarSalas, renomearSala } from '../lib/api'
+import { arquivarSala, criarSala, excluirSala, listarSalas, renomearSala } from '../lib/api'
 import { NOME_SALA_MAX, type SalaMeta } from '../shared/professora'
 import { boardHash } from '../lib/boardId'
 import { loadUltimaSala, saveAdminToken, saveUltimaSala } from '../store/session'
@@ -44,6 +44,19 @@ export function Home({ adminToken, onAdminToken, onSair }: Props) {
       setErroSalas(null)
       setEditando(null)
     } else setErroSalas(r.erro)
+  }
+  const aplicar = async (pedido: Promise<{ ok: true; salas: SalaMeta[] } | { ok: false; erro: string }>) => {
+    const r = await pedido
+    if (r.ok) {
+      setSalas(r.salas)
+      setErroSalas(null)
+    } else setErroSalas(r.erro)
+  }
+  const arquivar = (s: SalaMeta, arquivada: boolean) => adminToken && aplicar(arquivarSala(adminToken, s.codigo, arquivada))
+  const excluir = (s: SalaMeta) => {
+    if (!adminToken) return
+    const ok = window.confirm(`Excluir a sala "${s.nome}"? O quadro e os dados dela são apagados, quem estiver nela é desconectado e o link de aluno deixa de funcionar. Isso não pode ser desfeito.`)
+    if (ok) void aplicar(excluirSala(adminToken, s.codigo))
   }
   const entrar = (codigo: string) => {
     saveUltimaSala(codigo)
@@ -94,7 +107,7 @@ export function Home({ adminToken, onAdminToken, onSair }: Props) {
           {salas === null && !erroSalas && <small>Carregando…</small>}
           {salas !== null && salas.length === 0 && <small>Você ainda não criou nenhuma sala.</small>}
           <ul>
-            {(salas ?? []).map((s) => (
+            {(salas ?? []).filter((s) => !s.arquivada).map((s) => (
               <li key={s.codigo}>
                 {editando === s.codigo ? (
                   <form className={styles.renomear} onSubmit={(e) => renomear(e, s.codigo)}>
@@ -120,11 +133,35 @@ export function Home({ adminToken, onAdminToken, onSair }: Props) {
                     >
                       Renomear
                     </button>
+                    <button type="button" onClick={() => arquivar(s, true)} title="Some da lista principal; o link continua funcionando">
+                      Arquivar
+                    </button>
+                    <button type="button" className={styles.perigo} onClick={() => excluir(s)}>
+                      Excluir
+                    </button>
                   </>
                 )}
               </li>
             ))}
           </ul>
+          {(salas ?? []).some((s) => s.arquivada) && (
+            <details className={styles.arquivadas}>
+              <summary>Arquivadas ({(salas ?? []).filter((s) => s.arquivada).length})</summary>
+              <ul>
+                {(salas ?? []).filter((s) => s.arquivada).map((s) => (
+                  <li key={s.codigo}>
+                    <span className={styles.nomeSala}>
+                      {s.nome}
+                      <small> · criada em {new Date(s.em).toLocaleDateString('pt-BR')}</small>
+                    </span>
+                    <button type="button" onClick={() => entrar(s.codigo)}>Entrar</button>
+                    <button type="button" onClick={() => arquivar(s, false)}>Desarquivar</button>
+                    <button type="button" className={styles.perigo} onClick={() => excluir(s)}>Excluir</button>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
           <small>Até {NOME_SALA_MAX} caracteres no nome. Para voltar a esta lista de dentro de uma sala, use "Minhas salas" na barra.</small>
         </section>
       )}

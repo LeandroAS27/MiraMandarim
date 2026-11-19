@@ -72,12 +72,12 @@ async function criarSala(request: Request, env: Env): Promise<Response> {
  * Lista as salas da admin ou renomeia uma. Quem pede prova que é a admin com o token (assinado pelo servidor);
  * o objeto consultado é o dela (nomeado pelo hash do token), então ninguém lê nem muda as salas de outra admin.
  */
-async function gerenciarSalas(request: Request, env: Env, acao: 'lista' | 'nome'): Promise<Response> {
+async function gerenciarSalas(request: Request, env: Env, acao: 'lista' | 'nome' | 'arquivar' | 'excluir'): Promise<Response> {
   const segredo = env.CHAVE_CRIACAO
   if (!segredo) return json({ erro: 'O servidor ainda não tem a chave de criação configurada.' }, 503)
   const texto = await request.text()
   if (texto.length > MAX_BODY) return json({ erro: 'Pedido grande demais.' }, 413)
-  let corpo: { token?: unknown; codigo?: unknown; nome?: unknown } = {}
+  let corpo: { token?: unknown; codigo?: unknown; nome?: unknown; arquivada?: unknown } = {}
   try {
     const v: unknown = JSON.parse(texto || '{}')
     if (typeof v === 'object' && v !== null) corpo = v as typeof corpo
@@ -87,9 +87,23 @@ async function gerenciarSalas(request: Request, env: Env, acao: 'lista' | 'nome'
   if (!(await validarAssinado(segredo, 'admin', corpo.token))) return json({ erro: 'Sessão de admin inválida.' }, 401)
   const prof = env.PROFESSORA.getByName(await sha256Hex(corpo.token as string))
   if (acao === 'lista') return json({ salas: await prof.listarSalas() })
-  if (typeof corpo.codigo !== 'string' || typeof corpo.nome !== 'string') return json({ erro: 'Pedido inválido.' }, 400)
+  if (typeof corpo.codigo !== 'string') return json({ erro: 'Pedido inválido.' }, 400)
+  const status = (code: string) => (code === 'nao_encontrado' ? 404 : code === 'limite' ? 409 : 400)
+
+  if (acao === 'arquivar') {
+    const r = await prof.arquivarSala(corpo.codigo, corpo.arquivada !== false)
+    return r.ok ? json({ salas: r.salas }) : json({ erro: r.message }, status(r.code))
+  }
+  if (acao === 'excluir') {
+    // só a dona: a sala tem de estar no registro dela. Depois a sala apaga seus dados e derruba quem está nela.
+    const r = await prof.excluirSala(corpo.codigo)
+    if (!r.ok) return json({ erro: r.message }, status(r.code))
+    await env.QUADRO.getByName(corpo.codigo).encerrar(await sha256Hex(corpo.token as string))
+    return json({ salas: r.salas })
+  }
+  if (typeof corpo.nome !== 'string') return json({ erro: 'Pedido inválido.' }, 400)
   const r = await prof.renomearSala(corpo.codigo, corpo.nome)
-  return r.ok ? json({ salas: r.salas }) : json({ erro: r.message }, r.code === 'nao_encontrado' ? 404 : 400)
+  return r.ok ? json({ salas: r.salas }) : json({ erro: r.message }, status(r.code))
 }
 
 /**
@@ -100,10 +114,11 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url)
 
-    if (url.pathname === '/api/salas/lista' || url.pathname === '/api/salas/nome') {
+    const gestao = /^\/api\/salas\/(lista|nome|arquivar|excluir)$/.exec(url.pathname)
+    if (gestao) {
       if (request.method !== 'POST') return json({ erro: 'Use POST.' }, 405)
       if (!originOk(request, url)) return json({ erro: 'Origem não permitida.' }, 403)
-      return gerenciarSalas(request, env, url.pathname.endsWith('/lista') ? 'lista' : 'nome')
+      return gerenciarSalas(request, env, gestao[1] as 'lista' | 'nome' | 'arquivar' | 'excluir')
     }
 
     if (url.pathname === '/api/salas') {

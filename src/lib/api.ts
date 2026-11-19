@@ -44,3 +44,10 @@ export const listarSalas = (token: string, f: typeof fetch = (...a) => fetch(...
 
 export const renomearSala = (token: string, codigo: string, nome: string, f: typeof fetch = (...a) => fetch(...a)) =>
   pedirSalas('/api/salas/nome', { token, codigo, nome }, f)
+
+export const arquivarSala = (token: string, codigo: string, arquivada: boolean, f: typeof fetch = (...a) => fetch(...a)) =>
+  pedirSalas('/api/salas/arquivar', { token, codigo, arquivada }, f)
+
+/** Exclui a sala de verdade: apaga os dados dela e derruba quem estiver conectado. */
+export const excluirSala = (token: string, codigo: string, f: typeof fetch = (...a) => fetch(...a)) =>
+  pedirSalas('/api/salas/excluir', { token, codigo }, f)

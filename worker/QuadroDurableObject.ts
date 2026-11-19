@@ -60,6 +60,27 @@ export class QuadroDurableObject extends DurableObject<Env> {
     return this.donoHash === donoHash
   }
 
+  /**
+   * Exclusão da sala (pedida pela admin dona, via Worker): derruba quem está conectado, apaga tudo o que
+   * a sala guarda (quadro, sessões de aluno, dono) e passa a recusar conexões como "sala não encontrada".
+   */
+  async encerrar(donoHash: string): Promise<boolean> {
+    if (this.donoHash === null || this.donoHash !== donoHash) return false
+    for (const ws of this.ctx.getWebSockets()) {
+      try {
+        ws.close(CLOSE_NO_ROOM, 'Sala excluída.')
+      } catch {
+        // já fechada
+      }
+    }
+    await this.ctx.storage.deleteAll()
+    this.donoHash = null
+    this.data = { state: {} }
+    this.extras = []
+    this.extrasCarregadas = false
+    return true
+  }
+
   async fetch(request: Request): Promise<Response> {
     if (request.headers.get('Upgrade') !== 'websocket') return new Response('Esperava uma conexão WebSocket.', { status: 426 })
 

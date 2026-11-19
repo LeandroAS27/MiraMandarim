@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MAX_SALAS, listarSalas, registrarSala, renomearSala, type Kv } from './professora'
+import { MAX_SALAS, MAX_SALAS_TOTAL, arquivarSala, excluirSala, listarSalas, registrarSala, renomearSala, type Kv } from './professora'
 
 const memoria = (): Kv => {
   const m = new Map<string, unknown>()
@@ -58,5 +58,48 @@ describe('salas da admin (escolher e nomear)', () => {
     const kv = memoria()
     for (let i = 0; i < MAX_SALAS; i++) await registrarSala(kv, cod(i), i)
     expect(await registrarSala(kv, cod(MAX_SALAS + 5), 1)).toMatchObject({ ok: false, code: 'limite' })
+  })
+
+  it('arquivar tira a sala das ativas (libera espaço) e desarquivar a traz de volta', async () => {
+    const kv = memoria()
+    for (let i = 0; i < MAX_SALAS; i++) await registrarSala(kv, cod(i), i)
+    const arq = await arquivarSala(kv, cod(0), true)
+    expect(arq.ok && arq.salas.find((x) => x.codigo === cod(0))?.arquivada).toBe(true)
+    expect((await registrarSala(kv, cod(500), 1)).ok).toBe(true) // coube porque uma foi arquivada
+    expect(await arquivarSala(kv, cod(0), false)).toMatchObject({ ok: false, code: 'limite' }) // ativas cheias de novo
+    await arquivarSala(kv, cod(1), true)
+    const volta = await arquivarSala(kv, cod(0), false)
+    expect(volta.ok && volta.salas.find((x) => x.codigo === cod(0))?.arquivada).toBeUndefined()
+  })
+
+  it('arquivar não muda nome nem data; sala desconhecida é recusada', async () => {
+    const kv = memoria()
+    await registrarSala(kv, cod(1), 50)
+    await renomearSala(kv, cod(1), 'Turma A')
+    const r = await arquivarSala(kv, cod(1), true)
+    expect(r.ok && r.salas[0]).toEqual({ codigo: cod(1), nome: 'Turma A', em: 50, arquivada: true })
+    expect(await arquivarSala(kv, cod(9), true)).toMatchObject({ ok: false, code: 'nao_encontrado' })
+  })
+
+  it('excluir tira a sala do registro e libera espaço; excluir de novo ou de outra admin é recusado', async () => {
+    const kv = memoria()
+    await registrarSala(kv, cod(1), 1)
+    await registrarSala(kv, cod(2), 2)
+    const r = await excluirSala(kv, cod(1))
+    expect(r.ok && r.salas.map((x) => x.codigo)).toEqual([cod(2)])
+    expect(await excluirSala(kv, cod(1))).toMatchObject({ ok: false, code: 'nao_encontrado' })
+    expect(await excluirSala(memoria(), cod(2))).toMatchObject({ ok: false, code: 'nao_encontrado' })
+    expect(await excluirSala(kv, '../x')).toMatchObject({ ok: false })
+  })
+
+  it('o total de salas (arquivadas incluídas) também tem teto', async () => {
+    const kv = memoria()
+    for (let i = 0; i < MAX_SALAS_TOTAL; i++) {
+      await registrarSala(kv, cod(i), i)
+      await arquivarSala(kv, cod(i), true)
+    }
+    expect(await registrarSala(kv, cod(MAX_SALAS_TOTAL + 1), 1)).toMatchObject({ ok: false, code: 'limite' })
+    await excluirSala(kv, cod(0))
+    expect((await registrarSala(kv, cod(MAX_SALAS_TOTAL + 1), 1)).ok).toBe(true)
   })
 })
