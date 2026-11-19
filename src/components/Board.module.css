@@ -1,4 +1,5 @@
-.viewport { background: var(--bg); position: fixed; top: 0; bottom: var(--tray-h, 0px); right: 0; left: var(--tray-w, 0px); overflow: auto; transition: left .18s ease, bottom .18s ease; }
+.viewport { background: var(--bg); position: fixed; top: 0; bottom: calc(var(--tray-h, 0px) + var(--dock-h, 28px)); right: 0; left: var(--tray-w, 0px); overflow: auto; scrollbar-width: none; transition: left .18s ease, bottom .18s ease; }
+.viewport::-webkit-scrollbar { display: none; }
 .canvas { transform-origin: 0 0; position: relative; background-color: var(--bg); background-image: radial-gradient(var(--dot) 1px, transparent 1px); background-size: 24px 24px; cursor: grab; }
 .panning, .panning * { cursor: grabbing !important; user-select: none; }
-.hint { position: fixed; top: calc((100vh - var(--tray-h, 0px)) / 2); left: calc(var(--tray-w, 0px) + (100vw - var(--tray-w, 0px)) / 2); transform: translate(-50%, -50%); margin: 0; color: var(--muted); font-size: 1.05rem; pointer-events: none; text-align: center; }
+.hint { position: fixed; top: calc((100vh - var(--tray-h, 0px) - var(--dock-h, 28px)) / 2); left: calc(var(--tray-w, 0px) + (100vw - var(--tray-w, 0px)) / 2); transform: translate(-50%, -50%); margin: 0; color: var(--muted); font-size: 1.05rem; pointer-events: none; text-align: center; }
