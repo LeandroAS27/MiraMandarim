@@ -101,6 +101,7 @@ export class RealtimeBoardStore implements BoardStore {
 
   connect(): void {
     this.wanted = true
+    if (this.meta.status === 'closed') this.setMeta({ status: 'connecting' })
     this.open()
   }
 
@@ -283,6 +284,8 @@ export class RealtimeBoardStore implements BoardStore {
         this.send({ type: 'add', clientId: cid, instances: move.instances })
         break
       case 'remove':
+        this.sendPreviewThrottled.cancel()
+        this.previewAt.delete(move.instance.instanceId)
         this.send({ type: 'remove', clientId: cid, instanceIds: [move.instance.instanceId] })
         break
       case 'clear':

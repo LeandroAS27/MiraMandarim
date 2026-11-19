@@ -8,7 +8,7 @@
 .info { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; }
 .msg { font-size: .8rem; color: #0f766e; }
 .msg:empty { display: none; }
-.demo { font-size: .72rem; color: var(--muted); }
+.err { font-size: .78rem; color: #b42318; }
 
 /* Celular: faixa fixa no topo; os botões rolam na horizontal, com alvos de toque maiores. */
 @media (max-width: 699px) {
@@ -17,5 +17,5 @@
   .actions::-webkit-scrollbar { display: none; }
   .bar button { min-height: 38px; padding: 6px 12px; }
   .info { flex-wrap: nowrap; justify-content: flex-start; }
-  .demo { font-size: .66rem; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .info { overflow-x: auto; }
 }

@@ -1,42 +1,75 @@
-import { useCallback, useMemo, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useMemo, useSyncExternalStore } from 'react'
 import palavrasData from '../data/palavras.json'
 import { BoardController } from '../store/BoardController'
-import { LocalStorageBoardStore } from '../store/LocalStorageBoardStore'
+import { RealtimeBoardStore } from '../store/RealtimeBoardStore'
 import type { Palavra, Pos } from '../types'
 
 export const palavras = palavrasData.palavras as Palavra[]
 export const palavraById: Record<string, Palavra> = Object.fromEntries(palavras.map((p) => [p.id, p]))
 
+export interface BoardSession {
+  clientId: string
+  nome: string
+  /** Token da professora (opcional): decide o papel no servidor. */
+  token: string | null
+}
 
-export function useBoard(boardId: string) {
-  // Um store novo a cada entrada: o quadro sempre começa vazio.
+export function useBoard(boardId: string, session: BoardSession) {
+  const { clientId, nome, token } = session
+  // O quadro agora é compartilhado: o estado vem do servidor (BoardStore em tempo real).
+  // Para voltar ao modo só-navegador, basta trocar esta linha por LocalStorageBoardStore.
   const { store, ctl } = useMemo(() => {
-    const store = new LocalStorageBoardStore(boardId)
+    const store = new RealtimeBoardStore({ boardId, clientId, nome, token })
     return { store, ctl: new BoardController(store) }
-  }, [boardId])
+    // o nome pode mudar sem reconectar (setNome, abaixo)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [boardId, clientId, token])
+
+  useEffect(() => {
+    store.connect()
+    return () => store.disconnect()
+  }, [store])
+  useEffect(() => store.setNome(nome), [store, nome])
+
   const instances = useSyncExternalStore(
     useCallback((cb) => store.subscribe(cb), [store]),
     () => store.getState(),
   )
-  const [hasSaved, setHasSaved] = useState(() => store.hasSaved())
+  const meta = useSyncExternalStore(store.subscribeMeta, store.getMeta)
 
   const createInstance = useCallback((palavraId: string, pos: Pos) => ctl.create(palavraId, pos), [ctl])
   const moveInstance = useCallback((instanceId: string, to: Pos) => ctl.move(instanceId, to), [ctl])
   const removeInstance = useCallback((instanceId: string) => ctl.remove(instanceId), [ctl])
   const clearBoard = useCallback(() => ctl.clear(), [ctl])
   const undo = useCallback(() => void ctl.undo(), [ctl])
-
-  const save = useCallback(() => {
-    store.save()
-    setHasSaved(true)
-  }, [store])
-
+  const save = useCallback(() => store.save(), [store])
   const openSaved = useCallback(() => {
     if (!store.hasSaved()) return
     ctl.clearHistory()
     store.load()
   }, [store, ctl])
 
+  // Arrasto ao vivo e cursor: efêmeros, não entram no histórico do desfazer.
+  const previewMove = useCallback((instanceId: string, to: Pos) => store.previewMove(instanceId, to), [store])
+  const cancelPreview = useCallback((instanceId: string) => store.cancelPreview(instanceId), [store])
+  const sendCursor = useCallback((x: number, y: number) => store.sendCursor(x, y), [store])
+
   // canUndo é lido a cada render; toda operação muda o estado e re-renderiza.
-  return { instances, createInstance, moveInstance, removeInstance, clearBoard, undo, canUndo: ctl.canUndo(), save, openSaved, hasSaved }
+  return {
+    instances,
+    createInstance,
+    moveInstance,
+    removeInstance,
+    clearBoard,
+    undo,
+    canUndo: ctl.canUndo(),
+    save,
+    openSaved,
+    hasSaved: meta.hasSaved,
+    previewMove,
+    cancelPreview,
+    sendCursor,
+    meta,
+    store,
+  }
 }

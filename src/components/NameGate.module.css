@@ -1,0 +1,13 @@
+.backdrop { position: fixed; inset: 0; z-index: 5000; display: grid; place-items: center; padding: 16px; background: rgba(240, 242, 245, 0.92); backdrop-filter: blur(3px); }
+.card { width: min(380px, 100%); display: flex; flex-direction: column; gap: 8px; padding: 22px; background: #fff; border-radius: 14px; box-shadow: 0 6px 30px rgba(0, 0, 0, 0.18); }
+.card h1 { margin: 0; font-size: 1.25rem; }
+.card p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+.label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; font-weight: 600; margin-top: 6px; }
+.label input { font: inherit; font-weight: 400; padding: 10px 12px; border: 1px solid #c9ced6; border-radius: 8px; }
+.label input[aria-invalid='true'] { border-color: #b42318; }
+.error { color: #b42318 !important; min-height: 1.2em; }
+.hint { color: var(--muted); }
+.row { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
+.primary, .secondary { font: inherit; padding: 9px 16px; border-radius: 8px; cursor: pointer; border: 1px solid #23262b; }
+.primary { background: #23262b; color: #fff; }
+.secondary { background: #fff; color: #23262b; border-color: #c9ced6; }

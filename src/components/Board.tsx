@@ -7,15 +7,18 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragMoveEvent,
   type DragStartEvent,
 } from '@dnd-kit/core'
 import { palavraById, palavras, useBoard } from '../hooks/useBoard'
 import { MOBILE_QUERY, useMediaQuery } from '../hooks/useMediaQuery'
 import { usePreferences } from '../hooks/usePreferences'
+import { studentLink, teacherLink } from '../lib/boardId'
 import { CANVAS_H, CANVAS_W, TRAY_W, clampToCanvas } from '../lib/layout'
 import { matches } from '../lib/search'
 import { buildSentence } from '../lib/sentences'
 import { anchoredScroll, clampZoom, pinchZoom, screenToCanvas, stepZoom } from '../lib/zoom'
+import { Cursors } from './Cursors'
 import { Draggable } from './Draggable'
 import { SentencePanel } from './SentencePanel'
 import { StickyNote } from './StickyNote'
@@ -39,8 +42,20 @@ const inside = (el: Element | null, p: XY): boolean => {
   return p.x >= r.left && p.x <= r.right && p.y >= r.top && p.y <= r.bottom
 }
 
-export function Board({ boardId }: { boardId: string }) {
-  const { instances, createInstance, moveInstance, removeInstance, clearBoard, undo, canUndo, save, openSaved, hasSaved } = useBoard(boardId)
+interface BoardProps {
+  boardId: string
+  nome: string
+  token: string | null
+  clientId: string
+  onChangeName: () => void
+}
+
+export function Board({ boardId, nome, token, clientId, onChangeName }: BoardProps) {
+  const {
+    instances, createInstance, moveInstance, removeInstance, clearBoard, undo, canUndo, save, openSaved, hasSaved,
+    previewMove, cancelPreview, sendCursor, meta, store,
+  } = useBoard(boardId, { clientId, nome, token })
+  const isTeacher = meta.papel === 'professora'
   const [prefs, updatePrefs] = usePreferences()
   const [topId, setTopId] = useState<string | null>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -165,7 +180,44 @@ export function Board({ boardId }: { boardId: string }) {
     }
   }, [])
 
+  // Meu cursor, em coordenadas do quadro (não da tela), para valer com pan e zoom diferentes em cada aparelho.
+  // O store limita o envio (~200 ms, só se mudou).
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      const vp = viewport.current
+      if (!vp || !inside(vp, { x: e.clientX, y: e.clientY })) return
+      const r = vp.getBoundingClientRect()
+      sendCursor(
+        screenToCanvas(e.clientX, r.left, vp.scrollLeft, zoomRef.current),
+        screenToCanvas(e.clientY, r.top, vp.scrollTop, zoomRef.current),
+      )
+    }
+    window.addEventListener('pointermove', onMove, { passive: true })
+    return () => window.removeEventListener('pointermove', onMove)
+  }, [sendCursor])
+
   const onDragStart = ({ active }: DragStartEvent) => setActiveId(String(active.id))
+
+  /** Onde o cartão cairia agora (coordenadas do quadro), ou null se o ponteiro está fora do quadro. */
+  const canvasPos = (): XY | null => {
+    const vp = viewport.current
+    const p = pointer.current
+    if (!vp || !inside(vp, p)) return null
+    const r = vp.getBoundingClientRect()
+    return clampToCanvas({
+      x: screenToCanvas(p.x - grab.current.x, r.left, vp.scrollLeft, zoomRef.current),
+      y: screenToCanvas(p.y - grab.current.y, r.top, vp.scrollTop, zoomRef.current),
+    })
+  }
+
+  // Durante o arrasto de um cartão do quadro, os outros o veem andar (o envio é limitado a ~200 ms).
+  // O estado local só muda ao soltar.
+  const onDragMove = ({ active }: DragMoveEvent) => {
+    const data = active.data.current as DragData | undefined
+    if (data?.kind !== 'instance' || (trayOpen && inside(tray.current, pointer.current))) return
+    const to = canvasPos()
+    if (to) previewMove(data.instanceId, to)
+  }
 
   // O estado global só muda ao soltar.
   const onDragEnd = ({ active }: DragEndEvent) => {
@@ -173,23 +225,25 @@ export function Board({ boardId }: { boardId: string }) {
     const data = active.data.current as DragData | undefined
     if (!data) return
     const p = pointer.current
-    const vp = viewport.current
+    const to = canvasPos()
     if (trayOpen && inside(tray.current, p)) {
       // solto no banco: remove a cópia (uma palavra do banco solta no banco não faz nada)
       if (data.kind === 'instance') removeInstance(data.instanceId)
-    } else if (vp && inside(vp, p)) {
-      const r = vp.getBoundingClientRect()
-      const to = clampToCanvas({
-        x: screenToCanvas(p.x - grab.current.x, r.left, vp.scrollLeft, zoomRef.current),
-        y: screenToCanvas(p.y - grab.current.y, r.top, vp.scrollTop, zoomRef.current),
-      })
+    } else if (to) {
       if (data.kind === 'bank') setTopId(createInstance(data.palavraId, to).instanceId)
       else {
         setTopId(data.instanceId)
         moveInstance(data.instanceId, to)
       }
+    } else if (data.kind === 'instance') {
+      cancelPreview(data.instanceId) // solto fora de tudo: os outros voltam a ver o cartão onde está
     }
-    // solto fora de ambos: cancela
+  }
+
+  const onDragCancel = ({ active }: { active: { data: { current?: unknown } } }) => {
+    setActiveId(null)
+    const data = active.data.current as DragData | undefined
+    if (data?.kind === 'instance') cancelPreview(data.instanceId)
   }
 
   // Ctrl/Cmd+Z (não interfere ao digitar na busca)
@@ -253,7 +307,7 @@ export function Board({ boardId }: { boardId: string }) {
         } as React.CSSProperties
       }
     >
-      <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragCancel={() => setActiveId(null)}>
+      <DndContext sensors={sensors} onDragStart={onDragStart} onDragMove={onDragMove} onDragEnd={onDragEnd} onDragCancel={onDragCancel}>
         <Tray
           trayRef={tray}
           open={trayOpen}
@@ -280,6 +334,14 @@ export function Board({ boardId }: { boardId: string }) {
           onUndo={undo}
           onSave={save}
           onOpenSaved={openSaved}
+          isTeacher={isTeacher}
+          status={meta.status}
+          users={meta.users}
+          myClientId={clientId}
+          onChangeName={onChangeName}
+          error={meta.error}
+          teacherLinkUrl={isTeacher && token ? teacherLink(window.location.origin, boardId, token) : null}
+          studentLinkUrl={studentLink(window.location.origin, boardId)}
         />
         <div ref={viewport} className={styles.viewport}>
           {/* sizer: tamanho já com zoom, para o scroll; o canvas é só escalado por transform */}
@@ -300,6 +362,7 @@ export function Board({ boardId }: { boardId: string }) {
                   onRemove={removeNote}
                 />
               ))}
+              <Cursors store={store} zoom={zoom} />
             </div>
           </div>
         </div>

@@ -1,16 +1,20 @@
-import { boardHash, newBoardId } from '../lib/boardId'
+import { boardHash, newBoardId, newToken } from '../lib/boardId'
+import { saveToken } from '../store/session'
 import styles from './Home.module.css'
 
 export function Home() {
   const create = () => {
-    window.location.hash = boardHash(newBoardId())
+    const id = newBoardId()
+    // Quem cria o quadro é a professora: o token fica neste navegador e vale no servidor.
+    saveToken(id, newToken())
+    window.location.hash = boardHash(id)
   }
   return (
     <main className={styles.home}>
       <h1>Quadro de Mandarim</h1>
-      <p>250 palavras em post-its para arrastar. Sem login: basta compartilhar o link.</p>
+      <p>300 palavras (HSK 1 e 2) em post-its para arrastar. Sem login: basta compartilhar o link.</p>
       <button className={styles.cta} onClick={create}>Criar quadro</button>
-      <small className={styles.note}>Demo: os movimentos ainda não são compartilhados entre dispositivos.</small>
+      <small className={styles.note}>Quadro compartilhado em tempo real. Quem abre o link vê e move os mesmos cartões.</small>
     </main>
   )
 }
