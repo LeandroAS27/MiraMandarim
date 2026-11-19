@@ -8,7 +8,7 @@ export function newBoardId(len = 24): string {
 /** Id de uma cópia (instância) de palavra no quadro. */
 export const newInstanceId = (): string => 'i' + newBoardId(10)
 
-/** Token da professora (aleatório, 24 caracteres ≈ 120 bits). */
+/** Token da admin (aleatório, 24 caracteres ≈ 120 bits). */
 export const newToken = (): string => newBoardId(24)
 
 /** Id de uma conexão: novo a cada carregamento da página (duas abas = duas pessoas). */
@@ -16,7 +16,7 @@ export const newClientId = (): string => 'c' + newBoardId(15)
 
 export interface BoardRoute {
   id: string
-  /** Token vindo do link da professora (`#/quadro/<id>?token=<t>`), se houver. */
+  /** Token vindo do link de admin (`#/quadro/<id>?token=<t>`), se houver. */
   token: string | null
 }
 
@@ -28,6 +28,6 @@ export function parseBoardRoute(hash: string): BoardRoute | null {
 
 export const boardHash = (id: string) => `#/quadro/${id}`
 
-/** Link para os alunos (sem token) e para a professora (com token). */
+/** Link para os alunos (sem token) e para a admin (com token). */
 export const studentLink = (origin: string, id: string) => `${origin}/${boardHash(id)}`
-export const teacherLink = (origin: string, id: string, token: string) => `${origin}/${boardHash(id)}?token=${token}`
+export const adminLink = (origin: string, id: string, token: string) => `${origin}/${boardHash(id)}?token=${token}`

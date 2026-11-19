@@ -5,7 +5,7 @@ import styles from './Home.module.css'
 export function Home() {
   const create = () => {
     const id = newBoardId()
-    // Quem cria o quadro é a professora: o token fica neste navegador e vale no servidor.
+    // Quem cria o quadro é a admin: o token fica neste navegador e vale no servidor.
     saveToken(id, newToken())
     window.location.hash = boardHash(id)
   }

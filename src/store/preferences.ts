@@ -7,11 +7,13 @@ export interface Prefs {
   showTraducao: boolean
   /** Painel da frase sempre aberto. */
   pinFrase: boolean
+  /** Legenda das cores aberta. */
+  showLegenda: boolean
   /** Barra de ferramentas sempre visível (senão ela se esconde e abre ao passar o mouse). */
   pinToolbar: boolean
 }
 
-export const DEFAULT_PREFS: Prefs = { showPinyin: true, showTraducao: true, pinFrase: false, pinToolbar: false }
+export const DEFAULT_PREFS: Prefs = { showPinyin: true, showTraducao: true, pinFrase: false, showLegenda: false, pinToolbar: false }
 export const PREFS_KEY = 'miro-mandarim:prefs'
 
 export function loadPrefs(storage: Storage = localStorage): Prefs {

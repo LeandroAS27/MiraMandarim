@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { newBoardId, newClientId, newToken, parseBoardRoute, studentLink, teacherLink } from './boardId'
+import { newBoardId, newClientId, newToken, parseBoardRoute, studentLink, adminLink } from './boardId'
 
 describe('boardId', () => {
   it('ids são longos e aleatórios', () => {
@@ -23,8 +23,8 @@ describe('boardId', () => {
     expect(parseBoardRoute('#/quadro/abcdefghijkmnpqrstuvwxyz?token=curto')).toBeNull()
   })
 
-  it('o link da aluna não leva o token; o da professora leva', () => {
+  it('o link da aluna não leva o token; o da admin leva', () => {
     expect(studentLink('https://x.dev', 'ID')).toBe('https://x.dev/#/quadro/ID')
-    expect(teacherLink('https://x.dev', 'ID', 'TK')).toBe('https://x.dev/#/quadro/ID?token=TK')
+    expect(adminLink('https://x.dev', 'ID', 'TK')).toBe('https://x.dev/#/quadro/ID?token=TK')
   })
 })

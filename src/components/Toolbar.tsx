@@ -17,21 +17,21 @@ interface Props {
   onToggleTray: () => void
   onSave: () => void
   onOpenSaved: () => void
-  /** Só a professora salva, abre o salvo e limpa o quadro de todos. */
-  isTeacher: boolean
+  /** Só a admin salva, abre o salvo e limpa o quadro de todos. */
+  isAdmin: boolean
   status: ConnStatus
   users: PresenceUser[]
   myClientId: string
   onChangeName: () => void
   /** Mensagem de erro do servidor (ex.: sem permissão). */
   error: string | null
-  /** Link com o token da professora (só existe para ela). */
-  teacherLinkUrl: string | null
+  /** Link com o token da admin (só existe para ela). */
+  adminLinkUrl: string | null
   /** Link dos alunos (sem token). */
   studentLinkUrl: string
 }
 
-export function Toolbar({ canClear, onClear, hasSaved, trayOpen, legendOpen, onToggleLegend, prefs, onPrefs, onToggleTray, onSave, onOpenSaved, isTeacher, status, users, myClientId, onChangeName, error, teacherLinkUrl, studentLinkUrl }: Props) {
+export function Toolbar({ canClear, onClear, hasSaved, trayOpen, legendOpen, onToggleLegend, prefs, onPrefs, onToggleTray, onSave, onOpenSaved, isAdmin, status, users, myClientId, onChangeName, error, adminLinkUrl, studentLinkUrl }: Props) {
   const [msg, setMsg] = useState('')
   const [hover, setHover] = useState(false)
   const [tapped, setTapped] = useState(false)
@@ -67,7 +67,7 @@ export function Toolbar({ canClear, onClear, hasSaved, trayOpen, legendOpen, onT
         <button onClick={onToggleTray} aria-pressed={trayOpen}>
           {trayOpen ? 'Ocultar palavras' : 'Mostrar palavras'}
         </button>
-        {isTeacher && (
+        {isAdmin && (
           <>
             <button onClick={onClear} disabled={!canClear} title="Esvazia o quadro de todos">
               Limpar quadro
@@ -85,9 +85,9 @@ export function Toolbar({ canClear, onClear, hasSaved, trayOpen, legendOpen, onT
           </>
         )}
         <button onClick={() => copy(studentLinkUrl, 'Link dos alunos copiado')}>Copiar link</button>
-        {teacherLinkUrl && (
-          <button onClick={() => copy(teacherLinkUrl, 'Link da professora copiado')} title="Guarde este link: ele dá o controle do quadro">
-            Copiar link da professora
+        {adminLinkUrl && (
+          <button onClick={() => copy(adminLinkUrl, 'Link de admin copiado')} title="Guarde este link: ele dá o controle do quadro">
+            Copiar meu link (admin)
           </button>
         )}
         <button className={styles.toggle} aria-pressed={prefs.showPinyin} onClick={() => onPrefs({ showPinyin: !prefs.showPinyin })}>

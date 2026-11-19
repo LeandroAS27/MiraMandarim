@@ -43,7 +43,7 @@ export interface RealtimeOptions {
   boardId: string
   clientId: string
   nome: string
-  /** Token da professora (opcional). */
+  /** Token da admin (opcional). */
   token?: string | null
   createSocket?: (url: string) => SocketLike
   location?: { protocol: string; host: string }
@@ -251,16 +251,16 @@ export class RealtimeBoardStore implements BoardStore {
     return this.meta.hasSaved
   }
 
-  /** "Abrir quadro salvo": a professora pede ao servidor; o quadro de todos é trocado pelo salvo. */
+  /** "Abrir quadro salvo": a admin pede ao servidor; o quadro de todos é trocado pelo salvo. */
   load(): BoardState | null {
-    if (!this.meta.hasSaved || this.meta.papel !== 'professora') return null
+    if (!this.meta.hasSaved || this.meta.papel !== 'admin') return null
     this.send({ type: 'reset', clientId: this.opts.clientId, to: 'saved' })
     return this.state
   }
 
-  /** "Salvar quadro": só a professora (o servidor também confere). */
+  /** "Salvar quadro": só a admin (o servidor também confere). */
   save(): void {
-    if (this.meta.papel === 'professora') this.send({ type: 'save', clientId: this.opts.clientId })
+    if (this.meta.papel === 'admin') this.send({ type: 'save', clientId: this.opts.clientId })
   }
 
   subscribe(listener: Listener): () => void {

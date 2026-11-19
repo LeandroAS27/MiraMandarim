@@ -10,7 +10,7 @@ export const palavraById: Record<string, Palavra> = Object.fromEntries(palavras.
 export interface BoardSession {
   clientId: string
   nome: string
-  /** Token da professora (opcional): decide o papel no servidor. */
+  /** Token da admin (opcional): decide o papel no servidor. */
   token: string | null
 }
 

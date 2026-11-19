@@ -19,8 +19,8 @@ interface Props {
 
 /** Quem está online (nome e papel) e o estado da conexão. Clicar no próprio nome troca o nome. */
 export function PresenceBar({ status, users, myClientId, onChangeName }: Props) {
-  // eu primeiro, depois a professora, depois os alunos
-  const sorted = [...users].sort((a, b) => Number(b.clientId === myClientId) - Number(a.clientId === myClientId) || Number(b.papel === 'professora') - Number(a.papel === 'professora'))
+  // eu primeiro, depois a admin, depois os alunos
+  const sorted = [...users].sort((a, b) => Number(b.clientId === myClientId) - Number(a.clientId === myClientId) || Number(b.papel === 'admin') - Number(a.papel === 'admin'))
   return (
     <div className={styles.bar}>
       <span className={styles.status} data-status={status} role="status">
@@ -32,7 +32,7 @@ export function PresenceBar({ status, users, myClientId, onChangeName }: Props) 
           const chip = (
             <>
               <span aria-hidden="true">{iconFor(u.papel)}</span> {u.nome}
-              {u.papel === 'professora' && <span className={styles.role}> (professora)</span>}
+              {u.papel === 'admin' && <span className={styles.role}> (admin)</span>}
             </>
           )
           return (

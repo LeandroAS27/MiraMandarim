@@ -27,8 +27,8 @@ const CLOSE_BAD_ID = 4002
  *
  * Gravação (ctx.storage, 1 chave por valor = 1 escrita de linha):
  *  - "state": só no soltar, no add/remove e no reset (nunca a cada passo do arrasto);
- *  - "saved": no "Salvar quadro" da professora;
- *  - "teacherHash": uma vez, quando a professora entra com o token.
+ *  - "saved": no "Salvar quadro" da admin;
+ *  - "teacherHash": uma vez, quando a admin entra com o token.
  * Cursores e presença são efêmeros: só memória/attachments + broadcast, nada em storage.
  */
 export class QuadroDurableObject extends DurableObject<Env> {

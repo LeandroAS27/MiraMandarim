@@ -23,7 +23,7 @@ export function App() {
   const routeId = route?.id
   const routeToken = route?.token ?? null
 
-  // Link da professora (#/quadro/<id>?token=…): guarda o token neste navegador e tira da barra de
+  // Link de admin (#/quadro/<id>?token=…): guarda o token neste navegador e tira da barra de
   // endereço, para o link copiado dali ser o dos alunos (sem token).
   useEffect(() => {
     if (!routeId || !routeToken) return

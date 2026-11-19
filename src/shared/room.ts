@@ -25,8 +25,8 @@ export function safeEqual(a: string, b: string): boolean {
 /**
  * O papel é decidido aqui, nunca pelo que o cliente diz.
  * - Sem token (ou token em formato inválido): aluno.
- * - Quadro ainda sem dona: o primeiro token enviado vira o da professora (`claim` = hash a guardar).
- * - Quadro com dona: só o mesmo token é professora.
+ * - Quadro ainda sem dona: o primeiro token enviado vira o da admin (`claim` = hash a guardar).
+ * - Quadro com dona: só o mesmo token é admin.
  */
 export async function decideRole(
   token: string | null,
@@ -34,8 +34,8 @@ export async function decideRole(
 ): Promise<{ papel: Papel; claim: string | null }> {
   if (!token || !TOKEN_RE.test(token)) return { papel: 'aluno', claim: null }
   const hash = await sha256Hex(token)
-  if (storedHash === null) return { papel: 'professora', claim: hash }
-  return { papel: safeEqual(hash, storedHash) ? 'professora' : 'aluno', claim: null }
+  if (storedHash === null) return { papel: 'admin', claim: hash }
+  return { papel: safeEqual(hash, storedHash) ? 'admin' : 'aluno', claim: null }
 }
 
 export const styleOf = (papel: Papel, clientId: string): { cor: string } => ({ cor: colorFor(papel, clientId) })
@@ -46,7 +46,7 @@ export const toPresence = (list: { clientId: string; nome: string; papel: Papel 
 export interface RoomData {
   /** Quadro ao vivo. */
   state: BoardState
-  /** Último "Salvar quadro" da professora (null se nunca salvou). */
+  /** Último "Salvar quadro" da admin (null se nunca salvou). */
   saved: BoardState | null
 }
 
@@ -76,7 +76,7 @@ export function handleMessage(
   isValidPalavra: (palavraId: string) => boolean,
   now: number,
 ): Outcome {
-  if (!canSend(papel, msg.type)) return fail(data, 'sem_permissao', 'Só a professora pode fazer isso.')
+  if (!canSend(papel, msg.type)) return fail(data, 'sem_permissao', 'Só a admin pode fazer isso.')
   const { clientId } = msg
 
   switch (msg.type) {

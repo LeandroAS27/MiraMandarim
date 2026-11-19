@@ -162,7 +162,7 @@ export function parseServerMessage(raw: unknown): ParseResult<ServerMessage> {
   switch (d.type) {
     case 'snapshot': {
       const state = parseState(d.state)
-      if (!state || (d.papel !== 'professora' && d.papel !== 'aluno') || !isHexColor(d.cor)) return bad('snapshot inválido.')
+      if (!state || (d.papel !== 'admin' && d.papel !== 'aluno') || !isHexColor(d.cor)) return bad('snapshot inválido.')
       return { ok: true, msg: { type: 'snapshot', clientId, papel: d.papel, cor: d.cor, state, hasSaved: d.hasSaved === true } }
     }
     case 'presence': {
@@ -170,7 +170,7 @@ export function parseServerMessage(raw: unknown): ParseResult<ServerMessage> {
       const users: PresenceUser[] = []
       for (const u of d.users) {
         if (!isObj(u) || !isStr(u.clientId) || !isStr(u.nome) || !isHexColor(u.cor)) continue
-        if (u.papel !== 'professora' && u.papel !== 'aluno') continue
+        if (u.papel !== 'admin' && u.papel !== 'aluno') continue
         users.push({ clientId: u.clientId, nome: u.nome, papel: u.papel, cor: u.cor })
       }
       return { ok: true, msg: { type: 'presence', clientId, users } }
@@ -207,9 +207,9 @@ export function parseServerMessage(raw: unknown): ParseResult<ServerMessage> {
   }
 }
 
-/** Tipos que só a professora pode enviar. */
-export const TEACHER_ONLY: ReadonlySet<ClientMessage['type']> = new Set(['save', 'reset'])
+/** Tipos que só a admin pode enviar. */
+export const ADMIN_ONLY: ReadonlySet<ClientMessage['type']> = new Set(['save', 'reset'])
 
-export const canSend = (papel: Papel, type: ClientMessage['type']): boolean => papel === 'professora' || !TEACHER_ONLY.has(type)
+export const canSend = (papel: Papel, type: ClientMessage['type']): boolean => papel === 'admin' || !ADMIN_ONLY.has(type)
 
 export const encode = (m: ClientMessage | ServerMessage): string => JSON.stringify(m)

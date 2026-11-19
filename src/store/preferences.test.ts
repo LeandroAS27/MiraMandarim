@@ -10,11 +10,12 @@ describe('preferences', () => {
     expect(DEFAULT_PREFS.showPinyin && DEFAULT_PREFS.showTraducao).toBe(true)
     expect(DEFAULT_PREFS.pinFrase).toBe(false)
     expect(DEFAULT_PREFS.pinToolbar).toBe(false)
+    expect(DEFAULT_PREFS.showLegenda).toBe(false)
   })
 
   it('salva e carrega', () => {
-    savePrefs({ showPinyin: false, showTraducao: true, pinFrase: true, pinToolbar: false })
-    expect(loadPrefs()).toEqual({ showPinyin: false, showTraducao: true, pinFrase: true, pinToolbar: false })
+    savePrefs({ showPinyin: false, showTraducao: true, pinFrase: true, showLegenda: true, pinToolbar: false })
+    expect(loadPrefs()).toEqual({ showPinyin: false, showTraducao: true, pinFrase: true, showLegenda: true, pinToolbar: false })
   })
 
   it('ignora JSON corrompido e valores inválidos', () => {
@@ -25,10 +26,10 @@ describe('preferences', () => {
   })
 
   it('é independente do quadro: salvar/recarregar o quadro não mexe nelas', () => {
-    savePrefs({ showPinyin: false, showTraducao: false, pinFrase: true, pinToolbar: false })
+    savePrefs({ showPinyin: false, showTraducao: false, pinFrase: true, showLegenda: true, pinToolbar: false })
     const s = new LocalStorageBoardStore('q1')
     s.save()
     new LocalStorageBoardStore('q1').load()
-    expect(loadPrefs()).toEqual({ showPinyin: false, showTraducao: false, pinFrase: true, pinToolbar: false })
+    expect(loadPrefs()).toEqual({ showPinyin: false, showTraducao: false, pinFrase: true, showLegenda: true, pinToolbar: false })
   })
 })

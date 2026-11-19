@@ -3,7 +3,7 @@ import { colorFor } from '../theme/presence'
 import type { Instance } from '../types'
 import { decideRole, handleMessage, sha256Hex, styleOf, toPresence, type RoomData } from './room'
 
-const TOKEN = 'token-da-professora-123456'
+const TOKEN = 'token-da-admin-123456'
 const A: Instance = { instanceId: 'i-aaaa1111', palavraId: 'p001', pos: { x: 0, y: 0 } }
 const ok = () => true
 const empty = (): RoomData => ({ state: {}, saved: null })
@@ -17,14 +17,14 @@ describe('decideRole (o papel é decidido no servidor)', () => {
   it('token em formato inválido é aluno', async () => {
     expect((await decideRole('curto', null)).papel).toBe('aluno')
   })
-  it('o primeiro token válido vira o da professora e devolve o hash para guardar', async () => {
+  it('o primeiro token válido vira o da admin e devolve o hash para guardar', async () => {
     const r = await decideRole(TOKEN, null)
-    expect(r.papel).toBe('professora')
+    expect(r.papel).toBe('admin')
     expect(r.claim).toBe(await sha256Hex(TOKEN))
   })
-  it('depois disso, só o mesmo token é professora', async () => {
+  it('depois disso, só o mesmo token é admin', async () => {
     const hash = await sha256Hex(TOKEN)
-    expect(await decideRole(TOKEN, hash)).toEqual({ papel: 'professora', claim: null })
+    expect(await decideRole(TOKEN, hash)).toEqual({ papel: 'admin', claim: null })
     expect((await decideRole('outro-token-qualquer-123', hash)).papel).toBe('aluno')
     expect((await decideRole(null, hash)).papel).toBe('aluno')
   })
@@ -33,7 +33,7 @@ describe('decideRole (o papel é decidido no servidor)', () => {
 describe('cor e presença', () => {
   it('a cor vem do papel e do clientId', () => {
     expect(styleOf('aluno', 'cliente-1-abcd').cor).toBe(colorFor('aluno', 'cliente-1-abcd'))
-    expect(styleOf('professora', 'x-aaaaaaaa').cor).toBe(colorFor('professora', 'y-bbbbbbbb'))
+    expect(styleOf('admin', 'x-aaaaaaaa').cor).toBe(colorFor('admin', 'y-bbbbbbbb'))
   })
   it('toPresence leva nome, papel e cor', () => {
     expect(toPresence([{ clientId: 'c-12345678', nome: 'Ana', papel: 'aluno' }])[0]).toMatchObject({
@@ -92,20 +92,20 @@ describe('handleMessage', () => {
     expect(handleMessage(many, { type: 'add', clientId: 'c1', instances: [A] }, 'aluno', ok, 1).error?.code).toBe('limite')
   })
 
-  it('a professora salva e o reset vale para todos', () => {
-    const save = handleMessage(withA(), { type: 'save', clientId: 'p1' }, 'professora', ok, 77)
+  it('a admin salva e o reset vale para todos', () => {
+    const save = handleMessage(withA(), { type: 'save', clientId: 'p1' }, 'admin', ok, 77)
     expect(save.persistSaved).toBe(true)
     expect(save.saved).toEqual(withA().state)
     expect(save.toAll).toBe(true)
     expect(save.broadcast).toEqual({ type: 'saved', clientId: 'p1', at: 77 })
 
-    const clear = handleMessage({ state: withA().state, saved: save.saved }, { type: 'reset', clientId: 'p1', to: 'empty' }, 'professora', ok, 1)
+    const clear = handleMessage({ state: withA().state, saved: save.saved }, { type: 'reset', clientId: 'p1', to: 'empty' }, 'admin', ok, 1)
     expect(clear.state).toEqual({})
     expect(clear.toAll).toBe(true)
     expect(clear.persistState).toBe(true)
 
-    const back = handleMessage({ state: {}, saved: save.saved }, { type: 'reset', clientId: 'p1', to: 'saved' }, 'professora', ok, 1)
+    const back = handleMessage({ state: {}, saved: save.saved }, { type: 'reset', clientId: 'p1', to: 'saved' }, 'admin', ok, 1)
     expect(back.state).toEqual(withA().state)
-    expect(handleMessage(empty(), { type: 'reset', clientId: 'p1', to: 'saved' }, 'professora', ok, 1).error?.code).toBe('sem_salvo')
+    expect(handleMessage(empty(), { type: 'reset', clientId: 'p1', to: 'saved' }, 'admin', ok, 1).error?.code).toBe('sem_salvo')
   })
 })

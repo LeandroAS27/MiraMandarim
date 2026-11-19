@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { BACKOFF_BASE_MS } from '../lib/backoff'
+import { loadPrefs, savePrefs } from './preferences'
 import { RealtimeBoardStore, socketUrl, type SocketLike } from './RealtimeBoardStore'
 
 class FakeSocket implements SocketLike {
@@ -177,7 +178,7 @@ describe('RealtimeBoardStore', () => {
     expect(store.getCursors()['outro-cliente-1']).toBeUndefined()
   })
 
-  it('aluno não envia save, reset (nem abre o quadro salvo); professora envia', () => {
+  it('aluno não envia save, reset (nem abre o quadro salvo); admin envia', () => {
     const aluno = make()
     aluno.sock().open()
     aluno.sock().receive(snapshot({ hasSaved: true }))
@@ -186,9 +187,9 @@ describe('RealtimeBoardStore', () => {
     expect(aluno.sock().ofType('save')).toHaveLength(0)
     expect(aluno.sock().ofType('reset')).toHaveLength(0)
 
-    const prof = make('token-da-professora-123')
+    const prof = make('token-da-admin-123')
     prof.sock().open()
-    prof.sock().receive(snapshot({ papel: 'professora', cor: '#ffc933', hasSaved: true }))
+    prof.sock().receive(snapshot({ papel: 'admin', cor: '#ffc933', hasSaved: true }))
     prof.store.save()
     prof.store.load()
     prof.store.applyMove({ type: 'clear', instances: [] })
@@ -243,5 +244,16 @@ describe('RealtimeBoardStore', () => {
     sock().receive(snapshot())
     store.setNome('Bia')
     expect(sock().ofType('join').pop()).toMatchObject({ nome: 'Bia' })
+  })
+
+  it('preferências locais (pinyin, tradução, legenda, frase, barra) não geram mensagens no WebSocket', () => {
+    localStorage.clear()
+    const { sock } = make()
+    sock().open()
+    sock().receive(snapshot())
+    const antes = sock().sent.length
+    savePrefs({ ...loadPrefs(), showPinyin: false, showTraducao: false, showLegenda: true, pinFrase: true, pinToolbar: true })
+    expect(sock().sent).toHaveLength(antes)
+    expect(loadPrefs().showLegenda).toBe(true)
   })
 })

@@ -51,11 +51,11 @@ describe('parseClientMessage', () => {
 })
 
 describe('permissão por papel', () => {
-  it('save e reset são só da professora', () => {
+  it('save e reset são só da admin', () => {
     expect(canSend('aluno', 'save')).toBe(false)
     expect(canSend('aluno', 'reset')).toBe(false)
-    expect(canSend('professora', 'save')).toBe(true)
-    expect(canSend('professora', 'reset')).toBe(true)
+    expect(canSend('admin', 'save')).toBe(true)
+    expect(canSend('admin', 'reset')).toBe(true)
   })
   it('aluno pode mover, adicionar, remover e mostrar o cursor', () => {
     for (const t of ['join', 'move', 'add', 'remove', 'cursor'] as const) expect(canSend('aluno', t)).toBe(true)

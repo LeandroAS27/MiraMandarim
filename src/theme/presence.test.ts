@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CURSOR_INK, STUDENT_COLORS, TEACHER_STYLE, colorFor, iconFor, isHexColor } from './presence'
+import { CURSOR_INK, STUDENT_COLORS, ADMIN_STYLE, colorFor, iconFor, isHexColor } from './presence'
 
 const lum = (hex: string): number => {
   const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))
@@ -11,11 +11,11 @@ const contrast = (a: string, b: string): number => {
 }
 
 describe('cor e ícone por papel', () => {
-  it('a professora tem sempre a mesma cor e um ícone próprio', () => {
-    expect(colorFor('professora', 'abc12345')).toBe(TEACHER_STYLE.cor)
-    expect(colorFor('professora', 'outro-id-1')).toBe(TEACHER_STYLE.cor)
-    expect(iconFor('professora')).toBe(TEACHER_STYLE.icone)
-    expect(iconFor('aluno')).not.toBe(iconFor('professora'))
+  it('a admin tem sempre a mesma cor e um ícone próprio', () => {
+    expect(colorFor('admin', 'abc12345')).toBe(ADMIN_STYLE.cor)
+    expect(colorFor('admin', 'outro-id-1')).toBe(ADMIN_STYLE.cor)
+    expect(iconFor('admin')).toBe(ADMIN_STYLE.icone)
+    expect(iconFor('aluno')).not.toBe(iconFor('admin'))
   })
 
   it('o aluno recebe uma cor da paleta, estável para o mesmo clientId', () => {
@@ -29,12 +29,12 @@ describe('cor e ícone por papel', () => {
     expect(cores.size).toBeGreaterThanOrEqual(STUDENT_COLORS.length - 1)
   })
 
-  it('nenhum aluno usa a cor da professora', () => {
-    expect(STUDENT_COLORS).not.toContain(TEACHER_STYLE.cor)
+  it('nenhum aluno usa a cor da admin', () => {
+    expect(STUDENT_COLORS).not.toContain(ADMIN_STYLE.cor)
   })
 
   it('o nome tem contraste ≥ 7:1 sobre todas as cores', () => {
-    for (const c of [TEACHER_STYLE.cor, ...STUDENT_COLORS]) expect(contrast(CURSOR_INK, c), c).toBeGreaterThanOrEqual(7)
+    for (const c of [ADMIN_STYLE.cor, ...STUDENT_COLORS]) expect(contrast(CURSOR_INK, c), c).toBeGreaterThanOrEqual(7)
   })
 
   it('isHexColor só aceita #rrggbb', () => {

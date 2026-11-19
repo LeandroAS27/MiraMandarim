@@ -13,7 +13,7 @@ import {
 import { palavraById, palavras, useBoard } from '../hooks/useBoard'
 import { MOBILE_QUERY, useMediaQuery } from '../hooks/useMediaQuery'
 import { usePreferences } from '../hooks/usePreferences'
-import { studentLink, teacherLink } from '../lib/boardId'
+import { studentLink, adminLink } from '../lib/boardId'
 import { CANVAS_H, CANVAS_W, TRAY_W, clampToCanvas } from '../lib/layout'
 import { matches } from '../lib/search'
 import { buildSentence } from '../lib/sentences'
@@ -55,13 +55,14 @@ export function Board({ boardId, nome, token, clientId, onChangeName }: BoardPro
     instances, createInstance, moveInstance, removeInstance, clearBoard, save, openSaved, hasSaved,
     previewMove, cancelPreview, sendCursor, meta, store,
   } = useBoard(boardId, { clientId, nome, token })
-  const isTeacher = meta.papel === 'professora'
+  const isAdmin = meta.papel === 'admin'
   const [prefs, updatePrefs] = usePreferences()
   const [topId, setTopId] = useState<string | null>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [hsk, setHsk] = useState<HskFilter>('all')
-  const [legendOpen, setLegendOpen] = useState(false)
+  const legendOpen = prefs.showLegenda // preferência só desta tela (localStorage), não vai para o servidor
+  const setLegendOpen = (open: boolean) => updatePrefs({ showLegenda: open })
   const [dockH, setDockH] = useState(28) // altura que o painel da frase ocupa na tela
   const isMobile = useMediaQuery(MOBILE_QUERY)
   // No celular o banco começa fechado (é uma gaveta que ocupa parte da tela).
@@ -312,19 +313,19 @@ export function Board({ boardId, nome, token, clientId, onChangeName }: BoardPro
           hasSaved={hasSaved}
           trayOpen={trayOpen}
           legendOpen={legendOpen}
-          onToggleLegend={() => setLegendOpen((o) => !o)}
+          onToggleLegend={() => setLegendOpen(!legendOpen)}
           prefs={prefs}
           onPrefs={updatePrefs}
           onToggleTray={() => setTrayOpen((o) => !o)}
           onSave={save}
           onOpenSaved={openSaved}
-          isTeacher={isTeacher}
+          isAdmin={isAdmin}
           status={meta.status}
           users={meta.users}
           myClientId={clientId}
           onChangeName={onChangeName}
           error={meta.error}
-          teacherLinkUrl={isTeacher && token ? teacherLink(window.location.origin, boardId, token) : null}
+          adminLinkUrl={isAdmin && token ? adminLink(window.location.origin, boardId, token) : null}
           studentLinkUrl={studentLink(window.location.origin, boardId)}
         />
         <div ref={viewport} className={styles.viewport}>
