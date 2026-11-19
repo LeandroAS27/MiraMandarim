@@ -1,0 +1,120 @@
+import type { BoardState, Instance } from '../types'
+import { colorFor, type Papel } from '../theme/presence'
+import { MAX_INSTANCES, canSend, type ClientMessage, type ErrorCode, type PresenceUser, type ServerMessage } from './protocol'
+
+/**
+ * Regras do quadro no servidor, como funções puras (o Durable Object só cuida de I/O).
+ * Assim dá para testar com Vitest sem o runtime da Cloudflare.
+ */
+
+export const TOKEN_RE = /^[A-Za-z0-9_-]{16,64}$/
+
+export async function sha256Hex(text: string): Promise<string> {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))
+  return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+/** Comparação sem sair no primeiro caractere diferente. */
+export function safeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  let diff = 0
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  return diff === 0
+}
+
+/**
+ * O papel é decidido aqui, nunca pelo que o cliente diz.
+ * - Sem token (ou token em formato inválido): aluno.
+ * - Quadro ainda sem dona: o primeiro token enviado vira o da professora (`claim` = hash a guardar).
+ * - Quadro com dona: só o mesmo token é professora.
+ */
+export async function decideRole(
+  token: string | null,
+  storedHash: string | null,
+): Promise<{ papel: Papel; claim: string | null }> {
+  if (!token || !TOKEN_RE.test(token)) return { papel: 'aluno', claim: null }
+  const hash = await sha256Hex(token)
+  if (storedHash === null) return { papel: 'professora', claim: hash }
+  return { papel: safeEqual(hash, storedHash) ? 'professora' : 'aluno', claim: null }
+}
+
+export const styleOf = (papel: Papel, clientId: string): { cor: string } => ({ cor: colorFor(papel, clientId) })
+
+export const toPresence = (list: { clientId: string; nome: string; papel: Papel }[]): PresenceUser[] =>
+  list.map((u) => ({ clientId: u.clientId, nome: u.nome, papel: u.papel, cor: colorFor(u.papel, u.clientId) }))
+
+export interface RoomData {
+  /** Quadro ao vivo. */
+  state: BoardState
+  /** Último "Salvar quadro" da professora (null se nunca salvou). */
+  saved: BoardState | null
+}
+
+export interface Outcome {
+  error?: { code: ErrorCode; message: string }
+  state: BoardState
+  saved: BoardState | null
+  /** Gravar o estado no armazenamento? (só no soltar, no add/remove, no save e no reset) */
+  persistState: boolean
+  persistSaved: boolean
+  /** Mensagem para os outros (ou para todos, se `toAll`). */
+  broadcast: ServerMessage | null
+  toAll: boolean
+}
+
+const noop = (data: RoomData): Outcome => ({ state: data.state, saved: data.saved, persistState: false, persistSaved: false, broadcast: null, toAll: false })
+const fail = (data: RoomData, code: ErrorCode, message: string): Outcome => ({ ...noop(data), error: { code, message } })
+
+/**
+ * Aplica uma mensagem já validada (não vale para `join`). Não altera `data`: devolve o novo estado
+ * e o que o Durable Object deve gravar e enviar.
+ */
+export function handleMessage(
+  data: RoomData,
+  msg: Exclude<ClientMessage, { type: 'join' }>,
+  papel: Papel,
+  isValidPalavra: (palavraId: string) => boolean,
+  now: number,
+): Outcome {
+  if (!canSend(papel, msg.type)) return fail(data, 'sem_permissao', 'Só a professora pode fazer isso.')
+  const { clientId } = msg
+
+  switch (msg.type) {
+    case 'cursor':
+      return { ...noop(data), broadcast: { type: 'cursor', clientId, x: msg.x, y: msg.y } }
+
+    case 'move': {
+      const inst = data.state[msg.instanceId]
+      if (!inst) return noop(data)
+      const state = { ...data.state, [msg.instanceId]: { ...inst, pos: msg.to } }
+      // Durante o arrasto (final = false) só memória + broadcast; ao soltar, grava.
+      return { ...noop(data), state, persistState: msg.final, broadcast: { type: 'move', clientId, instanceId: msg.instanceId, to: msg.to, final: msg.final } }
+    }
+
+    case 'add': {
+      const accepted: Instance[] = msg.instances.filter((i) => isValidPalavra(i.palavraId))
+      if (accepted.length === 0) return fail(data, 'mensagem_invalida', 'Palavra desconhecida.')
+      const state = { ...data.state }
+      for (const i of accepted) state[i.instanceId] = i
+      if (Object.keys(state).length > MAX_INSTANCES) return fail(data, 'limite', `O quadro aceita até ${MAX_INSTANCES} cartões.`)
+      return { ...noop(data), state, persistState: true, broadcast: { type: 'add', clientId, instances: accepted } }
+    }
+
+    case 'remove': {
+      const ids = msg.instanceIds.filter((id) => id in data.state)
+      if (ids.length === 0) return noop(data)
+      const state = { ...data.state }
+      for (const id of ids) delete state[id]
+      return { ...noop(data), state, persistState: true, broadcast: { type: 'remove', clientId, instanceIds: ids } }
+    }
+
+    case 'save':
+      return { ...noop(data), saved: { ...data.state }, persistSaved: true, broadcast: { type: 'saved', clientId, at: now }, toAll: true }
+
+    case 'reset': {
+      if (msg.to === 'saved' && !data.saved) return fail(data, 'sem_salvo', 'Ainda não há quadro salvo.')
+      const state = msg.to === 'saved' ? { ...data.saved } : {}
+      return { ...noop(data), state, persistState: true, broadcast: { type: 'reset', clientId, to: msg.to, state }, toAll: true }
+    }
+  }
+}

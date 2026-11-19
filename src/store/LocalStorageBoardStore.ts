@@ -1,4 +1,5 @@
 import type { BoardState, Instance, Move } from '../types'
+import { applyMoveToState } from './applyMove'
 import type { BoardStore, Listener } from './BoardStore'
 
 export const storageKey = (boardId: string) => `miro-mandarim:quadro:${boardId}`
@@ -78,26 +79,8 @@ export class LocalStorageBoardStore implements BoardStore {
   }
 
   applyMove(move: Move): void {
-    const next = move.type === 'clear' ? {} : { ...this.current }
-    switch (move.type) {
-      case 'clear':
-        break
-      case 'restore':
-        for (const i of move.instances) next[i.instanceId] = i
-        break
-      case 'create':
-        next[move.instance.instanceId] = move.instance
-        break
-      case 'remove':
-        delete next[move.instance.instanceId]
-        break
-      case 'move': {
-        const inst = next[move.instanceId]
-        if (!inst) return
-        next[move.instanceId] = { ...inst, pos: move.to }
-        break
-      }
-    }
+    const next = applyMoveToState(this.current, move)
+    if (!next) return
     this.current = next
     this.emit()
   }
