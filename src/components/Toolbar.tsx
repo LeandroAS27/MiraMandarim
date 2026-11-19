@@ -35,6 +35,10 @@ interface Props {
 
 export function Toolbar({ canUndo, canClear, onClear, hasSaved, trayOpen, legendOpen, onToggleLegend, prefs, onPrefs, onToggleTray, onUndo, onSave, onOpenSaved, isTeacher, status, users, myClientId, onChangeName, error, teacherLinkUrl, studentLinkUrl }: Props) {
   const [msg, setMsg] = useState('')
+  const [hover, setHover] = useState(false)
+  const [tapped, setTapped] = useState(false)
+  const [focused, setFocused] = useState(false)
+  const open = prefs.pinToolbar || hover || tapped || focused
   const flash = (m: string) => {
     setMsg(m)
     window.setTimeout(() => setMsg(''), 1800)
@@ -48,7 +52,18 @@ export function Toolbar({ canUndo, canClear, onClear, hasSaved, trayOpen, legend
     }
   }
   return (
-    <header className={styles.bar}>
+    <header
+      className={`${styles.bar} ${open ? styles.open : ''}`}
+      // hover só para mouse; no toque a barra abre com um toque na aba
+      onPointerEnter={(e) => e.pointerType === 'mouse' && setHover(true)}
+      onPointerLeave={(e) => {
+        if (e.pointerType === 'mouse') setHover(false)
+      }}
+      onFocus={() => setFocused(true)}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) setFocused(false)
+      }}
+    >
       {/* no celular esta linha rola na horizontal */}
       <div className={styles.actions}>
         <button onClick={onToggleTray} aria-pressed={trayOpen}>
@@ -95,6 +110,34 @@ export function Toolbar({ canUndo, canClear, onClear, hasSaved, trayOpen, legend
         <span className={styles.msg} aria-live="polite">{msg}</span>
         {error && <span className={styles.err} role="alert">{error}</span>}
         <PresenceBar status={status} users={users} myClientId={myClientId} onChangeName={onChangeName} />
+      </div>
+      {/* aba que fica visível com a barra escondida */}
+      <div className={styles.tab}>
+        <span className={styles.tabDot} data-status={status} aria-hidden="true" />
+        <button
+          type="button"
+          className={styles.tabLabel}
+          aria-expanded={open}
+          disabled={prefs.pinToolbar}
+          onClick={() => setTapped((t) => !t)}
+        >
+          Ferramentas · {users.length} online
+        </button>
+        <button
+          type="button"
+          className={styles.pin}
+          aria-pressed={prefs.pinToolbar}
+          title={prefs.pinToolbar ? 'Desafixar a barra (ela se esconde)' : 'Fixar a barra (sempre visível)'}
+          aria-label={prefs.pinToolbar ? 'Desafixar barra de ferramentas' : 'Fixar barra de ferramentas'}
+          onClick={() => {
+            setTapped(false)
+            onPrefs({ pinToolbar: !prefs.pinToolbar })
+          }}
+        >
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
+            <path d="M16 3a1 1 0 0 1 .7 1.7L15.4 6l.9 6 2.2 2.2a1 1 0 0 1-.7 1.7H13v5l-1 1-1-1v-5H6.2a1 1 0 0 1-.7-1.7L7.7 12l.9-6-1.3-1.3A1 1 0 0 1 8 3z" />
+          </svg>
+        </button>
       </div>
     </header>
   )
