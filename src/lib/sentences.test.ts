@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ROW_TOLERANCE, buildSentence, type Placed } from './sentences'
+import { MAX_GAP, ROW_TOLERANCE, buildSentence, type Placed } from './sentences'
 
 const w = (hanzi: string, pinyin: string, traducao: string, x: number, y: number): Placed => ({
   palavra: { id: hanzi, hanzi, pinyin, traducao, hsk: 1, classe: 'outro' },
@@ -19,9 +19,9 @@ describe('buildSentence', () => {
 
   it('lê da esquerda para a direita, independente da ordem de criação', () => {
     const s = buildSentence([
-      w('你', 'nǐ', 'você', 400, 0),
+      w('你', 'nǐ', 'você', 300, 0),
       w('我', 'wǒ', 'eu', 0, 0),
-      w('爱', 'ài', 'amar', 200, 5),
+      w('爱', 'ài', 'amar', 150, 5),
     ])
     expect(s?.hanzi).toBe('我爱你')
     expect(s?.pinyin).toBe('wǒ ài nǐ')
@@ -30,9 +30,9 @@ describe('buildSentence', () => {
 
   it('em linhas diferentes, a de cima vem primeiro (e dentro da linha, da esquerda para a direita)', () => {
     const s = buildSentence([
-      w('好', 'hǎo', 'bom', 200, 300),
+      w('好', 'hǎo', 'bom', 150, 300),
       w('你', 'nǐ', 'você', 0, 300),
-      w('累', 'lèi', 'cansado', 200, 0),
+      w('累', 'lèi', 'cansado', 150, 0),
       w('我', 'wǒ', 'eu', 0, 0),
     ])
     expect(s?.hanzi).toBe('我累你好')
@@ -68,14 +68,30 @@ describe('buildSentence', () => {
 
   it('cada linha do quadro vira uma frase, com a tradução separada por linha', () => {
     const s = buildSentence([
-      w('累', 'lèi', 'cansado', 200, 0),
+      w('累', 'lèi', 'cansado', 150, 0),
       w('我', 'wǒ', 'eu', 0, 0),
-      w('好', 'hǎo', 'bom', 200, 300),
+      w('好', 'hǎo', 'bom', 150, 300),
       w('你', 'nǐ', 'você', 0, 300),
     ])
     expect(s?.lines.map((l) => l.hanzi)).toEqual(['我累', '你好'])
     expect(s?.lines.map((l) => l.pinyin)).toEqual(['wǒ lèi', 'nǐ hǎo'])
     expect(s?.lines.map((l) => l.gloss)).toEqual(['eu · cansado', 'você · bom'])
+  })
+
+  it('palavras na mesma linha mas distantes não se misturam: viram frases separadas', () => {
+    const far = 96 + MAX_GAP + 20
+    const s = buildSentence([w('我', 'wǒ', 'eu', 0, 0), w('累', 'lèi', 'cansado', 100, 0), w('你', 'nǐ', 'você', 100 + far, 0)])
+    expect(s?.lines.map((l) => l.hanzi)).toEqual(['我累', '你'])
+  })
+
+  it('um vão no limite ainda é a mesma frase', () => {
+    const s = buildSentence([w('我', 'wǒ', 'eu', 0, 0), w('累', 'lèi', 'cansado', 96 + MAX_GAP, 0)])
+    expect(s?.lines).toHaveLength(1)
+  })
+
+  it('cada grupo distante tem sua própria tradução, da esquerda para a direita', () => {
+    const s = buildSentence([w('你', 'nǐ', 'você', 900, 0), w('我', 'wǒ', 'eu', 0, 0)])
+    expect(s?.lines.map((l) => l.gloss)).toEqual(['eu', 'você'])
   })
 
   it('uma única linha gera uma única frase', () => {
