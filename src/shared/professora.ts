@@ -1,4 +1,5 @@
-import type { BoardState } from '../types'
+import type { BoardState, Palavra } from '../types'
+import { EXTRA_ID_RE, MAX_EXTRAS, comoPalavra, validarPalavra } from './palavras'
 import { validarTexto } from './texto'
 
 /**
@@ -71,4 +72,51 @@ export async function excluirQuadro(kv: Kv, id: string): Promise<boolean> {
   if (!ID_RE.test(id) || (await kv.get(chave(id))) === undefined) return false
   await kv.delete(chave(id))
   return true
+}
+
+// --- palavras extras (um único registro: o dicionário da admin) -----------------
+
+const CHAVE_PALAVRAS = 'palavras'
+type Dicionario = Record<string, Palavra>
+
+const lerDicionario = async (kv: Kv): Promise<Dicionario> => (await kv.get<Dicionario>(CHAVE_PALAVRAS)) ?? {}
+const lista = (d: Dicionario): Palavra[] => Object.values(d)
+
+export type ResultadoPalavra = { ok: true; palavra: Palavra; items: Palavra[] } | { ok: false; code: 'mensagem_invalida' | 'limite' | 'nao_encontrado'; message: string }
+
+export async function listarPalavras(kv: Kv): Promise<Palavra[]> {
+  return lista(await lerDicionario(kv))
+}
+
+export async function adicionarPalavra(kv: Kv, dados: unknown, novoId: () => string): Promise<ResultadoPalavra> {
+  const v = validarPalavra(dados)
+  if (!v.ok) return { ok: false, code: 'mensagem_invalida', message: v.erro }
+  const dic = await lerDicionario(kv)
+  if (Object.keys(dic).length >= MAX_EXTRAS) {
+    return { ok: false, code: 'limite', message: `Você pode ter até ${MAX_EXTRAS} palavras extras. Exclua alguma para adicionar outra.` }
+  }
+  const palavra = comoPalavra(novoId(), v.dados)
+  dic[palavra.id] = palavra
+  await kv.put(CHAVE_PALAVRAS, dic)
+  return { ok: true, palavra, items: lista(dic) }
+}
+
+export async function editarPalavra(kv: Kv, id: string, dados: unknown): Promise<ResultadoPalavra> {
+  const v = validarPalavra(dados)
+  if (!v.ok) return { ok: false, code: 'mensagem_invalida', message: v.erro }
+  const dic = await lerDicionario(kv)
+  if (!EXTRA_ID_RE.test(id) || !dic[id]) return { ok: false, code: 'nao_encontrado', message: 'Palavra extra não encontrada.' }
+  const palavra = comoPalavra(id, v.dados)
+  dic[id] = palavra
+  await kv.put(CHAVE_PALAVRAS, dic)
+  return { ok: true, palavra, items: lista(dic) }
+}
+
+/** Exclui a palavra; devolve a lista nova, ou null se ela não existia. */
+export async function excluirPalavra(kv: Kv, id: string): Promise<Palavra[] | null> {
+  const dic = await lerDicionario(kv)
+  if (!EXTRA_ID_RE.test(id) || !dic[id]) return null
+  delete dic[id]
+  await kv.put(CHAVE_PALAVRAS, dic)
+  return lista(dic)
 }

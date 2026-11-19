@@ -1,5 +1,6 @@
 import { DurableObject } from 'cloudflare:workers'
-import { abrirQuadro, excluirQuadro, listarQuadros, salvarQuadro, type Kv } from '../src/shared/professora'
+import type { PalavraInput } from '../src/shared/palavras'
+import { abrirQuadro, adicionarPalavra, editarPalavra, excluirPalavra, excluirQuadro, listarPalavras, listarQuadros, salvarQuadro, type Kv } from '../src/shared/professora'
 import type { BoardState } from '../src/types'
 import type { Env } from './env'
 
@@ -8,7 +9,8 @@ const novoId = (): string => Array.from(crypto.getRandomValues(new Uint8Array(16
 
 /**
  * Um Durable Object por admin, nomeado pelo hash do token dela (calculado no servidor).
- * Guarda o que vale para todas as salas dela: os quadros salvos (uma chave por quadro).
+ * Guarda o que vale para todas as salas dela: os quadros salvos (uma chave por quadro)
+ * e as palavras extras (uma chave só, com o dicionário todo).
  * Só as salas chamam estes métodos (RPC), depois de confirmar no servidor que quem pede é a admin.
  * Gravações só ao salvar ou excluir um quadro.
  */
@@ -31,5 +33,22 @@ export class ProfessoraDurableObject extends DurableObject<Env> {
 
   excluirQuadro(id: string) {
     return excluirQuadro(this.kv, id)
+  }
+
+  // Palavras extras: um único registro (o dicionário). Gravação só ao adicionar, editar ou excluir.
+  listarPalavras() {
+    return listarPalavras(this.kv)
+  }
+
+  adicionarPalavra(dados: PalavraInput) {
+    return adicionarPalavra(this.kv, dados, () => 'e_' + novoId())
+  }
+
+  editarPalavra(id: string, dados: PalavraInput) {
+    return editarPalavra(this.kv, id, dados)
+  }
+
+  excluirPalavra(id: string) {
+    return excluirPalavra(this.kv, id)
   }
 }

@@ -5,12 +5,12 @@ import palavrasData from '../src/data/palavras.json'
 import { CLOSE_BAD_ID, CLOSE_NO_ROOM, CLOSE_REPLACED, CLOSE_SESSION_EXPIRED, encode, parseClientMessage, type ClientMessage, type ErrorCode, type ServerMessage } from '../src/shared/protocol'
 import { decideRole, handleMessage, snapshotFor, toPresence, type RoomData } from '../src/shared/room'
 import { entrarComoAluno, expirou, type SessaoStore } from '../src/shared/sessoes'
-import type { BoardState } from '../src/types'
+import type { BoardState, Palavra } from '../src/types'
 import type { Papel } from '../src/theme/presence'
 
 export type { Env }
 
-const ACOES_ADMIN = new Set(['save', 'listSaved', 'open', 'deleteSaved'])
+const ACOES_ADMIN = new Set(['save', 'listSaved', 'open', 'deleteSaved', 'addPalavra', 'editPalavra', 'removePalavra'])
 const isAcaoDeAdmin = (m: { type: string }): m is MsgAdmin => ACOES_ADMIN.has(m.type)
 
 const VALID_PALAVRAS = new Set((palavrasData.palavras as { id: string }[]).map((p) => p.id))
@@ -37,6 +37,9 @@ interface Attachment {
 export class QuadroDurableObject extends DurableObject<Env> {
   private data: RoomData = { state: {} }
   private donoHash: string | null = null
+  /** Cópia (na memória) das palavras extras da admin: valem para validar cartões e vão no snapshot. */
+  private extras: Palavra[] = []
+  private extrasCarregadas = false
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env)
@@ -88,16 +91,20 @@ export class QuadroDurableObject extends DurableObject<Env> {
     // A sessão de aluno é conferida pelo relógio do servidor a cada mensagem.
     if (att.expiraEm !== null && expirou(att.expiraEm, Date.now())) return this.expulsar(ws)
 
-    const valida = (id: string) => VALID_PALAVRAS.has(id)
+    // depois de acordar da hibernação, busca as palavras extras antes de validar cartões
+    if ((msg.type === 'add' || msg.type === 'open') && !this.extrasCarregadas) await this.carregarExtras()
+    const valida = (id: string) => VALID_PALAVRAS.has(id) || this.extras.some((p) => p.id === id)
     const out = isAcaoDeAdmin(msg)
       ? await acaoDeAdmin(this.data, msg, att.papel, this.professora(), valida)
       : handleMessage(this.data, msg, att.papel, valida)
     if (out.error) return this.sendError(ws, att.clientId, out.error.code, out.error.message)
 
     this.data = { state: out.state }
+    if (out.extras) this.extras = out.extras
     if (out.persistState) await this.ctx.storage.put('state', out.state)
     if (out.reply) ws.send(encode(out.reply))
     if (out.broadcast) this.broadcast(out.broadcast, out.toAll ? null : ws)
+    for (const m of out.also ?? []) this.broadcast(m, null)
   }
 
   async webSocketClose(ws: WebSocket, code: number, reason: string): Promise<void> {
@@ -142,7 +149,8 @@ export class QuadroDurableObject extends DurableObject<Env> {
     }
 
     ws.serializeAttachment({ clientId, nome, papel, expiraEm: sessao?.expiraEm ?? null } satisfies Attachment)
-    ws.send(encode(snapshotFor(papel, clientId, this.data, sessao)))
+    await this.carregarExtras() // sempre a lista mais nova (uma palavra pode ter sido criada em outra sala)
+    ws.send(encode(snapshotFor(papel, clientId, this.data, sessao, this.extras)))
     this.broadcastPresence()
   }
 
@@ -154,6 +162,19 @@ export class QuadroDurableObject extends DurableObject<Env> {
       salvarQuadro: (nome, state) => stub.salvarQuadro(nome, state),
       abrirQuadro: (id) => stub.abrirQuadro(id),
       excluirQuadro: (id) => stub.excluirQuadro(id),
+      listarPalavras: () => stub.listarPalavras(),
+      adicionarPalavra: (dados) => stub.adicionarPalavra(dados),
+      editarPalavra: (id, dados) => stub.editarPalavra(id, dados),
+      excluirPalavra: (id) => stub.excluirPalavra(id),
+    }
+  }
+
+  private async carregarExtras(): Promise<void> {
+    try {
+      this.extras = await this.professora().listarPalavras()
+      this.extrasCarregadas = true
+    } catch {
+      // sem resposta: segue com o que já tinha (o próximo join tenta de novo)
     }
   }
 

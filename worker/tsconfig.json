@@ -11,6 +11,6 @@
     "noEmit": true,
     "types": ["@cloudflare/workers-types"]
   },
-  "include": ["./**/*.ts", "../src/shared/**/*.ts", "../src/theme/presence.ts", "../src/types.ts", "../src/lib/layout.ts"],
+  "include": ["./**/*.ts", "../src/shared/**/*.ts", "../src/theme/presence.ts", "../src/theme/classes.ts", "../src/types.ts", "../src/lib/layout.ts"],
   "exclude": ["../src/**/*.test.ts"]
 }

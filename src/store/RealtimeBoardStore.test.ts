@@ -343,4 +343,33 @@ describe('RealtimeBoardStore', () => {
     expect(sock().sent).toHaveLength(antes)
     expect(loadPrefs().showLegenda).toBe(true)
   })
+
+  it('guarda as palavras extras do snapshot e atualiza quando chega a lista nova', () => {
+    const extra = { id: 'e_abcd1234', hanzi: '电脑', pinyin: 'diànnǎo', traducao: 'computador', classe: 'substantivo', hsk: null, extra: true }
+    const a = make()
+    a.sock().open()
+    a.sock().receive(snapshot({ palavras: [extra] }))
+    expect(a.store.getMeta().extras).toEqual([extra])
+    a.sock().receive({ type: 'palavras', clientId: 'server', items: [] })
+    expect(a.store.getMeta().extras).toEqual([])
+  })
+
+  it('aluno não envia addPalavra, editPalavra nem removePalavra; admin envia', () => {
+    const palavra = { hanzi: '电脑', pinyin: 'diànnǎo', traducao: 'computador', classe: 'substantivo' as const }
+    const aluno = make()
+    aluno.sock().open()
+    aluno.sock().receive(snapshot())
+    aluno.store.addPalavra(palavra)
+    aluno.store.editPalavra('e_abcd1234', palavra)
+    aluno.store.removePalavra('e_abcd1234')
+    for (const t of ['addPalavra', 'editPalavra', 'removePalavra']) expect(aluno.sock().ofType(t)).toHaveLength(0)
+
+    const adm = make('token-da-admin-123456')
+    adm.sock().open()
+    adm.sock().receive(snapshot({ papel: 'admin', cor: '#ffc933' }))
+    adm.store.addPalavra(palavra)
+    adm.store.editPalavra('e_abcd1234', palavra)
+    adm.store.removePalavra('e_abcd1234')
+    for (const t of ['addPalavra', 'editPalavra', 'removePalavra']) expect(adm.sock().ofType(t)).toHaveLength(1)
+  })
 })

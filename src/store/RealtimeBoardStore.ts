@@ -1,9 +1,10 @@
 import { backoffDelay } from '../lib/backoff'
 import { throttle, type Throttled } from '../lib/throttle'
 import { CLOSE_BAD_ID, CLOSE_NO_ROOM, CLOSE_REPLACED, CLOSE_SESSION_EXPIRED, encode, parseServerMessage, type ClientMessage, type PresenceUser, type ServerMessage } from '../shared/protocol'
+import type { PalavraInput } from '../shared/palavras'
 import type { SavedMeta } from '../shared/professora'
 import type { Papel } from '../theme/presence'
-import type { BoardState, Instance, Move, Pos } from '../types'
+import type { BoardState, Instance, Move, Palavra, Pos } from '../types'
 import { applyMoveToState } from './applyMove'
 import type { BoardStore, Listener } from './BoardStore'
 
@@ -19,6 +20,8 @@ export interface Meta {
   saved: SavedMeta[] | null
   /** Aviso de sucesso (ex.: quadro salvo). */
   aviso: string | null
+  /** Palavras extras da admin (separadas das originais). */
+  extras: Palavra[]
   users: PresenceUser[]
   /** Último erro vindo do servidor (ex.: sem permissão), para a barra mostrar. */
   error: string | null
@@ -100,7 +103,7 @@ export class RealtimeBoardStore implements BoardStore {
   constructor(private opts: RealtimeOptions) {
     this.nome = opts.nome
     this.sessao = opts.sessao ?? null
-    this.meta = { status: 'connecting', papel: null, cor: null, clientId: opts.clientId, saved: null, aviso: null, users: [], error: null, motivo: null }
+    this.meta = { status: 'connecting', papel: null, cor: null, clientId: opts.clientId, saved: null, aviso: null, extras: [], users: [], error: null, motivo: null }
     const ms = opts.throttleMs ?? 200
     this.sendCursorThrottled = throttle((p) => this.send({ type: 'cursor', clientId: this.opts.clientId, x: p.x, y: p.y }), ms)
     this.sendPreviewThrottled = throttle(
@@ -215,7 +218,7 @@ export class RealtimeBoardStore implements BoardStore {
           this.opts.onSessao?.(m.sessao.id)
         }
         this.setState(m.state)
-        this.setMeta({ status: 'open', papel: m.papel, cor: m.cor, error: null })
+        this.setMeta({ status: 'open', papel: m.papel, cor: m.cor, error: null, extras: m.palavras ?? [] })
         break
       case 'presence': {
         const ids = new Set(m.users.map((u) => u.clientId))
@@ -247,6 +250,9 @@ export class RealtimeBoardStore implements BoardStore {
         this.setMeta({ saved: [m.meta, ...resto], aviso: `Quadro "${m.meta.nome}" salvo`, error: null })
         break
       }
+      case 'palavras':
+        this.setMeta({ extras: m.items, error: null })
+        break
       case 'savedList':
         this.setMeta({ saved: m.items })
         break
@@ -295,6 +301,19 @@ export class RealtimeBoardStore implements BoardStore {
 
   deleteSaved(id: string): void {
     if (this.meta.papel === 'admin') this.send({ type: 'deleteSaved', clientId: this.opts.clientId, id })
+  }
+
+  /** Palavras extras (só admin; o servidor valida de novo). A lista nova chega para todos. */
+  addPalavra(palavra: PalavraInput): void {
+    if (this.meta.papel === 'admin') this.send({ type: 'addPalavra', clientId: this.opts.clientId, palavra })
+  }
+
+  editPalavra(id: string, palavra: PalavraInput): void {
+    if (this.meta.papel === 'admin') this.send({ type: 'editPalavra', clientId: this.opts.clientId, id, palavra })
+  }
+
+  removePalavra(id: string): void {
+    if (this.meta.papel === 'admin') this.send({ type: 'removePalavra', clientId: this.opts.clientId, id })
   }
 
   /** Limpa o aviso de sucesso e o erro (ao fechar a janela). */

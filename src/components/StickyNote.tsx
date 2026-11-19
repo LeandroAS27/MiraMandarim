@@ -1,5 +1,6 @@
 import { memo, useRef, useState } from 'react'
 import { CLASSES } from '../theme/classes'
+import { seloDe, seloTitulo } from '../lib/palavrasView'
 import type { Palavra } from '../types'
 import styles from './StickyNote.module.css'
 
@@ -53,7 +54,7 @@ export const StickyNote = memo(function StickyNote({ palavra, showPinyin, showTr
       onPointerCancel={() => (touch.current = null)}
     >
       <span className={styles.hanzi}>{palavra.hanzi}</span>
-      <span className={styles.badge} title={`HSK ${palavra.hsk}`}>{palavra.hsk}</span>
+      <span className={styles.badge} title={seloTitulo(palavra)}>{seloDe(palavra)}</span>
       {showPinyin && <span className={styles.pinyin}>{palavra.pinyin}</span>}
       {showTraducao && <span className={styles.tr}>{palavra.traducao}</span>}
     </div>

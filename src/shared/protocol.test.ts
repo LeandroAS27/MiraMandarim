@@ -106,4 +106,25 @@ describe('parseServerMessage', () => {
       expect(parseServerMessage(bad).ok).toBe(false)
     }
   })
+
+  it('palavras extras: o servidor valida de novo os campos que chegam', () => {
+    const palavra = { hanzi: '电脑', pinyin: 'diànnǎo', traducao: 'computador', classe: 'substantivo' }
+    expect(parse({ type: 'addPalavra', clientId: CID, palavra }).ok).toBe(true)
+    expect(parse({ type: 'editPalavra', clientId: CID, id: 'e_abcd1234', palavra }).ok).toBe(true)
+    expect(parse({ type: 'removePalavra', clientId: CID, id: 'e_abcd1234' }).ok).toBe(true)
+    for (const ruim of [{ ...palavra, hanzi: '' }, { ...palavra, traducao: '<script>' }, { ...palavra, classe: 'xyz' }, { ...palavra, pinyin: 'a'.repeat(41) }]) {
+      expect(parse({ type: 'addPalavra', clientId: CID, palavra: ruim }).ok, JSON.stringify(ruim)).toBe(false)
+    }
+    expect(parse({ type: 'editPalavra', clientId: CID, id: '../x', palavra }).ok).toBe(false)
+    expect(parse({ type: 'removePalavra', clientId: CID, id: 'p001' }).ok).toBe(false)
+  })
+
+  it('o front lê as palavras extras do snapshot e do aviso "palavras", ignorando as inválidas', () => {
+    const boa = { id: 'e_abcd1234', hanzi: '电脑', pinyin: 'diànnǎo', traducao: 'computador', classe: 'substantivo' }
+    const ruins = [{ ...boa, id: 'p001' }, { ...boa, classe: 'xyz' }, { ...boa, hanzi: 5 }, null]
+    const snap = parseServerMessage(JSON.stringify({ type: 'snapshot', clientId: CID, papel: 'aluno', cor: '#9ad1ff', state: {}, palavras: [boa, ...ruins] }))
+    expect(snap.ok && snap.msg.type === 'snapshot' && snap.msg.palavras).toEqual([{ ...boa, hsk: null, extra: true }])
+    const aviso = parseServerMessage(JSON.stringify({ type: 'palavras', clientId: 'server', items: [boa] }))
+    expect(aviso.ok && aviso.msg.type === 'palavras' && aviso.msg.items[0]).toMatchObject({ id: 'e_abcd1234', extra: true, hsk: null })
+  })
 })

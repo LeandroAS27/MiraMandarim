@@ -1,7 +1,8 @@
 import { CANVAS_H, CANVAS_W } from '../lib/layout'
-import type { BoardState, Instance, Pos } from '../types'
+import type { BoardState, Instance, Palavra, Pos } from '../types'
 import { isHexColor, type Papel } from '../theme/presence'
 import { TOKEN_RE } from './chaves'
+import { EXTRA_ID_RE, comoPalavra, isClasse, validarPalavra, type PalavraInput } from './palavras'
 import type { SavedMeta } from './professora'
 import { validateNome } from './nome'
 
@@ -42,6 +43,10 @@ export type ClientMessage =
   /** Troca o quadro de todos pelo quadro salvo `id`. */
   | { type: 'open'; clientId: string; id: string }
   | { type: 'deleteSaved'; clientId: string; id: string }
+  /** Palavras extras (só admin): adicionar, editar e excluir. */
+  | { type: 'addPalavra'; clientId: string; palavra: PalavraInput }
+  | { type: 'editPalavra'; clientId: string; id: string; palavra: PalavraInput }
+  | { type: 'removePalavra'; clientId: string; id: string }
   | { type: 'cursor'; clientId: string; x: number; y: number }
 
 export interface PresenceUser {
@@ -68,7 +73,9 @@ export type ErrorCode =
   | 'nao_encontrado'
 
 export type ServerMessage =
-  | { type: 'snapshot'; clientId: string; papel: Papel; cor: string; state: BoardState; sessao?: SessaoInfo }
+  | { type: 'snapshot'; clientId: string; papel: Papel; cor: string; state: BoardState; sessao?: SessaoInfo; palavras?: Palavra[] }
+  /** Lista completa de palavras extras da admin (sempre que mudam). */
+  | { type: 'palavras'; clientId: string; items: Palavra[] }
   | { type: 'presence'; clientId: string; users: PresenceUser[] }
   | { type: 'move'; clientId: string; instanceId: string; to: Pos; final: boolean }
   | { type: 'add'; clientId: string; instances: Instance[] }
@@ -165,6 +172,17 @@ export function parseClientMessage(raw: unknown): ParseResult<ClientMessage> {
       return { ok: true, msg: { type: 'reset', clientId, to: 'empty' } }
     case 'listSaved':
       return { ok: true, msg: { type: 'listSaved', clientId } }
+    case 'addPalavra':
+    case 'editPalavra': {
+      const v = validarPalavra(d.palavra)
+      if (!v.ok) return bad(v.erro)
+      if (d.type === 'addPalavra') return { ok: true, msg: { type: 'addPalavra', clientId, palavra: v.dados } }
+      if (!isStr(d.id) || !EXTRA_ID_RE.test(d.id)) return bad('Id de palavra inválido.')
+      return { ok: true, msg: { type: 'editPalavra', clientId, id: d.id, palavra: v.dados } }
+    }
+    case 'removePalavra':
+      if (!isStr(d.id) || !EXTRA_ID_RE.test(d.id)) return bad('Id de palavra inválido.')
+      return { ok: true, msg: { type: 'removePalavra', clientId, id: d.id } }
     case 'open':
     case 'deleteSaved':
       if (!isStr(d.id) || !SAVED_ID_RE.test(d.id)) return bad('Id de quadro inválido.')
@@ -176,6 +194,18 @@ export function parseClientMessage(raw: unknown): ParseResult<ClientMessage> {
       return bad(`Tipo desconhecido: ${d.type}`)
   }
 }
+
+const TEXTO_MAX = 200
+
+/** Palavra extra vinda do servidor: formato conferido, tudo tratado como texto. */
+function parseExtra(v: unknown): Palavra | null {
+  if (!isObj(v) || !isStr(v.id) || !EXTRA_ID_RE.test(v.id)) return null
+  if (!isStr(v.hanzi) || !isStr(v.pinyin) || !isStr(v.traducao) || !isClasse(v.classe)) return null
+  if (v.hanzi.length > TEXTO_MAX || v.pinyin.length > TEXTO_MAX || v.traducao.length > TEXTO_MAX) return null
+  return comoPalavra(v.id, { hanzi: v.hanzi, pinyin: v.pinyin, traducao: v.traducao, classe: v.classe })
+}
+
+const parseExtras = (v: unknown): Palavra[] => (Array.isArray(v) ? v.map(parseExtra).filter((p): p is Palavra => p !== null) : [])
 
 function parseMeta(v: unknown): SavedMeta | null {
   if (!isObj(v) || !isStr(v.id) || !isStr(v.nome) || !isNum(v.em) || !isNum(v.total)) return null
@@ -211,7 +241,7 @@ export function parseServerMessage(raw: unknown): ParseResult<ServerMessage> {
       if (!state || (d.papel !== 'admin' && d.papel !== 'aluno') || !isHexColor(d.cor)) return bad('snapshot inválido.')
       const si = d.sessao
       const sessao: SessaoInfo | undefined = isObj(si) && isNum(si.expiraEm) ? { expiraEm: si.expiraEm, ...(isStr(si.id) ? { id: si.id } : {}) } : undefined
-      return { ok: true, msg: { type: 'snapshot', clientId, papel: d.papel, cor: d.cor, state, ...(sessao ? { sessao } : {}) } }
+      return { ok: true, msg: { type: 'snapshot', clientId, papel: d.papel, cor: d.cor, state, ...(sessao ? { sessao } : {}), palavras: parseExtras(d.palavras) } }
     }
     case 'presence': {
       if (!Array.isArray(d.users)) return bad('presence inválido.')
@@ -240,6 +270,8 @@ export function parseServerMessage(raw: unknown): ParseResult<ServerMessage> {
       const m = parseMeta(d.meta)
       return m ? { ok: true, msg: { type: 'saved', clientId, meta: m } } : bad('saved inválido.')
     }
+    case 'palavras':
+      return { ok: true, msg: { type: 'palavras', clientId, items: parseExtras(d.items) } }
     case 'savedList': {
       if (!Array.isArray(d.items)) return bad('savedList inválido.')
       return { ok: true, msg: { type: 'savedList', clientId, items: d.items.map(parseMeta).filter((m): m is SavedMeta => m !== null) } }
@@ -262,7 +294,7 @@ export function parseServerMessage(raw: unknown): ParseResult<ServerMessage> {
 }
 
 /** Tipos que só a admin pode enviar. */
-export const ADMIN_ONLY: ReadonlySet<ClientMessage['type']> = new Set(['save', 'reset', 'listSaved', 'open', 'deleteSaved'])
+export const ADMIN_ONLY: ReadonlySet<ClientMessage['type']> = new Set(['save', 'reset', 'listSaved', 'open', 'deleteSaved', 'addPalavra', 'editPalavra', 'removePalavra'])
 
 export const canSend = (papel: Papel, type: ClientMessage['type']): boolean => papel === 'admin' || !ADMIN_ONLY.has(type)
 

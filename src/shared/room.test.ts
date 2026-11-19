@@ -131,4 +131,10 @@ describe('handleMessage', () => {
     expect(clear.persistState).toBe(true)
     expect(clear.broadcast).toEqual({ type: 'reset', clientId: 'p1', to: 'empty', state: {} })
   })
+
+  it('o snapshot leva as palavras extras da admin (os alunos também as veem)', () => {
+    const extra = { id: 'e_abcd1234', hanzi: '电脑', pinyin: 'diànnǎo', traducao: 'computador', classe: 'substantivo' as const, hsk: null, extra: true as const }
+    const m = snapshotFor('aluno', 'cliente-aluno-1', { state: {} }, undefined, [extra])
+    expect(m.type === 'snapshot' && m.palavras).toEqual([extra])
+  })
 })

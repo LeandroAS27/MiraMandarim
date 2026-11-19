@@ -10,13 +10,13 @@ import {
   type DragMoveEvent,
   type DragStartEvent,
 } from '@dnd-kit/core'
-import { palavraById, palavras, useBoard } from '../hooks/useBoard'
+import { palavras, useBoard } from '../hooks/useBoard'
 import { MOBILE_QUERY, useMediaQuery } from '../hooks/useMediaQuery'
 import { usePreferences } from '../hooks/usePreferences'
 import { studentLink, adminLink } from '../lib/boardId'
 import { saveUltimaSala } from '../store/session'
 import { CANVAS_H, CANVAS_W, TRAY_W, clampToCanvas } from '../lib/layout'
-import { matches } from '../lib/search'
+import { filtrarPalavras, indexarPalavras, juntarPalavras } from '../lib/palavrasView'
 import { buildSentence } from '../lib/sentences'
 import { anchoredScroll, clampZoom, pinchZoom, screenToCanvas, stepZoom } from '../lib/zoom'
 import { Cursors } from './Cursors'
@@ -24,6 +24,7 @@ import { Draggable } from './Draggable'
 import { SentencePanel } from './SentencePanel'
 import { StickyNote } from './StickyNote'
 import { Legend } from './Legend'
+import { PalavrasExtras } from './PalavrasExtras'
 import { QuadrosSalvos } from './QuadrosSalvos'
 import { Toolbar } from './Toolbar'
 import { Tray, type HskFilter } from './Tray'
@@ -62,12 +63,16 @@ interface BoardProps {
 
 export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom, onLeave, sessao, onSessao, onSessaoExpirada }: BoardProps) {
   const {
-    instances, createInstance, moveInstance, removeInstance, clearBoard, save, listSaved, openSaved, deleteSaved, clearNotices,
+    instances, createInstance, moveInstance, removeInstance, clearBoard, save, listSaved, openSaved, deleteSaved, clearNotices, addPalavra, editPalavra, removePalavra,
     previewMove, cancelPreview, sendCursor, meta, store,
   } = useBoard(boardId, { clientId, nome, token, sessao, onSessao })
   const isAdmin = meta.papel === 'admin'
   // janela de quadros salvos (só admin): salvar com nome ou abrir/excluir
   const [dialogo, setDialogo] = useState<'salvar' | 'abrir' | null>(null)
+  const [palavrasAberto, setPalavrasAberto] = useState(false)
+  // palavras: as 300 originais + as extras da admin (que chegam do servidor)
+  const todas = useMemo(() => juntarPalavras(palavras, meta.extras), [meta.extras])
+  const palavraById = useMemo(() => indexarPalavras(todas), [todas])
   const abrirDialogo = (modo: 'salvar' | 'abrir') => {
     clearNotices()
     listSaved()
@@ -292,15 +297,16 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
   }
 
   const removeNote = useCallback((instanceId: string) => removeInstance(instanceId), [removeInstance])
-  const placed = Object.values(instances)
+  // cartão de uma palavra que não existe mais (ex.: extra excluída em outra sala) não aparece
+  const placed = Object.values(instances).filter((i) => palavraById[i.palavraId])
   const trayItems = useMemo(
-    () => palavras.filter((p) => (hsk === 'all' || p.hsk === hsk) && matches(p, query)),
-    [query, hsk],
+    () => filtrarPalavras(todas, hsk, query),
+    [todas, query, hsk],
   )
   const sentence = useMemo(
     () => buildSentence(placed.map((i) => ({ palavra: palavraById[i.palavraId], pos: i.pos }))),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [instances],
+    [instances, palavraById],
   )
   const activePalavra = useMemo(() => {
     if (!activeId) return undefined
@@ -324,7 +330,7 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
           trayRef={tray}
           open={trayOpen}
           items={trayItems}
-          total={palavras.length}
+          total={todas.length}
           query={query}
           onQuery={setQuery}
           hsk={hsk}
@@ -343,6 +349,10 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
           onToggleTray={() => setTrayOpen((o) => !o)}
           onSave={() => abrirDialogo('salvar')}
           onOpenSaved={() => abrirDialogo('abrir')}
+          onPalavras={() => {
+            clearNotices()
+            setPalavrasAberto(true)
+          }}
           isAdmin={isAdmin}
           status={meta.status}
           users={meta.users}
@@ -397,6 +407,19 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
             onFechar={() => {
               clearNotices()
               setDialogo(null)
+            }}
+          />
+        )}
+        {isAdmin && palavrasAberto && (
+          <PalavrasExtras
+            extras={meta.extras}
+            erro={meta.error}
+            onAdicionar={addPalavra}
+            onEditar={editPalavra}
+            onExcluir={removePalavra}
+            onFechar={() => {
+              clearNotices()
+              setPalavrasAberto(false)
             }}
           />
         )}

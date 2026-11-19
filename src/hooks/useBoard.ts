@@ -2,10 +2,10 @@ import { useCallback, useEffect, useMemo, useSyncExternalStore } from 'react'
 import palavrasData from '../data/palavras.json'
 import { BoardController } from '../store/BoardController'
 import { RealtimeBoardStore } from '../store/RealtimeBoardStore'
+import type { PalavraInput } from '../shared/palavras'
 import type { Palavra, Pos } from '../types'
 
 export const palavras = palavrasData.palavras as Palavra[]
-export const palavraById: Record<string, Palavra> = Object.fromEntries(palavras.map((p) => [p.id, p]))
 
 export interface BoardSession {
   clientId: string
@@ -49,6 +49,9 @@ export function useBoard(boardId: string, session: BoardSession) {
   const openSaved = useCallback((id: string) => store.openSaved(id), [store])
   const deleteSaved = useCallback((id: string) => store.deleteSaved(id), [store])
   const clearNotices = useCallback(() => store.clearNotices(), [store])
+  const addPalavra = useCallback((p: PalavraInput) => store.addPalavra(p), [store])
+  const editPalavra = useCallback((id: string, p: PalavraInput) => store.editPalavra(id, p), [store])
+  const removePalavra = useCallback((id: string) => store.removePalavra(id), [store])
 
   // Arrasto ao vivo e cursor: efêmeros (não são gravados).
   const previewMove = useCallback((instanceId: string, to: Pos) => store.previewMove(instanceId, to), [store])
@@ -66,6 +69,9 @@ export function useBoard(boardId: string, session: BoardSession) {
     openSaved,
     deleteSaved,
     clearNotices,
+    addPalavra,
+    editPalavra,
+    removePalavra,
     previewMove,
     cancelPreview,
     sendCursor,

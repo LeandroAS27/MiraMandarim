@@ -4,12 +4,15 @@ import type { Palavra } from '../types'
 import { StickyNote } from './StickyNote'
 import styles from './Tray.module.css'
 
-export type HskFilter = 'all' | 1 | 2
+import type { HskFilter } from '../lib/palavrasView'
+
+export type { HskFilter }
 
 const HSK_OPTIONS: { value: HskFilter; label: string }[] = [
   { value: 'all', label: 'Todos' },
   { value: 1, label: 'HSK 1' },
   { value: 2, label: 'HSK 2' },
+  { value: 'extras', label: 'Extras' },
 ]
 
 interface ItemProps {
@@ -57,7 +60,7 @@ export function Tray({ trayRef, open, items, total, query, onQuery, hsk, onHsk, 
           value={query}
           onChange={(e) => onQuery(e.target.value)}
         />
-        <div className={styles.filter} role="group" aria-label="Filtrar por nível HSK">
+        <div className={styles.filter} role="group" aria-label="Filtrar por nível HSK ou palavras extras">
           {HSK_OPTIONS.map((o) => (
             <button key={String(o.value)} type="button" aria-pressed={hsk === o.value} onClick={() => onHsk(o.value)}>
               {o.label}

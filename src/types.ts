@@ -5,8 +5,10 @@ export interface Palavra {
   hanzi: string
   pinyin: string
   traducao: string
-  /** Nível HSK (padrão HSK 2.0). */
-  hsk: 1 | 2
+  /** Nível HSK (padrão HSK 2.0). Palavras extras não têm nível (null). */
+  hsk: 1 | 2 | null
+  /** Palavra extra da admin (selo "E"). As 300 originais não têm este campo. */
+  extra?: true
   /** Classe gramatical (define a cor do cartão). Provisória: revisar com a professora. */
   classe: Classe
 }

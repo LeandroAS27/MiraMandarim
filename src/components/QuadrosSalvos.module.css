@@ -18,3 +18,4 @@
 .ok { margin: 0; color: #0f766e; font-size: 0.9rem; }
 .err { margin: 0; color: #b42318; font-size: 0.9rem; }
 .row { display: flex; justify-content: flex-end; margin-top: 6px; }
+.card select { font: inherit; padding: 9px 11px; border: 1px solid #c9ced6; border-radius: 8px; background: #fff; }

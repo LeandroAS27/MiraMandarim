@@ -16,6 +16,7 @@ interface Props {
   onToggleTray: () => void
   onSave: () => void
   onOpenSaved: () => void
+  onPalavras: () => void
   /** Só a admin salva, abre o salvo e limpa o quadro de todos. */
   isAdmin: boolean
   status: ConnStatus
@@ -32,7 +33,7 @@ interface Props {
   studentLinkUrl: string
 }
 
-export function Toolbar({ canClear, onClear, trayOpen, legendOpen, onToggleLegend, prefs, onPrefs, onToggleTray, onSave, onOpenSaved, isAdmin, status, users, myClientId, onChangeName, onNewRoom, onLeave, error, adminLinkUrl, studentLinkUrl }: Props) {
+export function Toolbar({ canClear, onClear, trayOpen, legendOpen, onToggleLegend, prefs, onPrefs, onToggleTray, onSave, onOpenSaved, onPalavras, isAdmin, status, users, myClientId, onChangeName, onNewRoom, onLeave, error, adminLinkUrl, studentLinkUrl }: Props) {
   const [msg, setMsg] = useState('')
   const [hover, setHover] = useState(false)
   const [tapped, setTapped] = useState(false)
@@ -82,6 +83,9 @@ export function Toolbar({ canClear, onClear, trayOpen, legendOpen, onToggleLegen
             </button>
             <button onClick={onOpenSaved} title="Troca o quadro de todos por um quadro salvo">
               Abrir quadro salvo
+            </button>
+            <button onClick={onPalavras} title="Acrescente palavras suas ao banco (valem para todas as suas salas)">
+              Adicionar palavra
             </button>
           </>
         )}

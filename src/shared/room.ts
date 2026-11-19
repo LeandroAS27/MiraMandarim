@@ -1,4 +1,4 @@
-import type { BoardState, Instance } from '../types'
+import type { BoardState, Instance, Palavra } from '../types'
 import { colorFor, type Papel } from '../theme/presence'
 import { TOKEN_RE } from './chaves'
 import { MAX_INSTANCES, canSend, type ClientMessage, type ErrorCode, type PresenceUser, type ServerMessage, type SessaoInfo } from './protocol'
@@ -35,13 +35,14 @@ export async function decideRole(token: string | null | undefined, donoHash: str
 export const styleOf = (papel: Papel, clientId: string): { cor: string } => ({ cor: colorFor(papel, clientId) })
 
 /** O que o servidor manda a quem acabou de entrar. Não leva token nem nada de outra pessoa. */
-export const snapshotFor = (papel: Papel, clientId: string, data: RoomData, sessao?: SessaoInfo): ServerMessage => ({
+export const snapshotFor = (papel: Papel, clientId: string, data: RoomData, sessao?: SessaoInfo, palavras: Palavra[] = []): ServerMessage => ({
   type: 'snapshot',
   clientId,
   papel,
   cor: colorFor(papel, clientId),
   state: data.state,
   ...(sessao ? { sessao } : {}),
+  palavras,
 })
 
 export const toPresence = (list: { clientId: string; nome: string; papel: Papel }[]): PresenceUser[] =>
@@ -62,6 +63,10 @@ export interface Outcome {
   toAll: boolean
   /** Resposta só para quem enviou. */
   reply?: ServerMessage
+  /** Outras mensagens para todos (ex.: cartões removidos junto com uma palavra extra excluída). */
+  also?: ServerMessage[]
+  /** Nova lista de palavras extras (a sala guarda uma cópia na memória). */
+  extras?: Palavra[]
 }
 
 const noop = (data: RoomData): Outcome => ({ state: data.state, persistState: false, broadcast: null, toAll: false })
