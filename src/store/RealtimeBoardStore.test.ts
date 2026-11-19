@@ -45,7 +45,6 @@ const snapshot = (over: Record<string, unknown> = {}) => ({
   papel: 'aluno',
   cor: '#9ad1ff',
   state: {},
-  hasSaved: false,
   ...over,
 })
 
@@ -150,9 +149,9 @@ describe('RealtimeBoardStore', () => {
     expect(sock().sent).toEqual([])
     sock().open()
     expect(sock().sent[0]).toEqual({ type: 'join', clientId: CID, nome: 'Ana' })
-    sock().receive(snapshot({ state: { [inst.instanceId]: inst }, hasSaved: true }))
+    sock().receive(snapshot({ state: { [inst.instanceId]: inst } }))
     expect(store.getState()).toEqual({ [inst.instanceId]: inst })
-    expect(store.getMeta()).toMatchObject({ status: 'open', papel: 'aluno', hasSaved: true })
+    expect(store.getMeta()).toMatchObject({ status: 'open', papel: 'aluno' })
   })
 
   it('create/move/remove viram add/move final/remove e valem na hora localmente', () => {
@@ -248,23 +247,41 @@ describe('RealtimeBoardStore', () => {
     expect(store.getCursors()['outro-cliente-1']).toBeUndefined()
   })
 
-  it('aluno não envia save, reset (nem abre o quadro salvo); admin envia', () => {
+  it('aluno não envia save, reset, listSaved, open nem deleteSaved; admin envia', () => {
     const aluno = make()
     aluno.sock().open()
-    aluno.sock().receive(snapshot({ hasSaved: true }))
-    aluno.store.save()
-    expect(aluno.store.load()).toBeNull()
-    expect(aluno.sock().ofType('save')).toHaveLength(0)
-    expect(aluno.sock().ofType('reset')).toHaveLength(0)
+    aluno.sock().receive(snapshot())
+    aluno.store.save('Aula 1')
+    aluno.store.listSaved()
+    aluno.store.openSaved('abcd1234')
+    aluno.store.deleteSaved('abcd1234')
+    for (const t of ['save', 'listSaved', 'open', 'deleteSaved']) expect(aluno.sock().ofType(t)).toHaveLength(0)
 
-    const prof = make('token-da-admin-123')
+    const prof = make('token-da-admin-123456')
     prof.sock().open()
-    prof.sock().receive(snapshot({ papel: 'admin', cor: '#ffc933', hasSaved: true }))
-    prof.store.save()
-    prof.store.load()
+    prof.sock().receive(snapshot({ papel: 'admin', cor: '#ffc933' }))
+    prof.store.save('Aula 1')
+    prof.store.listSaved()
+    prof.store.openSaved('abcd1234')
+    prof.store.deleteSaved('abcd1234')
     prof.store.applyMove({ type: 'clear', instances: [] })
-    expect(prof.sock().ofType('save')).toHaveLength(1)
-    expect(prof.sock().ofType('reset').map((m) => m.to)).toEqual(['saved', 'empty'])
+    expect(prof.sock().ofType('save')).toMatchObject([{ nome: 'Aula 1' }])
+    expect(prof.sock().ofType('listSaved')).toHaveLength(1)
+    expect(prof.sock().ofType('open')).toMatchObject([{ id: 'abcd1234' }])
+    expect(prof.sock().ofType('deleteSaved')).toMatchObject([{ id: 'abcd1234' }])
+    expect(prof.sock().ofType('reset').map((m) => m.to)).toEqual(['empty'])
+  })
+
+  it('guarda a lista de quadros salvos e o aviso quando o servidor responde', () => {
+    const prof = make('token-da-admin-123456')
+    prof.sock().open()
+    prof.sock().receive(snapshot({ papel: 'admin', cor: '#ffc933' }))
+    const q = { id: 'abcd1234', nome: 'Aula 3', em: 5, total: 2 }
+    prof.sock().receive({ type: 'savedList', clientId: 'server', items: [q] })
+    expect(prof.store.getMeta().saved).toEqual([q])
+    prof.sock().receive({ type: 'saved', clientId: CID, meta: { ...q, nome: 'Aula 4', id: 'efgh5678' } })
+    expect(prof.store.getMeta().saved?.map((x) => x.nome)).toEqual(['Aula 4', 'Aula 3'])
+    expect(prof.store.getMeta().aviso).toContain('Aula 4')
   })
 
   it('reconecta com backoff crescente e volta ao normal depois do snapshot', () => {

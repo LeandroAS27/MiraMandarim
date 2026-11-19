@@ -12,9 +12,18 @@ describe('parseClientMessage', () => {
     expect(parse({ type: 'move', clientId: CID, instanceId: 'i-abcd1234', to: { x: 1, y: 2 }, final: true }).ok).toBe(true)
     expect(parse({ type: 'add', clientId: CID, instances: [inst] }).ok).toBe(true)
     expect(parse({ type: 'remove', clientId: CID, instanceIds: ['i-abcd1234'] }).ok).toBe(true)
-    expect(parse({ type: 'save', clientId: CID }).ok).toBe(true)
-    expect(parse({ type: 'reset', clientId: CID, to: 'saved' }).ok).toBe(true)
+    expect(parse({ type: 'save', clientId: CID, nome: 'Aula 3' }).ok).toBe(true)
+    expect(parse({ type: 'reset', clientId: CID, to: 'empty' }).ok).toBe(true)
+    expect(parse({ type: 'listSaved', clientId: CID }).ok).toBe(true)
+    expect(parse({ type: 'open', clientId: CID, id: 'abcd1234' }).ok).toBe(true)
+    expect(parse({ type: 'deleteSaved', clientId: CID, id: 'abcd1234' }).ok).toBe(true)
     expect(parse({ type: 'cursor', clientId: CID, x: 5, y: 6 }).ok).toBe(true)
+  })
+
+  it('o cliente não pode pedir reset para um quadro salvo (isso é o open)', () => {
+    expect(parse({ type: 'reset', clientId: CID, to: 'saved' }).ok).toBe(false)
+    expect(parse({ type: 'open', clientId: CID, id: '../x' }).ok).toBe(false)
+    expect(parse({ type: 'save', clientId: CID }).ok).toBe(false)
   })
 
   it('reset sem destino esvazia o quadro', () => {
@@ -23,7 +32,7 @@ describe('parseClientMessage', () => {
   })
 
   it('recusa lixo: não-JSON, sem type, tipo desconhecido, clientId ruim', () => {
-    for (const bad of ['não é json', '[]', '{}', '"x"', { type: 'nada', clientId: CID }, { type: 'save' }, { type: 'save', clientId: 'a b' }]) {
+    for (const bad of ['não é json', '[]', '{}', '"x"', { type: 'nada', clientId: CID }, { type: 'save' }, { type: 'save', clientId: 'a b', nome: 'x' }]) {
       const r = parse(bad)
       expect(r.ok, JSON.stringify(bad)).toBe(false)
     }
@@ -64,11 +73,11 @@ describe('parseClientMessage', () => {
 })
 
 describe('permissão por papel', () => {
-  it('save e reset são só da admin', () => {
-    expect(canSend('aluno', 'save')).toBe(false)
-    expect(canSend('aluno', 'reset')).toBe(false)
-    expect(canSend('admin', 'save')).toBe(true)
-    expect(canSend('admin', 'reset')).toBe(true)
+  it('save, reset, listSaved, open e deleteSaved são só da admin', () => {
+    for (const t of ['save', 'reset', 'listSaved', 'open', 'deleteSaved'] as const) {
+      expect(canSend('aluno', t), t).toBe(false)
+      expect(canSend('admin', t), t).toBe(true)
+    }
   })
   it('aluno pode mover, adicionar, remover e mostrar o cursor', () => {
     for (const t of ['join', 'move', 'add', 'remove', 'cursor'] as const) expect(canSend('aluno', t)).toBe(true)
@@ -77,7 +86,7 @@ describe('permissão por papel', () => {
 
 describe('parseServerMessage', () => {
   it('lê snapshot e presença', () => {
-    const snap = parseServerMessage(JSON.stringify({ type: 'snapshot', clientId: CID, papel: 'aluno', cor: '#9ad1ff', state: { a: inst }, hasSaved: true }))
+    const snap = parseServerMessage(JSON.stringify({ type: 'snapshot', clientId: CID, papel: 'aluno', cor: '#9ad1ff', state: { a: inst } }))
     expect(snap.ok).toBe(true)
     const pres = parseServerMessage(
       JSON.stringify({

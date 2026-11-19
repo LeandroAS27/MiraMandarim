@@ -8,7 +8,6 @@ import styles from './Toolbar.module.css'
 interface Props {
   canClear: boolean
   onClear: () => void
-  hasSaved: boolean
   trayOpen: boolean
   legendOpen: boolean
   onToggleLegend: () => void
@@ -33,7 +32,7 @@ interface Props {
   studentLinkUrl: string
 }
 
-export function Toolbar({ canClear, onClear, hasSaved, trayOpen, legendOpen, onToggleLegend, prefs, onPrefs, onToggleTray, onSave, onOpenSaved, isAdmin, status, users, myClientId, onChangeName, onNewRoom, onLeave, error, adminLinkUrl, studentLinkUrl }: Props) {
+export function Toolbar({ canClear, onClear, trayOpen, legendOpen, onToggleLegend, prefs, onPrefs, onToggleTray, onSave, onOpenSaved, isAdmin, status, users, myClientId, onChangeName, onNewRoom, onLeave, error, adminLinkUrl, studentLinkUrl }: Props) {
   const [msg, setMsg] = useState('')
   const [hover, setHover] = useState(false)
   const [tapped, setTapped] = useState(false)
@@ -78,16 +77,12 @@ export function Toolbar({ canClear, onClear, hasSaved, trayOpen, legendOpen, onT
             >
               Limpar quadro
             </button>
-            <button
-              onClick={() => {
-                onSave()
-                flash('Quadro salvo para a turma')
-              }}
-              title="Guarda o quadro para reabrir na próxima aula"
-            >
+            <button onClick={onSave} title="Guarda o quadro com um nome para reabrir em outra aula">
               Salvar quadro
             </button>
-            {hasSaved && <button onClick={onOpenSaved} title="Troca o quadro de todos pelo último salvo">Abrir quadro salvo</button>}
+            <button onClick={onOpenSaved} title="Troca o quadro de todos por um quadro salvo">
+              Abrir quadro salvo
+            </button>
           </>
         )}
         {isAdmin && (

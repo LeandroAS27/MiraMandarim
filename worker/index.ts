@@ -1,9 +1,11 @@
 import { CLOSE_NO_ROOM } from '../src/shared/protocol'
 import { criarAssinado, validarAssinado } from '../src/shared/chaves'
 import { safeEqual, sha256Hex } from '../src/shared/room'
-import { QuadroDurableObject, type Env } from './QuadroDurableObject'
+import type { Env } from './env'
+import { ProfessoraDurableObject } from './ProfessoraDurableObject'
+import { QuadroDurableObject } from './QuadroDurableObject'
 
-export { QuadroDurableObject }
+export { ProfessoraDurableObject, QuadroDurableObject }
 
 const WS_ROUTE = /^\/api\/quadro\/([A-Za-z0-9_-]{16,64})\/ws$/
 const MAX_BODY = 2_000

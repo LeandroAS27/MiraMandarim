@@ -41,7 +41,6 @@ export const snapshotFor = (papel: Papel, clientId: string, data: RoomData, sess
   papel,
   cor: colorFor(papel, clientId),
   state: data.state,
-  hasSaved: data.saved !== null,
   ...(sessao ? { sessao } : {}),
 })
 
@@ -51,35 +50,33 @@ export const toPresence = (list: { clientId: string; nome: string; papel: Papel 
 export interface RoomData {
   /** Quadro ao vivo. */
   state: BoardState
-  /** Último "Salvar quadro" da admin (null se nunca salvou). */
-  saved: BoardState | null
 }
 
 export interface Outcome {
   error?: { code: ErrorCode; message: string }
   state: BoardState
-  saved: BoardState | null
-  /** Gravar o estado no armazenamento? (só no soltar, no add/remove, no save e no reset) */
+  /** Gravar o estado no armazenamento? (só no soltar, no add/remove, no reset e ao abrir um quadro salvo) */
   persistState: boolean
-  persistSaved: boolean
   /** Mensagem para os outros (ou para todos, se `toAll`). */
   broadcast: ServerMessage | null
   toAll: boolean
+  /** Resposta só para quem enviou. */
+  reply?: ServerMessage
 }
 
-const noop = (data: RoomData): Outcome => ({ state: data.state, saved: data.saved, persistState: false, persistSaved: false, broadcast: null, toAll: false })
+const noop = (data: RoomData): Outcome => ({ state: data.state, persistState: false, broadcast: null, toAll: false })
 const fail = (data: RoomData, code: ErrorCode, message: string): Outcome => ({ ...noop(data), error: { code, message } })
 
 /**
- * Aplica uma mensagem já validada (não vale para `join`). Não altera `data`: devolve o novo estado
+ * Aplica uma mensagem síncrona já validada (cursor, move, add, remove, reset; `join` e as ações de quadros
+ * salvos ficam fora: ver acoes.ts). Não altera `data`: devolve o novo estado
  * e o que o Durable Object deve gravar e enviar.
  */
 export function handleMessage(
   data: RoomData,
-  msg: Exclude<ClientMessage, { type: 'join' }>,
+  msg: Extract<ClientMessage, { type: 'cursor' | 'move' | 'add' | 'remove' | 'reset' }>,
   papel: Papel,
   isValidPalavra: (palavraId: string) => boolean,
-  now: number,
 ): Outcome {
   if (!canSend(papel, msg.type)) return fail(data, 'sem_permissao', 'Só a admin pode fazer isso.')
   const { clientId } = msg
@@ -113,13 +110,7 @@ export function handleMessage(
       return { ...noop(data), state, persistState: true, broadcast: { type: 'remove', clientId, instanceIds: ids } }
     }
 
-    case 'save':
-      return { ...noop(data), saved: { ...data.state }, persistSaved: true, broadcast: { type: 'saved', clientId, at: now }, toAll: true }
-
-    case 'reset': {
-      if (msg.to === 'saved' && !data.saved) return fail(data, 'sem_salvo', 'Ainda não há quadro salvo.')
-      const state = msg.to === 'saved' ? { ...data.saved } : {}
-      return { ...noop(data), state, persistState: true, broadcast: { type: 'reset', clientId, to: msg.to, state }, toAll: true }
-    }
+    case 'reset':
+      return { ...noop(data), state: {}, persistState: true, broadcast: { type: 'reset', clientId, to: 'empty', state: {} }, toAll: true }
   }
 }

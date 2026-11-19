@@ -1,6 +1,7 @@
 import { backoffDelay } from '../lib/backoff'
 import { throttle, type Throttled } from '../lib/throttle'
 import { CLOSE_BAD_ID, CLOSE_NO_ROOM, CLOSE_REPLACED, CLOSE_SESSION_EXPIRED, encode, parseServerMessage, type ClientMessage, type PresenceUser, type ServerMessage } from '../shared/protocol'
+import type { SavedMeta } from '../shared/professora'
 import type { Papel } from '../theme/presence'
 import type { BoardState, Instance, Move, Pos } from '../types'
 import { applyMoveToState } from './applyMove'
@@ -14,7 +15,10 @@ export interface Meta {
   papel: Papel | null
   cor: string | null
   clientId: string
-  hasSaved: boolean
+  /** Quadros salvos da admin (null até ela pedir a lista). */
+  saved: SavedMeta[] | null
+  /** Aviso de sucesso (ex.: quadro salvo). */
+  aviso: string | null
   users: PresenceUser[]
   /** Último erro vindo do servidor (ex.: sem permissão), para a barra mostrar. */
   error: string | null
@@ -96,7 +100,7 @@ export class RealtimeBoardStore implements BoardStore {
   constructor(private opts: RealtimeOptions) {
     this.nome = opts.nome
     this.sessao = opts.sessao ?? null
-    this.meta = { status: 'connecting', papel: null, cor: null, clientId: opts.clientId, hasSaved: false, users: [], error: null, motivo: null }
+    this.meta = { status: 'connecting', papel: null, cor: null, clientId: opts.clientId, saved: null, aviso: null, users: [], error: null, motivo: null }
     const ms = opts.throttleMs ?? 200
     this.sendCursorThrottled = throttle((p) => this.send({ type: 'cursor', clientId: this.opts.clientId, x: p.x, y: p.y }), ms)
     this.sendPreviewThrottled = throttle(
@@ -211,7 +215,7 @@ export class RealtimeBoardStore implements BoardStore {
           this.opts.onSessao?.(m.sessao.id)
         }
         this.setState(m.state)
-        this.setMeta({ status: 'open', papel: m.papel, cor: m.cor, hasSaved: m.hasSaved, error: null })
+        this.setMeta({ status: 'open', papel: m.papel, cor: m.cor, error: null })
         break
       case 'presence': {
         const ids = new Set(m.users.map((u) => u.clientId))
@@ -238,8 +242,13 @@ export class RealtimeBoardStore implements BoardStore {
       case 'reset':
         this.setState(m.state)
         break
-      case 'saved':
-        this.setMeta({ hasSaved: true })
+      case 'saved': {
+        const resto = (this.meta.saved ?? []).filter((q) => q.id !== m.meta.id)
+        this.setMeta({ saved: [m.meta, ...resto], aviso: `Quadro "${m.meta.nome}" salvo`, error: null })
+        break
+      }
+      case 'savedList':
+        this.setMeta({ saved: m.items })
         break
       case 'cursor':
         this.setCursors({ ...this.cursors, [m.clientId]: { x: m.x, y: m.y, t: Date.now() } })
@@ -267,20 +276,30 @@ export class RealtimeBoardStore implements BoardStore {
     return this.state
   }
 
-  hasSaved(): boolean {
-    return this.meta.hasSaved
+  // --- quadros salvos (só admin; o servidor confere de novo) ---------------
+
+  /** Salva o quadro atual com um nome. */
+  save(nome: string): void {
+    if (this.meta.papel === 'admin') this.send({ type: 'save', clientId: this.opts.clientId, nome })
   }
 
-  /** "Abrir quadro salvo": a admin pede ao servidor; o quadro de todos é trocado pelo salvo. */
-  load(): BoardState | null {
-    if (!this.meta.hasSaved || this.meta.papel !== 'admin') return null
-    this.send({ type: 'reset', clientId: this.opts.clientId, to: 'saved' })
-    return this.state
+  /** Pede a lista de quadros salvos (chega em meta.saved). */
+  listSaved(): void {
+    if (this.meta.papel === 'admin') this.send({ type: 'listSaved', clientId: this.opts.clientId })
   }
 
-  /** "Salvar quadro": só a admin (o servidor também confere). */
-  save(): void {
-    if (this.meta.papel === 'admin') this.send({ type: 'save', clientId: this.opts.clientId })
+  /** Troca o quadro de todos pelo quadro salvo. */
+  openSaved(id: string): void {
+    if (this.meta.papel === 'admin') this.send({ type: 'open', clientId: this.opts.clientId, id })
+  }
+
+  deleteSaved(id: string): void {
+    if (this.meta.papel === 'admin') this.send({ type: 'deleteSaved', clientId: this.opts.clientId, id })
+  }
+
+  /** Limpa o aviso de sucesso e o erro (ao fechar a janela). */
+  clearNotices(): void {
+    this.setMeta({ aviso: null, error: null })
   }
 
   subscribe(listener: Listener): () => void {

@@ -24,6 +24,7 @@ import { Draggable } from './Draggable'
 import { SentencePanel } from './SentencePanel'
 import { StickyNote } from './StickyNote'
 import { Legend } from './Legend'
+import { QuadrosSalvos } from './QuadrosSalvos'
 import { Toolbar } from './Toolbar'
 import { Tray, type HskFilter } from './Tray'
 import { ZoomControls } from './ZoomControls'
@@ -61,10 +62,17 @@ interface BoardProps {
 
 export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom, onLeave, sessao, onSessao, onSessaoExpirada }: BoardProps) {
   const {
-    instances, createInstance, moveInstance, removeInstance, clearBoard, save, openSaved, hasSaved,
+    instances, createInstance, moveInstance, removeInstance, clearBoard, save, listSaved, openSaved, deleteSaved, clearNotices,
     previewMove, cancelPreview, sendCursor, meta, store,
   } = useBoard(boardId, { clientId, nome, token, sessao, onSessao })
   const isAdmin = meta.papel === 'admin'
+  // janela de quadros salvos (só admin): salvar com nome ou abrir/excluir
+  const [dialogo, setDialogo] = useState<'salvar' | 'abrir' | null>(null)
+  const abrirDialogo = (modo: 'salvar' | 'abrir') => {
+    clearNotices()
+    listSaved()
+    setDialogo(modo)
+  }
   // sessão de aluno vencida: volta para a tela de nome
   useEffect(() => {
     if (meta.motivo === 'sessao_expirada') onSessaoExpirada()
@@ -327,15 +335,14 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
         <Toolbar
           canClear={placed.length > 0}
           onClear={clearBoard}
-          hasSaved={hasSaved}
           trayOpen={trayOpen}
           legendOpen={legendOpen}
           onToggleLegend={() => setLegendOpen(!legendOpen)}
           prefs={prefs}
           onPrefs={updatePrefs}
           onToggleTray={() => setTrayOpen((o) => !o)}
-          onSave={save}
-          onOpenSaved={openSaved}
+          onSave={() => abrirDialogo('salvar')}
+          onOpenSaved={() => abrirDialogo('abrir')}
           isAdmin={isAdmin}
           status={meta.status}
           users={meta.users}
@@ -377,6 +384,22 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
           onReset={() => applyZoom(1)}
         />
         {placed.length === 0 && <p className={styles.hint}>Arraste palavras do banco para o quadro.</p>}
+        {isAdmin && dialogo && (
+          <QuadrosSalvos
+            modo={dialogo}
+            quadros={meta.saved}
+            cartoesNoQuadro={placed.length}
+            aviso={meta.aviso}
+            erro={meta.error}
+            onSalvar={save}
+            onAbrir={openSaved}
+            onExcluir={deleteSaved}
+            onFechar={() => {
+              clearNotices()
+              setDialogo(null)
+            }}
+          />
+        )}
         {legendOpen && <Legend onClose={() => setLegendOpen(false)} />}
         <SentencePanel sentence={sentence} pinned={prefs.pinFrase} onVisibleHeight={setDockH} />
         <DragOverlay dropAnimation={null} zIndex={3000}>

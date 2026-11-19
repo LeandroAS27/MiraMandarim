@@ -1,4 +1,6 @@
 import { DurableObject } from 'cloudflare:workers'
+import { acaoDeAdmin, type MsgAdmin, type Professora } from '../src/shared/acoes'
+import type { Env } from './env'
 import palavrasData from '../src/data/palavras.json'
 import { CLOSE_BAD_ID, CLOSE_NO_ROOM, CLOSE_REPLACED, CLOSE_SESSION_EXPIRED, encode, parseClientMessage, type ClientMessage, type ErrorCode, type ServerMessage } from '../src/shared/protocol'
 import { decideRole, handleMessage, snapshotFor, toPresence, type RoomData } from '../src/shared/room'
@@ -6,11 +8,10 @@ import { entrarComoAluno, expirou, type SessaoStore } from '../src/shared/sessoe
 import type { BoardState } from '../src/types'
 import type { Papel } from '../src/theme/presence'
 
-export interface Env {
-  QUADRO: DurableObjectNamespace<QuadroDurableObject>
-  /** Segredo (wrangler secret put CHAVE_CRIACAO): chave para criar sala e para assinar códigos e tokens. */
-  CHAVE_CRIACAO?: string
-}
+export type { Env }
+
+const ACOES_ADMIN = new Set(['save', 'listSaved', 'open', 'deleteSaved'])
+const isAcaoDeAdmin = (m: { type: string }): m is MsgAdmin => ACOES_ADMIN.has(m.type)
 
 const VALID_PALAVRAS = new Set((palavrasData.palavras as { id: string }[]).map((p) => p.id))
 
@@ -29,24 +30,20 @@ interface Attachment {
  *
  * Gravação (ctx.storage, 1 chave por valor = 1 escrita de linha):
  *  - "state": só no soltar, no add/remove e no reset (nunca a cada passo do arrasto);
- *  - "saved": no "Salvar quadro" da admin;
+ *  - quadros salvos NÃO ficam aqui: moram no Durable Object PROFESSORA (valem para todas as salas da admin);
  *  - "donoHash": uma vez, quando a sala é criada (hash do token da admin; o token em si nunca é guardado).
  * Cursores e presença são efêmeros: só memória/attachments + broadcast, nada em storage.
  */
 export class QuadroDurableObject extends DurableObject<Env> {
-  private data: RoomData = { state: {}, saved: null }
+  private data: RoomData = { state: {} }
   private donoHash: string | null = null
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env)
     // Ao acordar da hibernação, recarrega o que foi gravado.
     ctx.blockConcurrencyWhile(async () => {
-      const [state, saved, hash] = await Promise.all([
-        ctx.storage.get<BoardState>('state'),
-        ctx.storage.get<BoardState>('saved'),
-        ctx.storage.get<string>('donoHash'),
-      ])
-      this.data = { state: state ?? {}, saved: saved ?? null }
+      const [state, hash] = await Promise.all([ctx.storage.get<BoardState>('state'), ctx.storage.get<string>('donoHash')])
+      this.data = { state: state ?? {} }
       this.donoHash = hash ?? null
     })
   }
@@ -91,12 +88,15 @@ export class QuadroDurableObject extends DurableObject<Env> {
     // A sessão de aluno é conferida pelo relógio do servidor a cada mensagem.
     if (att.expiraEm !== null && expirou(att.expiraEm, Date.now())) return this.expulsar(ws)
 
-    const out = handleMessage(this.data, msg, att.papel, (id) => VALID_PALAVRAS.has(id), Date.now())
+    const valida = (id: string) => VALID_PALAVRAS.has(id)
+    const out = isAcaoDeAdmin(msg)
+      ? await acaoDeAdmin(this.data, msg, att.papel, this.professora(), valida)
+      : handleMessage(this.data, msg, att.papel, valida)
     if (out.error) return this.sendError(ws, att.clientId, out.error.code, out.error.message)
 
-    this.data = { state: out.state, saved: out.saved }
+    this.data = { state: out.state }
     if (out.persistState) await this.ctx.storage.put('state', out.state)
-    if (out.persistSaved && out.saved) await this.ctx.storage.put('saved', out.saved)
+    if (out.reply) ws.send(encode(out.reply))
     if (out.broadcast) this.broadcast(out.broadcast, out.toAll ? null : ws)
   }
 
@@ -144,6 +144,17 @@ export class QuadroDurableObject extends DurableObject<Env> {
     ws.serializeAttachment({ clientId, nome, papel, expiraEm: sessao?.expiraEm ?? null } satisfies Attachment)
     ws.send(encode(snapshotFor(papel, clientId, this.data, sessao)))
     this.broadcastPresence()
+  }
+
+  /** Os dados da admin (quadros salvos) ficam no objeto dela, nomeado pelo hash do token. Só chamado por quem já é admin. */
+  private professora(): Professora {
+    const stub = this.env.PROFESSORA.getByName(this.donoHash ?? 'sem-dono')
+    return {
+      listarQuadros: () => stub.listarQuadros(),
+      salvarQuadro: (nome, state) => stub.salvarQuadro(nome, state),
+      abrirQuadro: (id) => stub.abrirQuadro(id),
+      excluirQuadro: (id) => stub.excluirQuadro(id),
+    }
   }
 
   /** Sessões de aluno: uma chave por sessão (hash do id → validade). Expiradas são apagadas de tempos em tempos. */

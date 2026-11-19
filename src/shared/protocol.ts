@@ -2,6 +2,7 @@ import { CANVAS_H, CANVAS_W } from '../lib/layout'
 import type { BoardState, Instance, Pos } from '../types'
 import { isHexColor, type Papel } from '../theme/presence'
 import { TOKEN_RE } from './chaves'
+import type { SavedMeta } from './professora'
 import { validateNome } from './nome'
 
 /**
@@ -22,6 +23,7 @@ export const MAX_BATCH = 400
 
 const CLIENT_ID_RE = /^[A-Za-z0-9_-]{8,64}$/
 const INSTANCE_ID_RE = /^[A-Za-z0-9_-]{4,40}$/
+const SAVED_ID_RE = /^[A-Za-z0-9_-]{4,40}$/
 const PALAVRA_ID_RE = /^[A-Za-z0-9_-]{1,32}$/
 
 export type ClientMessage =
@@ -31,8 +33,15 @@ export type ClientMessage =
   | { type: 'move'; clientId: string; instanceId: string; to: Pos; final: boolean }
   | { type: 'add'; clientId: string; instances: Instance[] }
   | { type: 'remove'; clientId: string; instanceIds: string[] }
-  | { type: 'save'; clientId: string }
-  | { type: 'reset'; clientId: string; to: 'empty' | 'saved' }
+  /** Salva o quadro atual com um nome (só admin). */
+  | { type: 'save'; clientId: string; nome: string }
+  /** Esvazia o quadro de todos (só admin). */
+  | { type: 'reset'; clientId: string; to: 'empty' }
+  /** Pede a lista de quadros salvos da admin. */
+  | { type: 'listSaved'; clientId: string }
+  /** Troca o quadro de todos pelo quadro salvo `id`. */
+  | { type: 'open'; clientId: string; id: string }
+  | { type: 'deleteSaved'; clientId: string; id: string }
   | { type: 'cursor'; clientId: string; x: number; y: number }
 
 export interface PresenceUser {
@@ -56,14 +65,18 @@ export type ErrorCode =
   | 'limite'
   | 'client_id_em_uso'
   | 'sessao_expirada'
+  | 'nao_encontrado'
 
 export type ServerMessage =
-  | { type: 'snapshot'; clientId: string; papel: Papel; cor: string; state: BoardState; hasSaved: boolean; sessao?: SessaoInfo }
+  | { type: 'snapshot'; clientId: string; papel: Papel; cor: string; state: BoardState; sessao?: SessaoInfo }
   | { type: 'presence'; clientId: string; users: PresenceUser[] }
   | { type: 'move'; clientId: string; instanceId: string; to: Pos; final: boolean }
   | { type: 'add'; clientId: string; instances: Instance[] }
   | { type: 'remove'; clientId: string; instanceIds: string[] }
-  | { type: 'saved'; clientId: string; at: number }
+  /** Só para quem salvou. */
+  | { type: 'saved'; clientId: string; meta: SavedMeta }
+  /** Só para quem pediu. */
+  | { type: 'savedList'; clientId: string; items: SavedMeta[] }
   | { type: 'reset'; clientId: string; to: 'empty' | 'saved'; state: BoardState }
   | { type: 'cursor'; clientId: string; x: number; y: number }
   | { type: 'leave'; clientId: string }
@@ -144,16 +157,29 @@ export function parseClientMessage(raw: unknown): ParseResult<ClientMessage> {
       return { ok: true, msg: { type: 'remove', clientId, instanceIds: d.instanceIds as string[] } }
     }
     case 'save':
-      return { ok: true, msg: { type: 'save', clientId } }
+      // o nome é validado de verdade no servidor (professora.ts); aqui só o formato
+      if (!isStr(d.nome) || d.nome.length > 200) return bad('Nome do quadro inválido.')
+      return { ok: true, msg: { type: 'save', clientId, nome: d.nome } }
     case 'reset':
-      if (d.to !== undefined && d.to !== 'empty' && d.to !== 'saved') return bad('Destino do reset inválido.')
-      return { ok: true, msg: { type: 'reset', clientId, to: d.to === 'saved' ? 'saved' : 'empty' } }
+      if (d.to !== undefined && d.to !== 'empty') return bad('Destino do reset inválido.')
+      return { ok: true, msg: { type: 'reset', clientId, to: 'empty' } }
+    case 'listSaved':
+      return { ok: true, msg: { type: 'listSaved', clientId } }
+    case 'open':
+    case 'deleteSaved':
+      if (!isStr(d.id) || !SAVED_ID_RE.test(d.id)) return bad('Id de quadro inválido.')
+      return { ok: true, msg: { type: d.type, clientId, id: d.id } }
     case 'cursor':
       if (!isNum(d.x) || !isNum(d.y)) return bad('Cursor inválido.')
       return { ok: true, msg: { type: 'cursor', clientId, x: clampX(d.x), y: clampY(d.y) } }
     default:
       return bad(`Tipo desconhecido: ${d.type}`)
   }
+}
+
+function parseMeta(v: unknown): SavedMeta | null {
+  if (!isObj(v) || !isStr(v.id) || !isStr(v.nome) || !isNum(v.em) || !isNum(v.total)) return null
+  return { id: v.id, nome: v.nome, em: v.em, total: v.total }
 }
 
 function parseState(v: unknown): BoardState | null {
@@ -185,7 +211,7 @@ export function parseServerMessage(raw: unknown): ParseResult<ServerMessage> {
       if (!state || (d.papel !== 'admin' && d.papel !== 'aluno') || !isHexColor(d.cor)) return bad('snapshot inválido.')
       const si = d.sessao
       const sessao: SessaoInfo | undefined = isObj(si) && isNum(si.expiraEm) ? { expiraEm: si.expiraEm, ...(isStr(si.id) ? { id: si.id } : {}) } : undefined
-      return { ok: true, msg: { type: 'snapshot', clientId, papel: d.papel, cor: d.cor, state, hasSaved: d.hasSaved === true, ...(sessao ? { sessao } : {}) } }
+      return { ok: true, msg: { type: 'snapshot', clientId, papel: d.papel, cor: d.cor, state, ...(sessao ? { sessao } : {}) } }
     }
     case 'presence': {
       if (!Array.isArray(d.users)) return bad('presence inválido.')
@@ -210,8 +236,14 @@ export function parseServerMessage(raw: unknown): ParseResult<ServerMessage> {
     case 'remove':
       if (!Array.isArray(d.instanceIds)) return bad('remove inválido.')
       return { ok: true, msg: { type: 'remove', clientId, instanceIds: d.instanceIds.filter(isStr) } }
-    case 'saved':
-      return { ok: true, msg: { type: 'saved', clientId, at: isNum(d.at) ? d.at : 0 } }
+    case 'saved': {
+      const m = parseMeta(d.meta)
+      return m ? { ok: true, msg: { type: 'saved', clientId, meta: m } } : bad('saved inválido.')
+    }
+    case 'savedList': {
+      if (!Array.isArray(d.items)) return bad('savedList inválido.')
+      return { ok: true, msg: { type: 'savedList', clientId, items: d.items.map(parseMeta).filter((m): m is SavedMeta => m !== null) } }
+    }
     case 'reset': {
       const state = parseState(d.state)
       if (!state) return bad('reset inválido.')
@@ -230,7 +262,7 @@ export function parseServerMessage(raw: unknown): ParseResult<ServerMessage> {
 }
 
 /** Tipos que só a admin pode enviar. */
-export const ADMIN_ONLY: ReadonlySet<ClientMessage['type']> = new Set(['save', 'reset'])
+export const ADMIN_ONLY: ReadonlySet<ClientMessage['type']> = new Set(['save', 'reset', 'listSaved', 'open', 'deleteSaved'])
 
 export const canSend = (papel: Papel, type: ClientMessage['type']): boolean => papel === 'admin' || !ADMIN_ONLY.has(type)
 

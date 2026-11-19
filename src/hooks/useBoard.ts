@@ -44,10 +44,11 @@ export function useBoard(boardId: string, session: BoardSession) {
   const moveInstance = useCallback((instanceId: string, to: Pos) => ctl.move(instanceId, to), [ctl])
   const removeInstance = useCallback((instanceId: string) => ctl.remove(instanceId), [ctl])
   const clearBoard = useCallback(() => ctl.clear(), [ctl])
-  const save = useCallback(() => store.save(), [store])
-  const openSaved = useCallback(() => {
-    if (store.hasSaved()) store.load()
-  }, [store])
+  const save = useCallback((nome: string) => store.save(nome), [store])
+  const listSaved = useCallback(() => store.listSaved(), [store])
+  const openSaved = useCallback((id: string) => store.openSaved(id), [store])
+  const deleteSaved = useCallback((id: string) => store.deleteSaved(id), [store])
+  const clearNotices = useCallback(() => store.clearNotices(), [store])
 
   // Arrasto ao vivo e cursor: efêmeros (não são gravados).
   const previewMove = useCallback((instanceId: string, to: Pos) => store.previewMove(instanceId, to), [store])
@@ -61,8 +62,10 @@ export function useBoard(boardId: string, session: BoardSession) {
     removeInstance,
     clearBoard,
     save,
+    listSaved,
     openSaved,
-    hasSaved: meta.hasSaved,
+    deleteSaved,
+    clearNotices,
     previewMove,
     cancelPreview,
     sendCursor,
