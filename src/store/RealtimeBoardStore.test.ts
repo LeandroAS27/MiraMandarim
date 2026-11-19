@@ -1,0 +1,247 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { BACKOFF_BASE_MS } from '../lib/backoff'
+import { RealtimeBoardStore, socketUrl, type SocketLike } from './RealtimeBoardStore'
+
+class FakeSocket implements SocketLike {
+  static all: FakeSocket[] = []
+  readyState = 0
+  sent: Record<string, unknown>[] = []
+  onopen: SocketLike['onopen'] = null
+  onmessage: SocketLike['onmessage'] = null
+  onclose: SocketLike['onclose'] = null
+  onerror: SocketLike['onerror'] = null
+  constructor(public url: string) {
+    FakeSocket.all.push(this)
+  }
+  send(data: string) {
+    this.sent.push(JSON.parse(data))
+  }
+  close() {
+    this.readyState = 3
+  }
+  // ajudantes dos testes
+  open() {
+    this.readyState = 1
+    this.onopen?.({})
+  }
+  receive(msg: unknown) {
+    this.onmessage?.({ data: JSON.stringify(msg) })
+  }
+  drop(code = 1006) {
+    this.readyState = 3
+    this.onclose?.({ code })
+  }
+  ofType(type: string) {
+    return this.sent.filter((m) => m.type === type)
+  }
+}
+
+const CID = 'cliente-abc123'
+const inst = { instanceId: 'i-aaaa1111', palavraId: 'p001', pos: { x: 10, y: 10 } }
+const snapshot = (over: Record<string, unknown> = {}) => ({
+  type: 'snapshot',
+  clientId: CID,
+  papel: 'aluno',
+  cor: '#9ad1ff',
+  state: {},
+  hasSaved: false,
+  ...over,
+})
+
+function make(token?: string) {
+  const store = new RealtimeBoardStore({
+    boardId: 'quadro-id-muito-longo-123',
+    clientId: CID,
+    nome: 'Ana',
+    token,
+    location: { protocol: 'http:', host: 'localhost:8787' },
+    createSocket: (u) => new FakeSocket(u),
+  })
+  store.connect()
+  const sock = () => FakeSocket.all[FakeSocket.all.length - 1]
+  return { store, sock }
+}
+
+describe('RealtimeBoardStore', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    FakeSocket.all = []
+  })
+  afterEach(() => vi.useRealTimers())
+
+  it('monta a URL do WebSocket (ws/wss + host + rota + token)', () => {
+    expect(socketUrl('abc', { protocol: 'http:', host: 'localhost:8787' })).toBe('ws://localhost:8787/api/quadro/abc/ws')
+    expect(socketUrl('abc', { protocol: 'https:', host: 'x.workers.dev' }, 'tok')).toBe('wss://x.workers.dev/api/quadro/abc/ws?token=tok')
+  })
+
+  it('só entra (join com o nome) depois que a conexão abre, e recebe o snapshot', () => {
+    const { store, sock } = make()
+    expect(sock().sent).toEqual([])
+    sock().open()
+    expect(sock().sent[0]).toEqual({ type: 'join', clientId: CID, nome: 'Ana' })
+    sock().receive(snapshot({ state: { [inst.instanceId]: inst }, hasSaved: true }))
+    expect(store.getState()).toEqual({ [inst.instanceId]: inst })
+    expect(store.getMeta()).toMatchObject({ status: 'open', papel: 'aluno', hasSaved: true })
+  })
+
+  it('create/move/remove viram add/move final/remove e valem na hora localmente', () => {
+    const { store, sock } = make()
+    sock().open()
+    sock().receive(snapshot())
+    store.applyMove({ type: 'create', instance: inst })
+    expect(store.getState()[inst.instanceId]).toEqual(inst)
+    expect(sock().ofType('add')[0]).toMatchObject({ instances: [inst] })
+    store.applyMove({ type: 'move', instanceId: inst.instanceId, from: inst.pos, to: { x: 50, y: 60 } })
+    expect(sock().ofType('move').pop()).toMatchObject({ to: { x: 50, y: 60 }, final: true })
+    store.applyMove({ type: 'remove', instance: { ...inst, pos: { x: 50, y: 60 } } })
+    expect(sock().ofType('remove')[0]).toMatchObject({ instanceIds: [inst.instanceId] })
+    expect(store.getState()).toEqual({})
+  })
+
+  it('o arrasto (preview) é limitado a ~1 envio por 200 ms e nunca é final', () => {
+    const { store, sock } = make()
+    sock().open()
+    sock().receive(snapshot({ state: { [inst.instanceId]: inst } }))
+    for (let i = 0; i < 30; i++) {
+      store.previewMove(inst.instanceId, { x: i, y: i })
+      vi.advanceTimersByTime(16)
+    }
+    vi.advanceTimersByTime(200)
+    const moves = sock().ofType('move')
+    expect(moves.length).toBeGreaterThanOrEqual(2)
+    expect(moves.length).toBeLessThanOrEqual(4)
+    expect(moves.every((m) => m.final === false)).toBe(true)
+  })
+
+  it('ao soltar, o envio agendado do arrasto é descartado e sai só a posição final', () => {
+    const { store, sock } = make()
+    sock().open()
+    sock().receive(snapshot({ state: { [inst.instanceId]: inst } }))
+    store.previewMove(inst.instanceId, { x: 1, y: 1 })
+    store.previewMove(inst.instanceId, { x: 2, y: 2 }) // fica agendado
+    store.applyMove({ type: 'move', instanceId: inst.instanceId, from: inst.pos, to: { x: 3, y: 3 } })
+    vi.advanceTimersByTime(500)
+    const moves = sock().ofType('move')
+    expect(moves.map((m) => m.final)).toEqual([false, true])
+    expect(moves[1]).toMatchObject({ to: { x: 3, y: 3 } })
+  })
+
+  it('o cursor: máx. 1 envio por 200 ms e só quando a posição mudou', () => {
+    const { store, sock } = make()
+    sock().open()
+    sock().receive(snapshot())
+    store.sendCursor(10, 10)
+    store.sendCursor(10, 10) // igual: não envia
+    store.sendCursor(11, 10) // dentro da janela: fica agendado
+    store.sendCursor(12, 10)
+    expect(sock().ofType('cursor')).toHaveLength(1)
+    vi.advanceTimersByTime(250)
+    const c = sock().ofType('cursor')
+    expect(c).toHaveLength(2)
+    expect(c[1]).toMatchObject({ x: 12, y: 10 })
+    store.sendCursor(12, 10) // continua igual
+    vi.advanceTimersByTime(500)
+    expect(sock().ofType('cursor')).toHaveLength(2)
+  })
+
+  it('aplica o que vem dos outros: move, add, remove, reset', () => {
+    const { store, sock } = make()
+    sock().open()
+    sock().receive(snapshot())
+    sock().receive({ type: 'add', clientId: 'outro-cliente-1', instances: [inst] })
+    expect(store.getState()[inst.instanceId]).toBeDefined()
+    sock().receive({ type: 'move', clientId: 'outro-cliente-1', instanceId: inst.instanceId, to: { x: 99, y: 98 }, final: false })
+    expect(store.getState()[inst.instanceId].pos).toEqual({ x: 99, y: 98 })
+    sock().receive({ type: 'remove', clientId: 'outro-cliente-1', instanceIds: [inst.instanceId] })
+    expect(store.getState()).toEqual({})
+    sock().receive({ type: 'reset', clientId: 'prof-cliente-1', to: 'empty', state: { [inst.instanceId]: inst } })
+    expect(Object.keys(store.getState())).toHaveLength(1)
+  })
+
+  it('ignora movimentos dos outros para o cartão que EU estou arrastando', () => {
+    const { store, sock } = make()
+    sock().open()
+    sock().receive(snapshot({ state: { [inst.instanceId]: inst } }))
+    store.previewMove(inst.instanceId, { x: 5, y: 5 })
+    sock().receive({ type: 'move', clientId: 'outro-cliente-1', instanceId: inst.instanceId, to: { x: 777, y: 777 }, final: false })
+    expect(store.getState()[inst.instanceId].pos).toEqual(inst.pos)
+  })
+
+  it('cursores dos outros entram e saem (leave)', () => {
+    const { store, sock } = make()
+    sock().open()
+    sock().receive(snapshot())
+    sock().receive({ type: 'cursor', clientId: 'outro-cliente-1', x: 4, y: 5 })
+    expect(store.getCursors()['outro-cliente-1']).toMatchObject({ x: 4, y: 5 })
+    sock().receive({ type: 'leave', clientId: 'outro-cliente-1' })
+    expect(store.getCursors()['outro-cliente-1']).toBeUndefined()
+  })
+
+  it('aluno não envia save, reset (nem abre o quadro salvo); professora envia', () => {
+    const aluno = make()
+    aluno.sock().open()
+    aluno.sock().receive(snapshot({ hasSaved: true }))
+    aluno.store.save()
+    expect(aluno.store.load()).toBeNull()
+    expect(aluno.sock().ofType('save')).toHaveLength(0)
+    expect(aluno.sock().ofType('reset')).toHaveLength(0)
+
+    const prof = make('token-da-professora-123')
+    prof.sock().open()
+    prof.sock().receive(snapshot({ papel: 'professora', cor: '#ffc933', hasSaved: true }))
+    prof.store.save()
+    prof.store.load()
+    prof.store.applyMove({ type: 'clear', instances: [] })
+    expect(prof.sock().ofType('save')).toHaveLength(1)
+    expect(prof.sock().ofType('reset').map((m) => m.to)).toEqual(['saved', 'empty'])
+  })
+
+  it('reconecta com backoff crescente e volta ao normal depois do snapshot', () => {
+    const { store, sock } = make()
+    sock().open()
+    sock().receive(snapshot())
+    sock().drop()
+    expect(store.getMeta().status).toBe('reconnecting')
+    expect(FakeSocket.all).toHaveLength(1)
+
+    vi.advanceTimersByTime(BACKOFF_BASE_MS) // 1ª tentativa: espera entre 50% e 100% da base
+    expect(FakeSocket.all).toHaveLength(2)
+    sock().drop() // falhou de novo (nunca abriu)
+
+    vi.advanceTimersByTime(BACKOFF_BASE_MS * 2) // 2ª espera: até 2x a base
+    expect(FakeSocket.all).toHaveLength(3)
+    sock().open()
+    expect(sock().sent[0]).toMatchObject({ type: 'join', nome: 'Ana' })
+    sock().receive(snapshot())
+    expect(store.getMeta().status).toBe('open')
+
+    // depois de um snapshot o contador zera: a próxima espera volta a ser curta
+    sock().drop()
+    vi.advanceTimersByTime(BACKOFF_BASE_MS)
+    expect(FakeSocket.all).toHaveLength(4)
+  })
+
+  it('não reconecta se outra aba assumiu o clientId (4000) nem depois de disconnect()', () => {
+    const a = make()
+    a.sock().open()
+    a.sock().drop(4000)
+    vi.advanceTimersByTime(60_000)
+    expect(FakeSocket.all).toHaveLength(1)
+    expect(a.store.getMeta().status).toBe('closed')
+
+    FakeSocket.all = []
+    const b = make()
+    b.sock().open()
+    b.store.disconnect()
+    vi.advanceTimersByTime(60_000)
+    expect(FakeSocket.all).toHaveLength(1)
+  })
+
+  it('trocar o nome manda um novo join', () => {
+    const { store, sock } = make()
+    sock().open()
+    sock().receive(snapshot())
+    store.setNome('Bia')
+    expect(sock().ofType('join').pop()).toMatchObject({ nome: 'Bia' })
+  })
+})
