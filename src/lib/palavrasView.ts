@@ -2,7 +2,7 @@ import type { Palavra } from '../types'
 import { matches } from './search'
 
 /** Filtro do banco de palavras: tudo, um nível HSK ou só as palavras extras da admin. */
-export type HskFilter = 'all' | 1 | 2 | 'extras'
+export type HskFilter = 'all' | 1 | 2 | 3 | 'extras'
 
 /** Texto do selo no canto do cartão: "E" nas extras, o nível nas originais. */
 export const seloDe = (p: Palavra): string => (p.extra ? 'E' : String(p.hsk))

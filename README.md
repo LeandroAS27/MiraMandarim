@@ -2,7 +2,7 @@
 
 > **Status: EM ANDAMENTO.** Fases 2 (tempo real) e 3 (salas, admin, quadros salvos e palavras extras) implementadas e testadas com Vitest, mas **ainda não validadas em produção**. Veja "O que ainda não foi testado".
 
-Quadro branco compartilhado em tempo real. Um banco com as palavras de HSK 1 e HSK 2 fica ao lado do quadro: a pessoa arrasta cópias dos cartões para o quadro, forma frases e vê o resultado num painel embaixo. A professora (**admin**) cria a sala e manda o **link de aluno**; os **alunos** entram por ele, sem login, e todos veem os mesmos cartões, o cursor e o nome uns dos outros.
+Quadro branco compartilhado em tempo real. Um banco com as palavras de HSK 1, 2 e 3 (padrão HSK 3.0) fica ao lado do quadro: a pessoa arrasta cópias dos cartões para o quadro, forma frases e vê o resultado num painel embaixo. A professora (**admin**) cria a sala e manda o **link de aluno**; os **alunos** entram por ele, sem login, e todos veem os mesmos cartões, o cursor e o nome uns dos outros.
 
 ## Nomenclatura
 
@@ -90,8 +90,8 @@ O quadro ao vivo é gravado no Durable Object da sala (ao soltar um cartão, adi
 ## Palavras extras
 
 - Só a admin adiciona: hanzi, pinyin, tradução e **classe gramatical** (lista fechada, a mesma das cores dos cartões), todos obrigatórios. Limites: hanzi 12, pinyin 40 e tradução 60 caracteres; sem `<` nem `>` (nada de HTML: tudo é texto puro). **Validação no navegador e no servidor.**
-- A palavra entra no banco com o selo **"E"** no lugar do selo de HSK, com a cor da classe, e ganha o filtro **Extras** ao lado de Todos, HSK 1 e HSK 2.
-- Ficam no **dicionário da admin** (`PROFESSORA`, um único registro, até 300 palavras) e aparecem em **todas as salas dela**, separadas das 300 originais (a lista original nunca é alterada). Quem entra na sala (aluno ou admin) recebe as extras no `snapshot`.
+- A palavra entra no banco com o selo **"E"** no lugar do selo de HSK, com a cor da classe, e ganha o filtro **Extras** ao lado de Todos, HSK 1, HSK 2 e HSK 3.
+- Ficam no **dicionário da admin** (`PROFESSORA`, um único registro, até 300 palavras) e aparecem em **todas as salas dela**, separadas das 978 originais (a lista original nunca é alterada). Quem entra na sala (aluno ou admin) recebe as extras no `snapshot`.
 - A admin pode **editar** e **excluir** uma palavra extra. Excluir tira os cartões dela da sala atual; em outras salas e quadros salvos, o cartão de uma palavra que não existe mais simplesmente não aparece (e é descartado ao abrir um quadro salvo).
 - Limite conhecido: uma palavra nova só aparece em **outra sala já aberta** quando alguém entra de novo nela (a sala consulta o dicionário a cada entrada).
 
@@ -248,7 +248,7 @@ Premissas: cada pessoa move o mouse sobre o quadro em 30% do tempo, cursor a no 
 - A coluna ao lado (no celular, uma gaveta embaixo) é um **banco**: arrastar uma palavra para o quadro cria uma **cópia**, e a palavra continua no banco. Cada cópia tem um `instanceId` próprio.
 - Para remover uma cópia: arraste-a de volta para o banco, ou clique no **×** (ou selecione e aperte Delete). Para **duplicar** um cartão que já está na lousa, clique no **⧉** (ao lado do ×) ou aperte **Ctrl+D** com o cartão selecionado: nasce uma cópia da mesma palavra, um pouco deslocada. Todos podem remover e duplicar. No toque o × e o ⧉ ficam sempre visíveis.
 - **Busca:** por hanzi, pinyin (com ou sem tom, ex.: `ni`, `nǐ`) ou tradução (com ou sem acento).
-- **Filtro:** Todos, HSK 1, HSK 2 ou **Extras**. Cada cartão tem um selo no canto superior direito: **1** ou **2** nas originais, **E** nas extras.
+- **Filtro:** Todos, HSK 1, HSK 2, HSK 3 ou **Extras**. Cada cartão tem um selo no canto superior direito: **1**, **2** ou **3** nas originais, **E** nas extras.
 
 ### Pinyin, tradução e cores
 
@@ -303,7 +303,7 @@ src/
   components/                   Home, NameGate, Board, Tray, Toolbar, PresenceBar, Cursors,
                                 Draggable, StickyNote, Legend, SentencePanel,
                                 QuadrosSalvos, PalavrasExtras
-  data/palavras.json            300 palavras originais (HSK 1 e 2), com hsk e classe
+  data/palavras.json            978 palavras originais (HSK 3.0, níveis 1 a 3), com hsk e classe
 dist/                           saída do vite build (servida pelo Worker)
 ```
 
@@ -311,11 +311,12 @@ dist/                           saída do vite build (servida pelo Worker)
 
 ### Lista de palavras
 
-- A lista tem **300 palavras: HSK 1 (150) e HSK 2 (150), no padrão HSK 2.0**, tiradas de uma lista pública (`github.com/clem109/hsk-vocabulary`). Não foi comparada com uma fonte oficial do Hanban/HSK.
-- As **traduções em português** foram escritas por nós e são **provisórias**.
-- Algumas entradas do HSK 2.0 são frases ou formas compostas (ex.: 打电话, 打篮球, 火车站); homógrafos aparecem como entradas separadas (长 cháng/zhǎng, 还 hái/huán, 得 de/děi).
-- O pinyin vem da lista pública, sem espaços entre sílabas e em forma de dicionário (sem sândi tonal, ex.: 不客气 = bùkèqi).
-- Palavras comuns de aula que **não** estão no HSK 1–2 (por exemplo 你们, 他们, 这儿, 那儿, 为什么) ficaram de fora. Agora a admin pode acrescentá-las como **palavras extras**.
+- A lista segue o **HSK 3.0, edição 2026**, níveis 1 a 3: **978 palavras** (HSK 1 = 294, HSK 2 = 197, HSK 3 = 487 palavras novas em cada nível). A fonte é o projeto público [`drkameleon/complete-hsk-vocabulary`](https://github.com/drkameleon/complete-hsk-vocabulary) (licença MIT; os níveis "newest-1" a "newest-3"; a mesma fonte traz também o HSK 3.0 de 2021 e o antigo 2.0). **A professora precisa confirmar que esta é a edição que ela usa**: a de 2021 tem outras listas (506/750/953 palavras nos níveis 1 a 3).
+- A lista anterior era o **HSK 2.0** (150 palavras em cada um dos níveis 1 e 2). **284 dos ids antigos continuam na lista, com a mesma palavra**, então salas e quadros salvos que as usam não mudam (só o nível pode ter mudado, ex.: várias do antigo HSK 2 viraram HSK 1). **16 ids antigos saíram**: 13 palavras que não estão nos níveis 1 a 3 do padrão novo (北京, 火车站, 没, 小姐, 白, 唱歌, 打篮球, 第一, 服务员, 公共汽车, 黑, 红, 羊肉) e 3 homógrafos que a nova lista traz como um cartão só (长 cháng/zhǎng, 还 hái/huán, 得 de/děi; ficou o id do primeiro, com as duas leituras e os dois significados). Cartões dessas 16 que já estavam em quadros deixam de aparecer (não quebram nada).
+- As **traduções em português** das 694 palavras novas foram escritas por nós a partir dos significados em inglês, e as das 284 antigas foram mantidas. Todas são **provisórias**. Também são provisórias as **classes gramaticais** das palavras novas, derivadas da classe indicada na fonte.
+- O **pinyin** vem da fonte, sem espaços e com apóstrofo quando preciso (ex.: xī'ān). Quando a fonte traz duas leituras (ex.: 只 zhǐ/zhī, 教 jiāo/jiào), o cartão mostra as duas, com a mais comum primeiro (ajuste manual nossa, a revisar).
+- A lista nova traz formas como "女孩儿", "一点儿" e "聊天儿" (com erhua) como cartões próprios, e expressões como 不好意思 e 怎么办.
+- Palavras de aula que não estão nos níveis 1 a 3 podem ser acrescentadas pela admin como **palavras extras**.
 
 ### Classes gramaticais (provisórias)
 
@@ -329,7 +330,7 @@ O campo `classe` de cada palavra foi atribuído por nós, e **a professora preci
 | 会, 能, 可以, 要, 想 | verbo | verbo modal |
 | 还 hái | advérbio | conjunção |
 | 就, 再, 最 | advérbio | — |
-| 没 | advérbio | verbo |
+| 没有 | verbo | advérbio (a antiga entrada 没 saiu da lista) |
 | 可能 | advérbio | verbo, adjetivo |
 | 别 | advérbio | verbo (separar) |
 | 好 | adjetivo | advérbio |
@@ -352,3 +353,7 @@ O campo `classe` de cada palavra foi atribuído por nós, e **a professora preci
 ### Confirmações
 
 As ações destrutivas (Sair, Limpar quadro, Excluir sala, quadro salvo ou palavra extra, Abrir quadro salvo sobre um quadro com cartões) usam um **cartão de confirmação do próprio app**, não a janela do navegador. Ele fecha com Esc ou clicando fora, o foco começa em "Cancelar" e, na exclusão de sala, o botão só libera depois de digitar o nome.
+
+## Créditos e licenças
+
+A lista de palavras (hanzi, pinyin e níveis HSK) deriva de [`drkameleon/complete-hsk-vocabulary`](https://github.com/drkameleon/complete-hsk-vocabulary), licença MIT, Copyright (c) 2026 Yanis Zafirópulos. Essa fonte, por sua vez, cita como origens: elkmovie/hsk30 (listas HSK 3.0), clem109/hsk-vocabulary (HSK 2.0), CC-CEDICT (significados em inglês, que usamos só como apoio para escrever as traduções em português) e outros projetos listados no README dela.

@@ -95,7 +95,7 @@ export function Home({ adminToken, onAdminToken, onSair }: Props) {
   return (
     <main className={styles.home}>
       <h1>Quadro de Mandarim</h1>
-      <p>300 palavras (HSK 1 e 2) em post-its para arrastar. Os alunos entram pelo link de aluno, sem login.</p>
+      <p>978 palavras (HSK 3.0, níveis 1 a 3) em post-its para arrastar. Os alunos entram pelo link de aluno, sem login.</p>
       <form className={styles.form} onSubmit={create}>
         {!adminToken && (
           <label className={styles.label}>

@@ -12,6 +12,7 @@ const HSK_OPTIONS: { value: HskFilter; label: string }[] = [
   { value: 'all', label: 'Todos' },
   { value: 1, label: 'HSK 1' },
   { value: 2, label: 'HSK 2' },
+  { value: 3, label: 'HSK 3' },
   { value: 'extras', label: 'Extras' },
 ]
 

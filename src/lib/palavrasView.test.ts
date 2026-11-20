@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest'
 import type { Palavra } from '../types'
 import { filtrarPalavras, indexarPalavras, juntarPalavras, seloDe, seloTitulo } from './palavrasView'
 
-const orig = (id: string, hsk: 1 | 2): Palavra => ({ id, hanzi: id, pinyin: id, traducao: id, hsk, classe: 'verbo' })
+const orig = (id: string, hsk: 1 | 2 | 3): Palavra => ({ id, hanzi: id, pinyin: id, traducao: id, hsk, classe: 'verbo' })
 const extra = (id: string, hanzi: string): Palavra => ({ id, hanzi, pinyin: 'diànnǎo', traducao: 'computador', hsk: null, extra: true, classe: 'substantivo' })
-const todas = juntarPalavras([orig('p1', 1), orig('p2', 2)], [extra('e_abcd1234', '电脑')])
+const todas = juntarPalavras([orig('p1', 1), orig('p2', 2), orig('p3', 3)], [extra('e_abcd1234', '电脑')])
 
 describe('selo e filtro das palavras extras', () => {
   it('o selo das extras é "E" (no lugar do HSK); o das originais continua sendo o nível', () => {
@@ -12,13 +12,16 @@ describe('selo e filtro das palavras extras', () => {
     expect(seloDe(orig('p1', 1))).toBe('1')
     expect(seloTitulo(extra('e_abcd1234', '电脑'))).toBe('Palavra extra')
     expect(seloTitulo(orig('p2', 2))).toBe('HSK 2')
+    expect(seloDe(orig('p3', 3))).toBe('3')
+    expect(seloTitulo(orig('p3', 3))).toBe('HSK 3')
   })
 
   it('o filtro "Extras" mostra só as extras; HSK 1 e 2 não mostram extras', () => {
     expect(filtrarPalavras(todas, 'extras', '').map((p) => p.id)).toEqual(['e_abcd1234'])
     expect(filtrarPalavras(todas, 1, '').map((p) => p.id)).toEqual(['p1'])
     expect(filtrarPalavras(todas, 2, '').map((p) => p.id)).toEqual(['p2'])
-    expect(filtrarPalavras(todas, 'all', '')).toHaveLength(3)
+    expect(filtrarPalavras(todas, 3, '').map((p) => p.id)).toEqual(['p3'])
+    expect(filtrarPalavras(todas, 'all', '')).toHaveLength(4)
   })
 
   it('a busca também acha extras (hanzi, pinyin sem tom e tradução)', () => {
