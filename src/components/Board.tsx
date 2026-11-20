@@ -15,7 +15,7 @@ import { MOBILE_QUERY, useMediaQuery } from '../hooks/useMediaQuery'
 import { usePreferences } from '../hooks/usePreferences'
 import { studentLink, adminLink } from '../lib/boardId'
 import { saveUltimaSala } from '../store/session'
-import { CANVAS_H, CANVAS_W, TRAY_W, clampToCanvas } from '../lib/layout'
+import { CANVAS_H, CANVAS_W, TRAY_W, clampToCanvas, duplicatePos } from '../lib/layout'
 import { filtrarPalavras, indexarPalavras, juntarPalavras } from '../lib/palavrasView'
 import { buildSentence } from '../lib/sentences'
 import { anchoredScroll, clampZoom, pinchZoom, screenToCanvas, stepZoom } from '../lib/zoom'
@@ -297,6 +297,14 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
   }
 
   const removeNote = useCallback((instanceId: string) => removeInstance(instanceId), [removeInstance])
+  // Duplicar: nova cópia da mesma palavra, um pouco deslocada, já por cima das outras (todos podem; vira um "add" normal)
+  const duplicateNote = useCallback(
+    (instanceId: string) => {
+      const original = store.getState()[instanceId]
+      if (original) setTopId(createInstance(original.palavraId, duplicatePos(original.pos)).instanceId)
+    },
+    [store, createInstance],
+  )
   // cartão de uma palavra que não existe mais (ex.: extra excluída em outra sala) não aparece
   const placed = Object.values(instances).filter((i) => palavraById[i.palavraId])
   const trayItems = useMemo(
@@ -392,6 +400,7 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
                   showPinyin={prefs.showPinyin}
                   showTraducao={prefs.showTraducao}
                   onRemove={removeNote}
+                  onDuplicate={duplicateNote}
                 />
               ))}
               <Cursors store={store} zoom={zoom} />

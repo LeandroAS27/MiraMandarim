@@ -12,6 +12,8 @@ interface Props {
   showTraducao: boolean
   /** Remove esta cópia do quadro (um único passo no histórico). */
   onRemove: (instanceId: string) => void
+  /** Duplica este cartão (cópia da mesma palavra, um pouco deslocada). */
+  onDuplicate: (instanceId: string) => void
 }
 
 /**
@@ -20,7 +22,7 @@ interface Props {
  * transform, e o DragOverlay precisa partir do ponto certo.
  * Durante o arraste quem aparece é o DragOverlay; este fica invisível no lugar.
  */
-export const Draggable = memo(function Draggable({ instance, palavra, isTop, showPinyin, showTraducao, onRemove }: Props) {
+export const Draggable = memo(function Draggable({ instance, palavra, isTop, showPinyin, showTraducao, onRemove, onDuplicate }: Props) {
   const { instanceId, pos } = instance
   const { setNodeRef, attributes, listeners, isDragging } = useDraggable({
     id: instanceId,
@@ -36,6 +38,9 @@ export const Draggable = memo(function Draggable({ instance, palavra, isTop, sho
         if (e.key === 'Delete' || e.key === 'Backspace') {
           e.preventDefault()
           onRemove(instanceId)
+        } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
+          e.preventDefault() // Ctrl/Cmd+D no navegador seria "favoritar"
+          onDuplicate(instanceId)
         }
       }}
       style={{
@@ -58,6 +63,18 @@ export const Draggable = memo(function Draggable({ instance, palavra, isTop, sho
         onClick={() => onRemove(instanceId)}
       >
         ×
+      </button>
+      <button
+        type="button"
+        className={styles.dup}
+        title="Duplicar este cartão (Ctrl+D)"
+        aria-label={`Duplicar ${palavra.hanzi}`}
+        onPointerDown={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+        onClick={() => onDuplicate(instanceId)}
+      >
+        ⧉
       </button>
     </div>
   )

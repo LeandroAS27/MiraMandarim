@@ -246,7 +246,7 @@ Premissas: cada pessoa move o mouse sobre o quadro em 30% do tempo, cursor a no 
 ### Banco de palavras (cópias)
 
 - A coluna ao lado (no celular, uma gaveta embaixo) é um **banco**: arrastar uma palavra para o quadro cria uma **cópia**, e a palavra continua no banco. Cada cópia tem um `instanceId` próprio.
-- Para remover uma cópia: arraste-a de volta para o banco, ou clique no **×** (ou selecione e aperte Delete). No toque o × fica sempre visível.
+- Para remover uma cópia: arraste-a de volta para o banco, ou clique no **×** (ou selecione e aperte Delete). Para **duplicar** um cartão que já está na lousa, clique no **⧉** (ao lado do ×) ou aperte **Ctrl+D** com o cartão selecionado: nasce uma cópia da mesma palavra, um pouco deslocada. Todos podem remover e duplicar. No toque o × e o ⧉ ficam sempre visíveis.
 - **Busca:** por hanzi, pinyin (com ou sem tom, ex.: `ni`, `nǐ`) ou tradução (com ou sem acento).
 - **Filtro:** Todos, HSK 1, HSK 2 ou **Extras**. Cada cartão tem um selo no canto superior direito: **1** ou **2** nas originais, **E** nas extras.
 
