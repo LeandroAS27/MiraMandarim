@@ -76,7 +76,8 @@ Quem entra pelo link de aluno **não vê nenhum desses botões**. O token de adm
 
 Só a admin vê e pode usar. O servidor **rejeita** essas mensagens quando vêm de um aluno e responde com `error` (`sem_permissao`).
 
-- **Limpar quadro:** esvazia o quadro de todos, com **confirmação** (não há desfazer).
+- **Limpar quadro:** esvazia o quadro de todos (post-its **e desenhos**), com **confirmação** (não há desfazer).
+- **Caneta, apagador e "Apagar todos os desenhos":** a lousa de desenho (seção abaixo).
 - **Salvar quadro:** pede um **nome** (ex.: "Aula 3 - verbos") e guarda o quadro atual. Um nome que já existe é substituído. Máximo de 50 quadros, nome de até 40 caracteres.
 - **Abrir quadro salvo:** lista os quadros da admin (todos, de qualquer sala dela). **Abrir** troca o quadro de todos os conectados (com confirmação se já houver cartões); **Excluir** apaga o quadro salvo (com confirmação).
 - **Adicionar palavra:** abre o formulário de palavras extras (abaixo).
@@ -86,6 +87,25 @@ Os quadros salvos pertencem à admin (Durable Object `PROFESSORA`), não à sala
 ### O quadro ao vivo e a aula seguinte
 
 O quadro ao vivo é gravado no Durable Object da sala (ao soltar um cartão, adicionar, remover, limpar ou abrir um quadro salvo; nunca a cada passo do arrasto). Abrir o mesmo link na aula seguinte mostra o quadro como ficou. Quem entra no meio da aula recebe um `snapshot` com o estado atual.
+
+## Caneta e apagador (só a admin)
+
+A admin escreve na lousa com uma caneta; os **alunos só veem** os desenhos, em tempo real. A caneta, as cores, o apagador e o botão de apagar tudo **só aparecem para quem o servidor reconheceu como `admin`**, e o servidor rejeita (com `error`) qualquer mensagem de desenho vinda de um aluno.
+
+**Como usar** (na barra de ferramentas, só para a admin):
+
+- **Mover** (padrão ao entrar): arrasta os post-its, como sempre. A camada de desenho **não captura o ponteiro** (`pointer-events: none`).
+- **Caneta:** desenha na lousa, com mouse, caneta stylus ou toque (Pointer Events; o navegador não rola nem dá zoom no lugar do traço). Aparecem **cinco cores**: preto `#1A1A1A`, vermelho `#C62828`, azul `#1565C0`, verde `#2E7D32` e laranja `#E65100` (definidas em `src/theme/tracos.ts`, todas com contraste ≥ 3:1 contra o fundo; o laranja sugerido inicialmente, `#EF6C00`, dava só 2,65:1). Espessura fixa de **4 px em coordenadas do quadro**, então o traço acompanha zoom e scroll como os post-its. Um clique sem arrastar faz um ponto.
+- **Apagador:** tocar (ou passar por cima de) um traço **apaga aquele traço inteiro**, não pixel a pixel.
+- **Apagar todos os desenhos:** esvazia todos os traços, para todos, com **cartão de confirmação**. Os post-its não são afetados.
+- Na caneta e no apagador o **arraste de post-its fica desligado**, inclusive o do banco de palavras. **Esc** volta ao modo Mover. O modo é só local (não vai ao servidor nem às preferências).
+- Com dois dedos (pinça), o traço em andamento é cancelado para o zoom funcionar.
+
+**Limites** (conferidos no cliente e no servidor): só as 5 cores; espessura só a permitida (hoje 4); **até 400 pontos por traço** (depois da simplificação) e **até 300 traços por quadro**; pontos têm de ser números finitos (coordenadas fora do quadro são ajustadas para dentro). Passou disso, o servidor responde `error` (`mensagem_invalida` ou `limite`).
+
+**Salvar, abrir e limpar:** os traços entram no **snapshot** de quem conecta no meio da aula; entram **ao salvar um quadro com nome** e **voltam ao abrir** o quadro salvo, para todos os conectados; **Limpar quadro** também os apaga. Quadros salvos antes da caneta abrem sem traços.
+
+**Cota do plano grátis:** só a admin desenha, então o custo é pequeno. O traço vai **inteiro, uma única vez, quando ela solta o ponteiro**, já simplificado (Ramer-Douglas-Peucker; nunca ponto a ponto). A **prévia ao vivo** (os alunos veem o traço aparecendo) é enviada no máximo a cada ~200 ms e fica **só em memória** no servidor (nunca em `ctx.storage`); some quando o traço final chega, ou sozinha após 3 s sem novidade. Grava-se **só**: traço finalizado, apagar um traço, apagar todos (e limpar/abrir quadro salvo). Cursor, prévia e pontos soltos nunca gravam.
 
 ## Palavras extras
 
@@ -128,20 +148,29 @@ Toda mensagem tem `type` e `clientId`. O `clientId` é gerado a cada carregament
 | `addPalavra` | `palavra: { hanzi, pinyin, traducao, classe }` | só admin |
 | `editPalavra` | `id`, `palavra` | só admin |
 | `removePalavra` | `id` | só admin |
+| `stroke_add` | `stroke: { id, cor, w, pts }` (traço completo, ao soltar) | só admin |
+| `stroke_remove` | `id` do traço | só admin |
+| `strokes_clear` | — | só admin |
+| `stroke_preview` | `stroke` parcial (só repassada, nunca gravada) | só admin |
 
 **Servidor → navegador**
 
 | type | para quem | campos |
 | --- | --- | --- |
-| `snapshot` | quem entrou | `papel`, `cor`, `state`, `palavras` (extras), `sessao?` (`{ id?, expiraEm }`, só alunos) |
+| `snapshot` | quem entrou | `papel`, `cor`, `state`, `strokes`, `palavras` (extras), `sessao?` (`{ id?, expiraEm }`, só alunos) |
 | `presence` | todos | `users: [{ clientId, nome, papel, cor }]` |
 | `move`, `add`, `remove`, `cursor` | os outros | os mesmos campos da mensagem original |
-| `reset` | todos | `to` (`"empty"` ou `"saved"`), `state` |
+| `reset` | todos | `to` (`"empty"` ou `"saved"`), `state`, `strokes` |
+| `stroke_add`, `stroke_preview` | os outros | `stroke` |
+| `stroke_remove` | os outros | `id` |
+| `strokes_clear` | os outros | — |
 | `palavras` | todos | `items`: lista completa das palavras extras |
 | `saved` | quem salvou | `meta: { id, nome, em, total }` |
 | `savedList` | quem pediu | `items: [{ id, nome, em, total }]` |
 | `leave` | os outros | — |
 | `error` | quem enviou | `code` (`mensagem_invalida`, `sem_permissao`, `sem_entrada`, `limite`, `client_id_em_uso`, `sessao_expirada`, `nao_encontrado`), `message` |
+
+**Traço (`stroke`):** `{ id, cor, w, pts }`. `id`: 4 a 40 caracteres `A-Z a-z 0-9 _ -`. `cor`: `"preto"`, `"vermelho"`, `"azul"`, `"verde"` ou `"laranja"` (o hexadecimal fica só no front). `w`: espessura (hoje só `4`). `pts`: lista achatada `[x0, y0, x1, y1, …]` em inteiros dentro do quadro, de 2 a 400 pontos.
 
 Códigos de fechamento do WebSocket (o front **não** reconecta): 4000 (outra aba assumiu o `clientId`), 4002 (`clientId` recusado), 4003 (sessão de aluno expirada), 4004 (sala inexistente).
 
@@ -208,7 +237,7 @@ Segundo a [página de preços dos Durable Objects](https://developers.cloudflare
 
 ### O que grava no armazenamento
 
-Só estas ações escrevem (uma linha por chave): soltar/adicionar/remover cartão e limpar (sala), abrir quadro salvo (sala), salvar ou excluir quadro salvo (`PROFESSORA`), adicionar/editar/excluir palavra extra (`PROFESSORA`), criar sala (1 linha) e **cada aluno novo** (1 linha da sessão). **Nunca** gravam: cursor, arrasto, presença e preferências locais.
+Só estas ações escrevem (uma linha por chave): soltar/adicionar/remover cartão e limpar (sala), traço finalizado, apagar um traço e apagar todos os desenhos (sala; a lista de traços é uma única chave, com até ~1,5 MB no pior caso, abaixo do limite de 8 MB por linha dos Durable Objects com SQLite), salvar quadro com traços (os traços ficam numa chave à parte, `tracos-quadro:<id>`, para a listagem dos quadros não lê-los), abrir quadro salvo (sala), salvar ou excluir quadro salvo (`PROFESSORA`), adicionar/editar/excluir palavra extra (`PROFESSORA`), criar sala (1 linha) e **cada aluno novo** (1 linha da sessão). **Nunca** gravam: cursor, arrasto, presença e preferências locais.
 
 ### Estimativa: aula de 30 alunos (60 min)
 
@@ -219,7 +248,8 @@ Premissas: cada pessoa move o mouse sobre o quadro em 30% do tempo, cursor a no 
 | Cursores: 30 × 5 × 0,3 × 3 600 s ≈ 162 000 mensagens ÷ 20 | **~8 100** |
 | Arrasto ao vivo: ~20 arrastos de 3 s por pessoa ≈ 9 000 mensagens ÷ 20 | ~450 |
 | Entradas (cada `join` consulta o dicionário da admin: +1 requisição), adds, drops, presença | < 150 |
-| **Total** | **~8 700 (≈ 9% das 100 mil)** |
+| Caneta da admin: ~200 traços numa aula ≈ 200 mensagens finais + ~3 000 de prévia (≤ 5 por segundo, só enquanto desenha) ÷ 20 | ~160 |
+| **Total** | **~8 900 (≈ 9% das 100 mil)** |
 
 - **Pior caso** (todos movendo o cursor o tempo todo): ≈ 27 000 requisições (**≈ 27%**), ou seja, ~3 aulas por dia.
 - **Escritas:** ~30 alunos × 20 ações + 30 sessões ≈ **630 por aula** (< 1%).
@@ -240,6 +270,7 @@ Premissas: cada pessoa move o mouse sobre o quadro em 30% do tempo, cursor a no 
 - **`wrangler dev` e `wrangler deploy` desta versão ainda não foram executados.** As regras (papéis, sessões, quadros salvos, palavras extras, protocolo, store com WebSocket falso) têm testes; os Durable Objects em si (Hibernation API, `serializeAttachment`, `ctx.storage`, chamadas RPC da sala para `PROFESSORA`, o `POST /api/salas` e o fechamento 4004 pelo Worker) só foram escritos conforme a documentação e precisam ser validados rodando.
 - Dois navegadores na mesma sala, sessão de aluno vencendo de verdade (4 horas), reconexão e hibernação reais.
 - Toque real em celular (segurar para arrastar, pinça) e os formulários/janelas novos no celular.
+- **Caneta com stylus e com toque reais** (rejeição de palma, pressão, `touch-action` em cada navegador) e o desempenho com 300 traços longos; os testes cobrem a lógica, o servidor, o store e a camada em jsdom, não o hardware.
 
 ## Como usar o quadro
 
