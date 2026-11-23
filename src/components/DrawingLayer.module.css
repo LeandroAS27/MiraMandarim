@@ -1,0 +1,5 @@
+/* Acima dos post-its (z-index até 10) e abaixo dos cursores (2500). No modo mover não captura o ponteiro (inline: pointer-events none). */
+.layer { position: absolute; left: 0; top: 0; z-index: 20; overflow: hidden; user-select: none; }
+/* os traços nunca recebem o ponteiro: quem recebe é o retângulo de captura */
+.traco { pointer-events: none; }
+.captura { outline: none; }

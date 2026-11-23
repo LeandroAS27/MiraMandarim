@@ -28,3 +28,6 @@ export const boardHash = (id: string) => `#/quadro/${id}`
 /** Link para os alunos (sem token) e para a admin (com token). */
 export const studentLink = (origin: string, id: string) => `${origin}/${boardHash(id)}`
 export const adminLink = (origin: string, id: string, token: string) => `${origin}/${boardHash(id)}?token=${token}`
+
+/** Id de um traço da caneta. */
+export const newStrokeId = (): string => 's' + newBoardId(12)

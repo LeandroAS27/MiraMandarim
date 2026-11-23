@@ -3,6 +3,9 @@ import type { PresenceUser } from '../shared/protocol'
 import type { ConnStatus } from '../store/RealtimeBoardStore'
 import type { Prefs } from '../store/preferences'
 import { useConfirm } from '../hooks/useConfirm'
+import { MODOS, type Modo } from '../lib/desenho'
+import { COR_IDS, type CorId } from '../shared/tracos'
+import { CORES_TRACO } from '../theme/tracos'
 import { PresenceBar } from './PresenceBar'
 import styles from './Toolbar.module.css'
 
@@ -26,6 +29,13 @@ interface Props {
   onChangeName: () => void
   onNewRoom: () => void
   onLeave: () => void
+  /** Caneta e apagador (só a admin vê). */
+  modo: Modo
+  onModo: (m: Modo) => void
+  corCaneta: CorId
+  onCorCaneta: (c: CorId) => void
+  temTracos: boolean
+  onApagarTudo: () => void
   /** Mensagem de erro do servidor (ex.: sem permissão). */
   error: string | null
   /** Link com o token da admin (só existe para ela). */
@@ -34,7 +44,7 @@ interface Props {
   studentLinkUrl: string
 }
 
-export function Toolbar({ canClear, onClear, trayOpen, legendOpen, onToggleLegend, prefs, onPrefs, onToggleTray, onSave, onOpenSaved, onPalavras, isAdmin, status, users, myClientId, onChangeName, onNewRoom, onLeave, error, adminLinkUrl, studentLinkUrl }: Props) {
+export function Toolbar({ canClear, onClear, trayOpen, legendOpen, onToggleLegend, prefs, onPrefs, onToggleTray, onSave, onOpenSaved, onPalavras, isAdmin, status, users, myClientId, onChangeName, onNewRoom, onLeave, modo, onModo, corCaneta, onCorCaneta, temTracos, onApagarTudo, error, adminLinkUrl, studentLinkUrl }: Props) {
   const [msg, setMsg] = useState('')
   const { pedir, dialogo } = useConfirm()
   const [hover, setHover] = useState(false)
@@ -71,6 +81,48 @@ export function Toolbar({ canClear, onClear, trayOpen, legendOpen, onToggleLegen
         <button onClick={onToggleTray} aria-pressed={trayOpen}>
           {trayOpen ? 'Ocultar palavras' : 'Mostrar palavras'}
         </button>
+        {isAdmin && (
+          <div className={styles.grupo} role="group" aria-label="Lousa: caneta e apagador">
+            {MODOS.map((m) => (
+              <button
+                key={m.id}
+                className={styles.toggle}
+                aria-pressed={modo === m.id}
+                onClick={() => onModo(m.id)}
+                title={m.id === 'mover' ? 'Arrastar os post-its (padrão)' : m.id === 'caneta' ? 'Escrever na lousa (só você)' : 'Tocar um traço o apaga inteiro (só você)'}
+              >
+                {m.label}
+              </button>
+            ))}
+            {modo === 'caneta' &&
+              COR_IDS.map((id) => (
+                <button
+                  key={id}
+                  className={styles.cor}
+                  style={{ background: CORES_TRACO[id].hex }}
+                  aria-pressed={corCaneta === id}
+                  aria-label={`Cor ${CORES_TRACO[id].label}`}
+                  title={CORES_TRACO[id].label}
+                  onClick={() => onCorCaneta(id)}
+                />
+              ))}
+            <button
+              disabled={!temTracos}
+              title="Apaga todos os desenhos da lousa, para todos"
+              onClick={async () => {
+                const ok = await pedir({
+                  titulo: 'Apagar todos os desenhos?',
+                  mensagem: 'Todos os traços da caneta somem da lousa, para todos os conectados. Os post-its não são afetados. Isso não pode ser desfeito.',
+                  confirmar: 'Apagar desenhos',
+                  perigo: true,
+                })
+                if (ok) onApagarTudo()
+              }}
+            >
+              Apagar todos os desenhos
+            </button>
+          </div>
+        )}
         {isAdmin && (
           <>
             <button
@@ -143,7 +195,7 @@ export function Toolbar({ canClear, onClear, trayOpen, legendOpen, onToggleLegen
           disabled={prefs.pinToolbar}
           onClick={() => setTapped((t) => !t)}
         >
-          Ferramentas · {users.length} online
+          Ferramentas{isAdmin && modo !== 'mover' ? ` · ${modo === 'caneta' ? 'Caneta' : 'Apagador'}` : ''} · {users.length} online
         </button>
         <button
           type="button"

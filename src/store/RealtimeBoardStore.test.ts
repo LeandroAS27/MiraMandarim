@@ -493,4 +493,15 @@ describe('RealtimeBoardStore', () => {
     expect(a.store.getDrawing().previews).toEqual({})
     expect(a.store.getDrawing().strokes).toHaveLength(1)
   })
+
+  it('a prévia de quem parou de desenhar some sozinha depois de alguns segundos', () => {
+    const a = make()
+    a.sock().open()
+    a.sock().receive(snapshot())
+    a.sock().receive({ type: 'stroke_preview', clientId: 'prof-cliente-1', stroke: traco('s-um00001') })
+    vi.advanceTimersByTime(2500)
+    expect(Object.keys(a.store.getDrawing().previews)).toHaveLength(1)
+    vi.advanceTimersByTime(1000)
+    expect(a.store.getDrawing().previews).toEqual({})
+  })
 })

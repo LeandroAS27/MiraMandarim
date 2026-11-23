@@ -72,6 +72,8 @@ export interface RealtimeOptions {
 }
 
 export const SOCKET_OPEN = 1
+/** Prévia de desenho sem novidade por este tempo (ms) é descartada. */
+export const PREVIEW_EXPIRA_MS = 3000
 /** Fechamentos que não devem reconectar: outra aba assumiu o clientId, clientId recusado, sala inexistente. */
 const NO_RETRY = new Set([CLOSE_REPLACED, CLOSE_BAD_ID, CLOSE_NO_ROOM, CLOSE_SESSION_EXPIRED])
 
@@ -93,6 +95,8 @@ export class RealtimeBoardStore implements BoardStore {
   private cursorListeners = new Set<() => void>()
   private drawingListeners = new Set<() => void>()
   private drawing: Drawing = { strokes: [], previews: {} }
+  /** A prévia de quem parou de desenhar (cancelou, perdeu o dedo…) some sozinha depois de alguns segundos. */
+  private previewTimers = new Map<string, ReturnType<typeof setTimeout>>()
   private meta: Meta
   private cursors: Cursors = {}
 
@@ -274,9 +278,20 @@ export class RealtimeBoardStore implements BoardStore {
       case 'strokes_clear':
         this.setDrawing({ strokes: [], previews: {} })
         break
-      case 'stroke_preview':
+      case 'stroke_preview': {
         this.setDrawing({ ...this.drawing, previews: { ...this.drawing.previews, [m.clientId]: m.stroke } })
+        const antigo = this.previewTimers.get(m.clientId)
+        if (antigo !== undefined) clearTimeout(antigo)
+        this.previewTimers.set(
+          m.clientId,
+          setTimeout(() => {
+            this.previewTimers.delete(m.clientId)
+            const { [m.clientId]: _expirou, ...previews } = this.drawing.previews
+            this.setDrawing({ ...this.drawing, previews })
+          }, PREVIEW_EXPIRA_MS),
+        )
         break
+      }
       case 'saved': {
         const resto = (this.meta.saved ?? []).filter((q) => q.id !== m.meta.id)
         this.setMeta({ saved: [m.meta, ...resto], aviso: `Quadro "${m.meta.nome}" salvo`, error: null })
@@ -503,6 +518,8 @@ export class RealtimeBoardStore implements BoardStore {
   }
 
   private clearPreviews(): void {
+    for (const t of this.previewTimers.values()) clearTimeout(t)
+    this.previewTimers.clear()
     if (Object.keys(this.drawing.previews).length > 0) this.setDrawing({ ...this.drawing, previews: {} })
   }
 

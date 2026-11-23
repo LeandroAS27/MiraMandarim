@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import {
   DndContext,
   DragOverlay,
@@ -24,6 +24,9 @@ import { Draggable } from './Draggable'
 import { SentencePanel } from './SentencePanel'
 import { StickyNote } from './StickyNote'
 import { Legend } from './Legend'
+import { arrasteDePostitLigado, type Modo } from '../lib/desenho'
+import { COR_PADRAO, type CorId } from '../shared/tracos'
+import { DrawingLayer } from './DrawingLayer'
 import { PalavrasExtras } from './PalavrasExtras'
 import { QuadrosSalvos } from './QuadrosSalvos'
 import { Toolbar } from './Toolbar'
@@ -70,6 +73,11 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
   // janela de quadros salvos (só admin): salvar com nome ou abrir/excluir
   const [dialogo, setDialogo] = useState<'salvar' | 'abrir' | null>(null)
   const [palavrasAberto, setPalavrasAberto] = useState(false)
+  // Caneta e apagador (só admin). O modo é só local: nunca vai para o servidor nem para as preferências.
+  const [modo, setModo] = useState<Modo>('mover')
+  const [corCaneta, setCorCaneta] = useState<CorId>(COR_PADRAO)
+  const modoAtivo: Modo = isAdmin ? modo : 'mover'
+  const totalTracos = useSyncExternalStore(store.subscribeDrawing, () => store.getDrawing().strokes.length)
   // palavras: as 300 originais + as extras da admin (que chegam do servidor)
   const todas = useMemo(() => juntarPalavras(palavras, meta.extras), [meta.extras])
   const palavraById = useMemo(() => indexarPalavras(todas), [todas])
@@ -182,6 +190,28 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
     useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
   )
+
+  // Nos modos caneta e apagador o arraste de post-its fica desligado (nenhum sensor ativo).
+  const sensorsOff = useSensors()
+
+  // Esc volta para o modo mover.
+  useEffect(() => {
+    if (modo === 'mover') return
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null
+      if (e.key === 'Escape' && !(t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA'))) setModo('mover')
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [modo])
+
+  // Ponto da tela em coordenadas do quadro (considera scroll e zoom): usado pela caneta e pelo apagador.
+  const toCanvas = useCallback((cx: number, cy: number) => {
+    const vp = viewport.current
+    if (!vp) return { x: cx, y: cy }
+    const r = vp.getBoundingClientRect()
+    return { x: screenToCanvas(cx, r.left, vp.scrollLeft, zoomRef.current), y: screenToCanvas(cy, r.top, vp.scrollTop, zoomRef.current) }
+  }, [])
 
   // Posição atual do ponteiro: decide onde o cartão é solto (banco ou quadro).
   useEffect(() => {
@@ -344,7 +374,7 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
         } as React.CSSProperties
       }
     >
-      <DndContext sensors={sensors} onDragStart={onDragStart} onDragMove={onDragMove} onDragEnd={onDragEnd} onDragCancel={onDragCancel}>
+      <DndContext sensors={arrasteDePostitLigado(modoAtivo, isAdmin) ? sensors : sensorsOff} onDragStart={onDragStart} onDragMove={onDragMove} onDragEnd={onDragEnd} onDragCancel={onDragCancel}>
         <Tray
           trayRef={tray}
           open={trayOpen}
@@ -379,6 +409,12 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
           onChangeName={onChangeName}
           onNewRoom={onNewRoom}
           onLeave={onLeave}
+          modo={modoAtivo}
+          onModo={setModo}
+          corCaneta={corCaneta}
+          onCorCaneta={setCorCaneta}
+          temTracos={totalTracos > 0}
+          onApagarTudo={() => store.clearStrokes()}
           error={meta.error}
           adminLinkUrl={isAdmin && token ? adminLink(window.location.origin, boardId, token) : null}
           studentLinkUrl={studentLink(window.location.origin, boardId)}
@@ -403,6 +439,7 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
                   onDuplicate={duplicateNote}
                 />
               ))}
+              <DrawingLayer store={store} modo={modoAtivo} cor={corCaneta} isAdmin={isAdmin} zoom={zoom} toCanvas={toCanvas} />
               <Cursors store={store} zoom={zoom} />
             </div>
           </div>
