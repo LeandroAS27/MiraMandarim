@@ -1,6 +1,7 @@
 import type { BoardState, Instance, Palavra } from '../types'
 import { colorFor, type Papel } from '../theme/presence'
 import { TOKEN_RE } from './chaves'
+import { MAX_TRACOS, type Stroke } from './tracos'
 import { MAX_INSTANCES, canSend, type ClientMessage, type ErrorCode, type PresenceUser, type ServerMessage, type SessaoInfo } from './protocol'
 
 /**
@@ -41,6 +42,7 @@ export const snapshotFor = (papel: Papel, clientId: string, data: RoomData, sess
   papel,
   cor: colorFor(papel, clientId),
   state: data.state,
+  strokes: data.strokes,
   ...(sessao ? { sessao } : {}),
   palavras,
 })
@@ -51,11 +53,16 @@ export const toPresence = (list: { clientId: string; nome: string; papel: Papel 
 export interface RoomData {
   /** Quadro ao vivo. */
   state: BoardState
+  /** Traços da caneta (em ordem: o último fica por cima). */
+  strokes: Stroke[]
 }
 
 export interface Outcome {
   error?: { code: ErrorCode; message: string }
   state: BoardState
+  strokes: Stroke[]
+  /** Gravar os traços? (só traço finalizado, apagar um, apagar todos, limpar e abrir quadro salvo; nunca a prévia) */
+  persistStrokes: boolean
   /** Gravar o estado no armazenamento? (só no soltar, no add/remove, no reset e ao abrir um quadro salvo) */
   persistState: boolean
   /** Mensagem para os outros (ou para todos, se `toAll`). */
@@ -69,7 +76,7 @@ export interface Outcome {
   extras?: Palavra[]
 }
 
-const noop = (data: RoomData): Outcome => ({ state: data.state, persistState: false, broadcast: null, toAll: false })
+const noop = (data: RoomData): Outcome => ({ state: data.state, strokes: data.strokes, persistStrokes: false, persistState: false, broadcast: null, toAll: false })
 const fail = (data: RoomData, code: ErrorCode, message: string): Outcome => ({ ...noop(data), error: { code, message } })
 
 /**
@@ -79,7 +86,7 @@ const fail = (data: RoomData, code: ErrorCode, message: string): Outcome => ({ .
  */
 export function handleMessage(
   data: RoomData,
-  msg: Extract<ClientMessage, { type: 'cursor' | 'move' | 'add' | 'remove' | 'reset' }>,
+  msg: Extract<ClientMessage, { type: 'cursor' | 'move' | 'add' | 'remove' | 'reset' | 'stroke_add' | 'stroke_preview' | 'stroke_remove' | 'strokes_clear' }>,
   papel: Papel,
   isValidPalavra: (palavraId: string) => boolean,
 ): Outcome {
@@ -116,6 +123,26 @@ export function handleMessage(
     }
 
     case 'reset':
-      return { ...noop(data), state: {}, persistState: true, broadcast: { type: 'reset', clientId, to: 'empty', state: {} }, toAll: true }
+      // Limpar quadro: esvazia os cartões E os desenhos
+      return { ...noop(data), state: {}, strokes: [], persistState: true, persistStrokes: true, broadcast: { type: 'reset', clientId, to: 'empty', state: {}, strokes: [] }, toAll: true }
+
+    case 'stroke_add': {
+      if (data.strokes.some((s) => s.id === msg.stroke.id)) return fail(data, 'mensagem_invalida', 'Já existe um traço com esse id.')
+      if (data.strokes.length >= MAX_TRACOS) return fail(data, 'limite', `O quadro aceita até ${MAX_TRACOS} traços. Apague algum para continuar.`)
+      return { ...noop(data), strokes: [...data.strokes, msg.stroke], persistStrokes: true, broadcast: { type: 'stroke_add', clientId, stroke: msg.stroke } }
+    }
+
+    case 'stroke_remove': {
+      if (!data.strokes.some((s) => s.id === msg.id)) return noop(data)
+      return { ...noop(data), strokes: data.strokes.filter((s) => s.id !== msg.id), persistStrokes: true, broadcast: { type: 'stroke_remove', clientId, id: msg.id } }
+    }
+
+    case 'strokes_clear':
+      if (data.strokes.length === 0) return noop(data)
+      return { ...noop(data), strokes: [], persistStrokes: true, broadcast: { type: 'strokes_clear', clientId } }
+
+    // Prévia ao vivo: só repassa aos outros. Nunca vai para o armazenamento.
+    case 'stroke_preview':
+      return { ...noop(data), broadcast: { type: 'stroke_preview', clientId, stroke: msg.stroke } }
   }
 }

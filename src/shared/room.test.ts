@@ -6,8 +6,8 @@ import { decideRole, handleMessage, sha256Hex, snapshotFor, styleOf, toPresence,
 const TOKEN = 'token-da-admin-123456'
 const A: Instance = { instanceId: 'i-aaaa1111', palavraId: 'p001', pos: { x: 0, y: 0 } }
 const ok = () => true
-const empty = (): RoomData => ({ state: {} })
-const withA = (): RoomData => ({ state: { [A.instanceId]: A } })
+const empty = (): RoomData => ({ state: {}, strokes: [] })
+const withA = (): RoomData => ({ state: { [A.instanceId]: A }, strokes: [] })
 
 describe('decideRole (o papel é decidido no servidor)', () => {
   it('sem token é aluno', async () => {
@@ -31,7 +31,7 @@ describe('decideRole (o papel é decidido no servidor)', () => {
 
 describe('o token de admin nunca sai do servidor', () => {
   const SECRETO = 'token-secreto-da-admin-9999'
-  const data: RoomData = { state: { [A.instanceId]: A } }
+  const data: RoomData = { state: { [A.instanceId]: A }, strokes: [] }
 
   it('snapshot e presença não levam o token (nem o hash)', async () => {
     const hash = await sha256Hex(SECRETO)
@@ -120,6 +120,7 @@ describe('handleMessage', () => {
     expect(rem.persistState).toBe(true)
     const many: RoomData = {
       state: Object.fromEntries(Array.from({ length: 400 }, (_, i) => [`i-${i}-xxxx`, { ...A, instanceId: `i-${i}-xxxx` }])),
+      strokes: [],
     }
     expect(handleMessage(many, { type: 'add', clientId: 'c1', instances: [A] }, 'aluno', ok).error?.code).toBe('limite')
   })
@@ -129,12 +130,12 @@ describe('handleMessage', () => {
     expect(clear.state).toEqual({})
     expect(clear.toAll).toBe(true)
     expect(clear.persistState).toBe(true)
-    expect(clear.broadcast).toEqual({ type: 'reset', clientId: 'p1', to: 'empty', state: {} })
+    expect(clear.broadcast).toEqual({ type: 'reset', clientId: 'p1', to: 'empty', state: {}, strokes: [] })
   })
 
   it('o snapshot leva as palavras extras da admin (os alunos também as veem)', () => {
     const extra = { id: 'e_abcd1234', hanzi: '电脑', pinyin: 'diànnǎo', traducao: 'computador', classe: 'substantivo' as const, hsk: null, extra: true as const }
-    const m = snapshotFor('aluno', 'cliente-aluno-1', { state: {} }, undefined, [extra])
+    const m = snapshotFor('aluno', 'cliente-aluno-1', { state: {}, strokes: [] }, undefined, [extra])
     expect(m.type === 'snapshot' && m.palavras).toEqual([extra])
   })
 })

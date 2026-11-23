@@ -4,6 +4,7 @@ import { isHexColor, type Papel } from '../theme/presence'
 import { TOKEN_RE } from './chaves'
 import { EXTRA_ID_RE, comoPalavra, isClasse, validarPalavra, type PalavraInput } from './palavras'
 import type { SavedMeta } from './professora'
+import { STROKE_ID_RE, parseStroke, type Stroke } from './tracos'
 import { validateNome } from './nome'
 
 /**
@@ -47,6 +48,11 @@ export type ClientMessage =
   | { type: 'addPalavra'; clientId: string; palavra: PalavraInput }
   | { type: 'editPalavra'; clientId: string; id: string; palavra: PalavraInput }
   | { type: 'removePalavra'; clientId: string; id: string }
+  /** Caneta (só admin): traço completo ao soltar, apagar um traço, apagar todos, e prévia ao vivo (só memória). */
+  | { type: 'stroke_add'; clientId: string; stroke: Stroke }
+  | { type: 'stroke_preview'; clientId: string; stroke: Stroke }
+  | { type: 'stroke_remove'; clientId: string; id: string }
+  | { type: 'strokes_clear'; clientId: string }
   | { type: 'cursor'; clientId: string; x: number; y: number }
 
 export interface PresenceUser {
@@ -73,7 +79,7 @@ export type ErrorCode =
   | 'nao_encontrado'
 
 export type ServerMessage =
-  | { type: 'snapshot'; clientId: string; papel: Papel; cor: string; state: BoardState; sessao?: SessaoInfo; palavras?: Palavra[] }
+  | { type: 'snapshot'; clientId: string; papel: Papel; cor: string; state: BoardState; strokes: Stroke[]; sessao?: SessaoInfo; palavras?: Palavra[] }
   /** Lista completa de palavras extras da admin (sempre que mudam). */
   | { type: 'palavras'; clientId: string; items: Palavra[] }
   | { type: 'presence'; clientId: string; users: PresenceUser[] }
@@ -84,7 +90,11 @@ export type ServerMessage =
   | { type: 'saved'; clientId: string; meta: SavedMeta }
   /** Só para quem pediu. */
   | { type: 'savedList'; clientId: string; items: SavedMeta[] }
-  | { type: 'reset'; clientId: string; to: 'empty' | 'saved'; state: BoardState }
+  | { type: 'reset'; clientId: string; to: 'empty' | 'saved'; state: BoardState; strokes: Stroke[] }
+  | { type: 'stroke_add'; clientId: string; stroke: Stroke }
+  | { type: 'stroke_preview'; clientId: string; stroke: Stroke }
+  | { type: 'stroke_remove'; clientId: string; id: string }
+  | { type: 'strokes_clear'; clientId: string }
   | { type: 'cursor'; clientId: string; x: number; y: number }
   | { type: 'leave'; clientId: string }
   | { type: 'error'; clientId: string; code: ErrorCode; message: string }
@@ -183,6 +193,17 @@ export function parseClientMessage(raw: unknown): ParseResult<ClientMessage> {
     case 'removePalavra':
       if (!isStr(d.id) || !EXTRA_ID_RE.test(d.id)) return bad('Id de palavra inválido.')
       return { ok: true, msg: { type: 'removePalavra', clientId, id: d.id } }
+    case 'stroke_add':
+    case 'stroke_preview': {
+      const r = parseStroke(d.stroke)
+      if (!r.ok) return bad(r.erro)
+      return { ok: true, msg: { type: d.type, clientId, stroke: r.stroke } }
+    }
+    case 'stroke_remove':
+      if (!isStr(d.id) || !STROKE_ID_RE.test(d.id)) return bad('Id de traço inválido.')
+      return { ok: true, msg: { type: 'stroke_remove', clientId, id: d.id } }
+    case 'strokes_clear':
+      return { ok: true, msg: { type: 'strokes_clear', clientId } }
     case 'open':
     case 'deleteSaved':
       if (!isStr(d.id) || !SAVED_ID_RE.test(d.id)) return bad('Id de quadro inválido.')
@@ -206,6 +227,17 @@ function parseExtra(v: unknown): Palavra | null {
 }
 
 const parseExtras = (v: unknown): Palavra[] => (Array.isArray(v) ? v.map(parseExtra).filter((p): p is Palavra => p !== null) : [])
+
+/** Lista de traços vinda do servidor: os inválidos são ignorados, nunca derrubam a tela. */
+function parseStrokes(v: unknown): Stroke[] {
+  if (!Array.isArray(v)) return []
+  const out: Stroke[] = []
+  for (const x of v) {
+    const r = parseStroke(x)
+    if (r.ok) out.push(r.stroke)
+  }
+  return out
+}
 
 function parseMeta(v: unknown): SavedMeta | null {
   if (!isObj(v) || !isStr(v.id) || !isStr(v.nome) || !isNum(v.em) || !isNum(v.total)) return null
@@ -241,7 +273,7 @@ export function parseServerMessage(raw: unknown): ParseResult<ServerMessage> {
       if (!state || (d.papel !== 'admin' && d.papel !== 'aluno') || !isHexColor(d.cor)) return bad('snapshot inválido.')
       const si = d.sessao
       const sessao: SessaoInfo | undefined = isObj(si) && isNum(si.expiraEm) ? { expiraEm: si.expiraEm, ...(isStr(si.id) ? { id: si.id } : {}) } : undefined
-      return { ok: true, msg: { type: 'snapshot', clientId, papel: d.papel, cor: d.cor, state, ...(sessao ? { sessao } : {}), palavras: parseExtras(d.palavras) } }
+      return { ok: true, msg: { type: 'snapshot', clientId, papel: d.papel, cor: d.cor, state, strokes: parseStrokes(d.strokes), ...(sessao ? { sessao } : {}), palavras: parseExtras(d.palavras) } }
     }
     case 'presence': {
       if (!Array.isArray(d.users)) return bad('presence inválido.')
@@ -272,6 +304,10 @@ export function parseServerMessage(raw: unknown): ParseResult<ServerMessage> {
     }
     case 'palavras':
       return { ok: true, msg: { type: 'palavras', clientId, items: parseExtras(d.items) } }
+    case 'stroke_remove':
+      return isStr(d.id) ? { ok: true, msg: { type: 'stroke_remove', clientId, id: d.id } } : bad('stroke_remove inválido.')
+    case 'strokes_clear':
+      return { ok: true, msg: { type: 'strokes_clear', clientId } }
     case 'savedList': {
       if (!Array.isArray(d.items)) return bad('savedList inválido.')
       return { ok: true, msg: { type: 'savedList', clientId, items: d.items.map(parseMeta).filter((m): m is SavedMeta => m !== null) } }
@@ -279,7 +315,12 @@ export function parseServerMessage(raw: unknown): ParseResult<ServerMessage> {
     case 'reset': {
       const state = parseState(d.state)
       if (!state) return bad('reset inválido.')
-      return { ok: true, msg: { type: 'reset', clientId, to: d.to === 'saved' ? 'saved' : 'empty', state } }
+      return { ok: true, msg: { type: 'reset', clientId, to: d.to === 'saved' ? 'saved' : 'empty', state, strokes: parseStrokes(d.strokes) } }
+    }
+    case 'stroke_add':
+    case 'stroke_preview': {
+      const r = parseStroke(d.stroke)
+      return r.ok ? { ok: true, msg: { type: d.type, clientId, stroke: r.stroke } } : bad('traço inválido.')
     }
     case 'cursor':
       if (!isNum(d.x) || !isNum(d.y)) return bad('cursor inválido.')
@@ -294,7 +335,7 @@ export function parseServerMessage(raw: unknown): ParseResult<ServerMessage> {
 }
 
 /** Tipos que só a admin pode enviar. */
-export const ADMIN_ONLY: ReadonlySet<ClientMessage['type']> = new Set(['save', 'reset', 'listSaved', 'open', 'deleteSaved', 'addPalavra', 'editPalavra', 'removePalavra'])
+export const ADMIN_ONLY: ReadonlySet<ClientMessage['type']> = new Set(['save', 'reset', 'listSaved', 'open', 'deleteSaved', 'addPalavra', 'editPalavra', 'removePalavra', 'stroke_add', 'stroke_preview', 'stroke_remove', 'strokes_clear'])
 
 export const canSend = (papel: Papel, type: ClientMessage['type']): boolean => papel === 'admin' || !ADMIN_ONLY.has(type)
 

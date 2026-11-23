@@ -1,4 +1,5 @@
 import type { BoardState, Palavra } from '../types'
+import type { Stroke } from './tracos'
 import { EXTRA_ID_RE, MAX_EXTRAS, comoPalavra, validarPalavra } from './palavras'
 import { validarTexto } from './texto'
 
@@ -36,6 +37,8 @@ export type Falha = { ok: false; code: 'mensagem_invalida' | 'limite'; message: 
 
 const meta = (r: Registro): SavedMeta => ({ id: r.id, nome: r.nome, em: r.em, total: r.total })
 const chave = (id: string) => `quadro:${id}`
+/** Os traços de um quadro salvo ficam numa chave à parte: a listagem (prefixo "quadro:") não os lê. */
+const chaveTracos = (id: string) => `tracos-quadro:${id}`
 
 export async function listarQuadros(kv: Kv): Promise<SavedMeta[]> {
   const todos = await kv.list<Registro>({ prefix: 'quadro:' })
@@ -49,6 +52,7 @@ export async function salvarQuadro(
   state: BoardState,
   agora: number,
   novoId: () => string,
+  strokes: Stroke[] = [],
 ): Promise<{ ok: true; meta: SavedMeta } | Falha> {
   const n = validarTexto(nomeBruto, NOME_QUADRO_MAX, 'O nome do quadro')
   if (!n.ok) return { ok: false, code: 'mensagem_invalida', message: n.erro }
@@ -60,17 +64,23 @@ export async function salvarQuadro(
   }
   const registro: Registro = { id: igual?.id ?? novoId(), nome: n.texto, em: agora, total: Object.keys(state).length, state }
   await kv.put(chave(registro.id), registro)
+  if (strokes.length > 0) await kv.put(chaveTracos(registro.id), strokes)
+  else await kv.delete(chaveTracos(registro.id))
   return { ok: true, meta: meta(registro) }
 }
 
-export async function abrirQuadro(kv: Kv, id: string): Promise<BoardState | null> {
+/** Quadro salvo: os cartões e os traços (quadros salvos antes da caneta abrem sem traços). */
+export async function abrirQuadro(kv: Kv, id: string): Promise<{ state: BoardState; strokes: Stroke[] } | null> {
   if (!ID_RE.test(id)) return null
-  return (await kv.get<Registro>(chave(id)))?.state ?? null
+  const reg = await kv.get<Registro>(chave(id))
+  if (!reg) return null
+  return { state: reg.state, strokes: (await kv.get<Stroke[]>(chaveTracos(id))) ?? [] }
 }
 
 export async function excluirQuadro(kv: Kv, id: string): Promise<boolean> {
   if (!ID_RE.test(id) || (await kv.get(chave(id))) === undefined) return false
   await kv.delete(chave(id))
+  await kv.delete(chaveTracos(id))
   return true
 }
 

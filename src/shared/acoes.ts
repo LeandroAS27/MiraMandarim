@@ -1,6 +1,7 @@
 import type { BoardState, Instance, Palavra } from '../types'
 import { canSend, MAX_INSTANCES, type ClientMessage, type ErrorCode } from './protocol'
 import type { PalavraInput } from './palavras'
+import type { Stroke } from './tracos'
 import type { ResultadoPalavra, SavedMeta } from './professora'
 import type { Papel } from '../theme/presence'
 import type { Outcome, RoomData } from './room'
@@ -11,8 +12,8 @@ import type { Outcome, RoomData } from './room'
  */
 export interface Professora {
   listarQuadros(): Promise<SavedMeta[]>
-  salvarQuadro(nome: string, state: BoardState): Promise<{ ok: true; meta: SavedMeta } | { ok: false; code: 'mensagem_invalida' | 'limite'; message: string }>
-  abrirQuadro(id: string): Promise<BoardState | null>
+  salvarQuadro(nome: string, state: BoardState, strokes: Stroke[]): Promise<{ ok: true; meta: SavedMeta } | { ok: false; code: 'mensagem_invalida' | 'limite'; message: string }>
+  abrirQuadro(id: string): Promise<{ state: BoardState; strokes: Stroke[] } | null>
   excluirQuadro(id: string): Promise<boolean>
   listarPalavras(): Promise<Palavra[]>
   adicionarPalavra(dados: PalavraInput): Promise<ResultadoPalavra>
@@ -23,7 +24,7 @@ export interface Professora {
 
 export type MsgAdmin = Extract<ClientMessage, { type: 'save' | 'listSaved' | 'open' | 'deleteSaved' | 'addPalavra' | 'editPalavra' | 'removePalavra' }>
 
-const base = (data: RoomData): Outcome => ({ state: data.state, persistState: false, broadcast: null, toAll: false })
+const base = (data: RoomData): Outcome => ({ state: data.state, strokes: data.strokes, persistStrokes: false, persistState: false, broadcast: null, toAll: false })
 const falha = (data: RoomData, code: ErrorCode, message: string): Outcome => ({ ...base(data), error: { code, message } })
 
 /**
@@ -41,7 +42,7 @@ export async function acaoDeAdmin(
 
   switch (msg.type) {
     case 'save': {
-      const r = await prof.salvarQuadro(msg.nome, data.state)
+      const r = await prof.salvarQuadro(msg.nome, data.state, data.strokes)
       if (!r.ok) return falha(data, r.code, r.message)
       return { ...base(data), reply: { type: 'saved', clientId: msg.clientId, meta: r.meta } }
     }
@@ -54,9 +55,10 @@ export async function acaoDeAdmin(
       if (!salvo) return falha(data, 'nao_encontrado', 'Quadro salvo não encontrado.')
       // palavras que não existem mais (ex.: extra excluída) ficam de fora
       const state: BoardState = {}
-      for (const i of Object.values(salvo) as Instance[]) if (isValidPalavra(i.palavraId)) state[i.instanceId] = i
+      for (const i of Object.values(salvo.state) as Instance[]) if (isValidPalavra(i.palavraId)) state[i.instanceId] = i
       if (Object.keys(state).length > MAX_INSTANCES) return falha(data, 'limite', `O quadro aceita até ${MAX_INSTANCES} cartões.`)
-      return { ...base(data), state, persistState: true, broadcast: { type: 'reset', clientId: msg.clientId, to: 'saved', state }, toAll: true }
+      // os traços do quadro salvo voltam junto, para todos os conectados
+      return { ...base(data), state, strokes: salvo.strokes, persistState: true, persistStrokes: true, broadcast: { type: 'reset', clientId: msg.clientId, to: 'saved', state, strokes: salvo.strokes }, toAll: true }
     }
 
     case 'addPalavra':

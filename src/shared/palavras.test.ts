@@ -104,7 +104,7 @@ describe('dicionário de palavras extras (da admin)', () => {
     if (!criada.ok) throw new Error('esperava adicionar')
 
     // sala B: um aluno entra e recebe o snapshot com as extras
-    const snap = snapshotFor('aluno', 'cliente-aluno-1', { state: {} }, undefined, await listarPalavras(dicionarioDaAdmin))
+    const snap = snapshotFor('aluno', 'cliente-aluno-1', { state: {}, strokes: [] }, undefined, await listarPalavras(dicionarioDaAdmin))
     const extras = snap.type === 'snapshot' ? (snap.palavras ?? []) : []
     expect(extras.map((p) => p.hanzi)).toEqual(['电脑'])
     expect(seloDe(extras[0])).toBe('E')

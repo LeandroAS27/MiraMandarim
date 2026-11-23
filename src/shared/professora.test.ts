@@ -28,7 +28,7 @@ describe('quadros salvos com nome (da professora)', () => {
     const lista = await listarQuadros(kv)
     expect(lista.map((q) => q.nome)).toEqual(['Aula 4', 'Aula 3 - verbos'])
     expect(lista.map((q) => q.total)).toEqual([5, 2])
-    expect(Object.keys((await abrirQuadro(kv, lista[1].id)) ?? {})).toHaveLength(2)
+    expect(Object.keys((await abrirQuadro(kv, lista[1].id))?.state ?? {})).toHaveLength(2)
   })
 
   it('a lista não leva o conteúdo dos quadros', async () => {

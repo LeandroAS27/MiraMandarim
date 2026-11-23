@@ -5,6 +5,7 @@ import palavrasData from '../src/data/palavras.json'
 import { CLOSE_BAD_ID, CLOSE_NO_ROOM, CLOSE_REPLACED, CLOSE_SESSION_EXPIRED, encode, parseClientMessage, type ClientMessage, type ErrorCode, type ServerMessage } from '../src/shared/protocol'
 import { decideRole, handleMessage, snapshotFor, toPresence, type RoomData } from '../src/shared/room'
 import { entrarComoAluno, expirou, type SessaoStore } from '../src/shared/sessoes'
+import type { Stroke } from '../src/shared/tracos'
 import type { BoardState, Palavra } from '../src/types'
 import type { Papel } from '../src/theme/presence'
 
@@ -35,7 +36,7 @@ interface Attachment {
  * Cursores e presença são efêmeros: só memória/attachments + broadcast, nada em storage.
  */
 export class QuadroDurableObject extends DurableObject<Env> {
-  private data: RoomData = { state: {} }
+  private data: RoomData = { state: {}, strokes: [] }
   private donoHash: string | null = null
   /** Cópia (na memória) das palavras extras da admin: valem para validar cartões e vão no snapshot. */
   private extras: Palavra[] = []
@@ -45,8 +46,12 @@ export class QuadroDurableObject extends DurableObject<Env> {
     super(ctx, env)
     // Ao acordar da hibernação, recarrega o que foi gravado.
     ctx.blockConcurrencyWhile(async () => {
-      const [state, hash] = await Promise.all([ctx.storage.get<BoardState>('state'), ctx.storage.get<string>('donoHash')])
-      this.data = { state: state ?? {} }
+      const [state, strokes, hash] = await Promise.all([
+        ctx.storage.get<BoardState>('state'),
+        ctx.storage.get<Stroke[]>('strokes'),
+        ctx.storage.get<string>('donoHash'),
+      ])
+      this.data = { state: state ?? {}, strokes: strokes ?? [] }
       this.donoHash = hash ?? null
     })
   }
@@ -75,7 +80,7 @@ export class QuadroDurableObject extends DurableObject<Env> {
     }
     await this.ctx.storage.deleteAll()
     this.donoHash = null
-    this.data = { state: {} }
+    this.data = { state: {}, strokes: [] }
     this.extras = []
     this.extrasCarregadas = false
     return true
@@ -120,9 +125,11 @@ export class QuadroDurableObject extends DurableObject<Env> {
       : handleMessage(this.data, msg, att.papel, valida)
     if (out.error) return this.sendError(ws, att.clientId, out.error.code, out.error.message)
 
-    this.data = { state: out.state }
+    this.data = { state: out.state, strokes: out.strokes }
     if (out.extras) this.extras = out.extras
     if (out.persistState) await this.ctx.storage.put('state', out.state)
+    // traços: só os finalizados (e apagar/limpar/abrir quadro salvo); a prévia nunca chega aqui
+    if (out.persistStrokes) await this.ctx.storage.put('strokes', out.strokes)
     if (out.reply) ws.send(encode(out.reply))
     if (out.broadcast) this.broadcast(out.broadcast, out.toAll ? null : ws)
     for (const m of out.also ?? []) this.broadcast(m, null)
@@ -180,7 +187,7 @@ export class QuadroDurableObject extends DurableObject<Env> {
     const stub = this.env.PROFESSORA.getByName(this.donoHash ?? 'sem-dono')
     return {
       listarQuadros: () => stub.listarQuadros(),
-      salvarQuadro: (nome, state) => stub.salvarQuadro(nome, state),
+      salvarQuadro: (nome, state, strokes) => stub.salvarQuadro(nome, state, strokes),
       abrirQuadro: (id) => stub.abrirQuadro(id),
       excluirQuadro: (id) => stub.excluirQuadro(id),
       listarPalavras: () => stub.listarPalavras(),

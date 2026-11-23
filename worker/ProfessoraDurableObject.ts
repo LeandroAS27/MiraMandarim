@@ -1,6 +1,7 @@
 import { DurableObject } from 'cloudflare:workers'
 import type { PalavraInput } from '../src/shared/palavras'
 import { abrirQuadro, adicionarPalavra, arquivarSala, excluirSala, editarPalavra, excluirPalavra, excluirQuadro, listarPalavras, listarQuadros, listarSalas, registrarSala, renomearSala, salvarQuadro, type Kv } from '../src/shared/professora'
+import type { Stroke } from '../src/shared/tracos'
 import type { BoardState } from '../src/types'
 import type { Env } from './env'
 
@@ -23,8 +24,8 @@ export class ProfessoraDurableObject extends DurableObject<Env> {
     return listarQuadros(this.kv)
   }
 
-  salvarQuadro(nome: string, state: BoardState) {
-    return salvarQuadro(this.kv, nome, state, Date.now(), novoId)
+  salvarQuadro(nome: string, state: BoardState, strokes: Stroke[]) {
+    return salvarQuadro(this.kv, nome, state, Date.now(), novoId, strokes)
   }
 
   abrirQuadro(id: string) {

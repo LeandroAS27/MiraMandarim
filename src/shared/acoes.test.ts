@@ -4,10 +4,11 @@ import { comoPalavra } from './palavras'
 import type { SavedMeta } from './professora'
 import type { RoomData } from './room'
 import type { BoardState } from '../types'
+import type { Stroke } from './tracos'
 
 const A = { instanceId: 'i-aaaa1111', palavraId: 'p001', pos: { x: 0, y: 0 } }
 const B = { instanceId: 'i-bbbb2222', palavraId: 'e_removida', pos: { x: 9, y: 9 } }
-const sala = (): RoomData => ({ state: { [A.instanceId]: A } })
+const sala = (): RoomData => ({ state: { [A.instanceId]: A }, strokes: [] })
 const meta: SavedMeta = { id: 'abcd1234', nome: 'Aula 3', em: 1, total: 1 }
 const todas = () => true
 const extra = comoPalavra('e_palavra1x', { hanzi: '电脑', pinyin: 'diànnǎo', traducao: 'computador', classe: 'substantivo' })
@@ -17,7 +18,7 @@ function falsaProfessora(salvo: BoardState | null = { [A.instanceId]: A, [B.inst
   const prof: Professora = {
     listarQuadros: vi.fn(async () => [meta]),
     salvarQuadro: vi.fn(async (nome: string) => (nome.trim() ? { ok: true as const, meta: { ...meta, nome } } : { ok: false as const, code: 'mensagem_invalida' as const, message: 'nome' })),
-    abrirQuadro: vi.fn(async () => salvo),
+    abrirQuadro: vi.fn(async () => (salvo ? { state: salvo, strokes: [] as Stroke[] } : null)),
     excluirQuadro: vi.fn(async () => true),
     listarPalavras: vi.fn(async () => [extra]),
     adicionarPalavra: vi.fn(async () => ({ ok: true as const, palavra: extra, items: [extra] })),
@@ -55,7 +56,7 @@ describe('ações de quadros salvos (só admin)', () => {
   it('salvar: guarda o quadro atual com o nome e responde só a quem salvou', async () => {
     const prof = falsaProfessora()
     const out = await acaoDeAdmin(sala(), mensagens[0], 'admin', prof, todas)
-    expect(prof.salvarQuadro).toHaveBeenCalledWith('Aula 3', sala().state)
+    expect(prof.salvarQuadro).toHaveBeenCalledWith('Aula 3', sala().state, [])
     expect(out.reply).toMatchObject({ type: 'saved', meta: { nome: 'Aula 3' } })
     expect(out.broadcast).toBeNull()
     expect(out.persistState).toBe(false)
@@ -114,7 +115,7 @@ describe('ações de quadros salvos (só admin)', () => {
   })
 
   it('excluir palavra extra tira os cartões dela desta sala e avisa todos', async () => {
-    const comExtra: RoomData = { state: { [A.instanceId]: A, 'i-cccc3333': { instanceId: 'i-cccc3333', palavraId: 'e_palavra1x', pos: { x: 1, y: 1 } } } }
+    const comExtra: RoomData = { state: { [A.instanceId]: A, 'i-cccc3333': { instanceId: 'i-cccc3333', palavraId: 'e_palavra1x', pos: { x: 1, y: 1 } } }, strokes: [] }
     const out = await acaoDeAdmin(comExtra, { type: 'removePalavra', clientId: 'c1', id: 'e_palavra1x' }, 'admin', falsaProfessora(), todas)
     expect(out.state).toEqual({ [A.instanceId]: A })
     expect(out.persistState).toBe(true)
