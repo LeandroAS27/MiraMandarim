@@ -92,12 +92,12 @@ O quadro ao vivo é gravado no Durable Object da sala (ao soltar um cartão, adi
 
 A admin escreve na lousa com uma caneta; os **alunos só veem** os desenhos, em tempo real. A caneta, as cores, o apagador e o botão de apagar tudo **só aparecem para quem o servidor reconheceu como `admin`**, e o servidor rejeita (com `error`) qualquer mensagem de desenho vinda de um aluno.
 
-**Como usar** (na barra de ferramentas, só para a admin):
+**Como usar** (na **paleta flutuante** embaixo da lousa, no estilo do Freeform do iPad: uma pílula só com ícones, visível só para a admin):
 
-- **Mover** (padrão ao entrar): arrasta os post-its, como sempre. A camada de desenho **não captura o ponteiro** (`pointer-events: none`).
-- **Caneta:** desenha na lousa, com mouse, caneta stylus ou toque (Pointer Events; o navegador não rola nem dá zoom no lugar do traço). Aparecem **cinco cores**: preto `#1A1A1A`, vermelho `#C62828`, azul `#1565C0`, verde `#2E7D32` e laranja `#E65100` (definidas em `src/theme/tracos.ts`, todas com contraste ≥ 3:1 contra o fundo; o laranja sugerido inicialmente, `#EF6C00`, dava só 2,65:1). Espessura fixa de **4 px em coordenadas do quadro**, então o traço acompanha zoom e scroll como os post-its. Um clique sem arrastar faz um ponto.
-- **Apagador:** tocar (ou passar por cima de) um traço **apaga aquele traço inteiro**, não pixel a pixel.
-- **Apagar todos os desenhos:** esvazia todos os traços, para todos, com **cartão de confirmação**. Os post-its não são afetados.
+- **Mover** (ícone de seta; padrão ao entrar): arrasta os post-its, como sempre. A camada de desenho **não captura o ponteiro** (`pointer-events: none`).
+- **Caneta** (ícone de lápis, com uma bolinha da cor atual): tocar nela escolhe a caneta; **tocar de novo abre as cinco cores** numa pílula acima da paleta. Desenha na lousa, com mouse, caneta stylus ou toque (Pointer Events; o navegador não rola nem dá zoom no lugar do traço). As **cinco cores** são: preto `#1A1A1A`, vermelho `#C62828`, azul `#1565C0`, verde `#2E7D32` e laranja `#E65100` (definidas em `src/theme/tracos.ts`, todas com contraste ≥ 3:1 contra o fundo; o laranja sugerido inicialmente, `#EF6C00`, dava só 2,65:1). Espessura fixa de **4 px em coordenadas do quadro**, então o traço acompanha zoom e scroll como os post-its. Um clique sem arrastar faz um ponto.
+- **Apagador** (ícone de borracha): tocar (ou passar por cima de) um traço **apaga aquele traço inteiro**, não pixel a pixel.
+- **Apagar todos os desenhos** (ícone de lixeira, desligado quando não há traços): esvazia todos os traços, para todos, com **cartão de confirmação**. Os post-its não são afetados.
 - Na caneta e no apagador o **arraste de post-its fica desligado**, inclusive o do banco de palavras. **Esc** volta ao modo Mover. O modo é só local (não vai ao servidor nem às preferências).
 - Com dois dedos (pinça), o traço em andamento é cancelado para o zoom funcionar.
 
@@ -288,7 +288,15 @@ Premissas: cada pessoa move o mouse sobre o quadro em 30% do tempo, cursor a no 
 
 ### Barra de ferramentas
 
-A barra fica **escondida**: só uma aba pequena aparece no topo ("Ferramentas · N online", com o estado da conexão). Ela abre ao **passar o mouse** (no celular, ao tocar na aba). O ícone de **pin** na aba **fixa** a barra aberta (preferência sua).
+A barra do topo fica **escondida**: só uma aba pequena aparece ("Ferramentas · N online", com o estado da conexão). Ela abre ao **passar o mouse** (no celular, ao tocar na aba) e fica aberta enquanto houver um menu aberto. O ícone de **pin** na aba **fixa** a barra aberta (preferência sua).
+
+Para não ficar carregada, a barra mostra à vista só **Palavras**, **Pinyin** e **Tradução**; o resto mora em menus:
+
+- **Quadro** (só admin): Salvar quadro…, Abrir quadro salvo…, Adicionar palavra… e Limpar quadro (com confirmação).
+- **Compartilhar** (só admin): Copiar link dos alunos e Copiar meu link (admin), com o aviso de que ele não vai aos alunos.
+- **Mais** (todos): Legenda das cores e Fixar painel da frase (liga/desliga); para a admin, também Minhas salas e Sair.
+
+A caneta e o apagador não ficam na barra: estão na paleta flutuante (seção "Caneta e apagador").
 
 ### Frase formada
 

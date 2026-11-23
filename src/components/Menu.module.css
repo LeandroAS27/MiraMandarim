@@ -1,0 +1,11 @@
+.botao { display: inline-flex; align-items: center; gap: 4px; }
+.painel { position: fixed; z-index: 6000; padding: 6px; background: #fff; border: 1px solid #d0d7de; border-radius: 12px; box-shadow: 0 8px 28px rgba(31, 35, 40, 0.22); }
+.item { display: flex; align-items: flex-start; gap: 8px; width: 100%; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; font: inherit; font-size: 0.9rem; text-align: left; color: #24292f; cursor: pointer; }
+.item:hover:not(:disabled), .item:focus-visible { background: #f0f2f5; outline: none; }
+.item:disabled { opacity: 0.4; cursor: default; }
+.perigo { color: #b42318; }
+.marca { width: 14px; flex: none; text-align: center; font-weight: 700; color: #0969da; }
+.texto { display: flex; flex-direction: column; gap: 1px; }
+.texto small { color: #6b7280; font-size: 0.75rem; }
+.perigo .texto small { color: #b42318; }
+.separador { height: 1px; margin: 5px 4px; background: #e3e6eb; }

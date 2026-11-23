@@ -27,6 +27,7 @@ import { Legend } from './Legend'
 import { arrasteDePostitLigado, type Modo } from '../lib/desenho'
 import { COR_PADRAO, type CorId } from '../shared/tracos'
 import { DrawingLayer } from './DrawingLayer'
+import { Paleta } from './Paleta'
 import { PalavrasExtras } from './PalavrasExtras'
 import { QuadrosSalvos } from './QuadrosSalvos'
 import { Toolbar } from './Toolbar'
@@ -409,12 +410,6 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
           onChangeName={onChangeName}
           onNewRoom={onNewRoom}
           onLeave={onLeave}
-          modo={modoAtivo}
-          onModo={setModo}
-          corCaneta={corCaneta}
-          onCorCaneta={setCorCaneta}
-          temTracos={totalTracos > 0}
-          onApagarTudo={() => store.clearStrokes()}
           error={meta.error}
           adminLinkUrl={isAdmin && token ? adminLink(window.location.origin, boardId, token) : null}
           studentLinkUrl={studentLink(window.location.origin, boardId)}
@@ -444,6 +439,16 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
             </div>
           </div>
         </div>
+        {isAdmin && (
+          <Paleta
+            modo={modoAtivo}
+            onModo={setModo}
+            cor={corCaneta}
+            onCor={setCorCaneta}
+            temTracos={totalTracos > 0}
+            onApagarTudo={() => store.clearStrokes()}
+          />
+        )}
         <ZoomControls
           zoom={zoom}
           onZoomIn={() => applyZoom(stepZoom(zoomRef.current, 1))}
