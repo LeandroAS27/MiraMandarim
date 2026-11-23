@@ -372,4 +372,125 @@ describe('RealtimeBoardStore', () => {
     adm.store.removePalavra('e_abcd1234')
     for (const t of ['addPalavra', 'editPalavra', 'removePalavra']) expect(adm.sock().ofType(t)).toHaveLength(1)
   })
+
+  // --- caneta ---------------------------------------------------------------
+
+  const traco = (id: string, over: Record<string, unknown> = {}) => ({ id, cor: 'azul', w: 4, pts: [10, 10, 60, 60], ...over })
+  const adminAberto = () => {
+    const a = make('token-da-admin-123456')
+    a.sock().open()
+    a.sock().receive(snapshot({ papel: 'admin', cor: '#ffc933' }))
+    return a
+  }
+
+  it('aluno não envia stroke_add, stroke_remove, strokes_clear nem stroke_preview', () => {
+    const aluno = make()
+    aluno.sock().open()
+    aluno.sock().receive(snapshot({ strokes: [traco('s-um00001')] }))
+    expect(aluno.store.addStroke(traco('s-novo0001') as never)).toBe(false)
+    aluno.store.removeStroke('s-um00001')
+    aluno.store.clearStrokes()
+    aluno.store.previewStroke(traco('s-novo0001') as never)
+    vi.advanceTimersByTime(1000)
+    for (const t of ['stroke_add', 'stroke_remove', 'strokes_clear', 'stroke_preview']) expect(aluno.sock().ofType(t), t).toHaveLength(0)
+    expect(aluno.store.getDrawing().strokes).toHaveLength(1) // nada mudou
+  })
+
+  it('admin: o traço aparece na hora e é enviado inteiro, uma vez, ao soltar', () => {
+    const a = adminAberto()
+    expect(a.store.addStroke(traco('s-um00001') as never)).toBe(true)
+    expect(a.store.getDrawing().strokes.map((x) => x.id)).toEqual(['s-um00001'])
+    expect(a.sock().ofType('stroke_add')).toMatchObject([{ stroke: { id: 's-um00001', cor: 'azul', pts: [10, 10, 60, 60] } }])
+  })
+
+  it('admin: apagar um traço e apagar todos aplicam aqui e avisam o servidor', () => {
+    const a = adminAberto()
+    a.store.addStroke(traco('s-um00001') as never)
+    a.store.addStroke(traco('s-dois0001') as never)
+    a.store.removeStroke('s-um00001')
+    expect(a.store.getDrawing().strokes.map((x) => x.id)).toEqual(['s-dois0001'])
+    expect(a.sock().ofType('stroke_remove')).toMatchObject([{ id: 's-um00001' }])
+    a.store.clearStrokes()
+    expect(a.store.getDrawing().strokes).toEqual([])
+    expect(a.sock().ofType('strokes_clear')).toHaveLength(1)
+  })
+
+  it('a prévia vai no máximo a cada ~200 ms e some quando o traço final é enviado', () => {
+    const a = adminAberto()
+    for (let i = 0; i < 20; i++) {
+      a.store.previewStroke(traco('s-um00001', { pts: [0, 0, i, i] }) as never)
+      vi.advanceTimersByTime(10) // 200 ms no total
+    }
+    vi.advanceTimersByTime(500)
+    expect(a.sock().ofType('stroke_preview').length).toBeLessThanOrEqual(3)
+    expect(a.sock().ofType('stroke_preview').length).toBeGreaterThanOrEqual(1)
+
+    // prévia pendente + traço final: a pendente é descartada, só o final sai
+    const antes = a.sock().ofType('stroke_preview').length
+    a.store.previewStroke(traco('s-um00001') as never)
+    a.store.previewStroke(traco('s-um00001') as never)
+    a.store.addStroke(traco('s-um00001') as never)
+    vi.advanceTimersByTime(1000)
+    expect(a.sock().ofType('stroke_add')).toHaveLength(1)
+    expect(a.sock().ofType('stroke_preview').length - antes).toBeLessThanOrEqual(1)
+  })
+
+  it('no limite de traços o admin não envia mais um e vê o aviso', () => {
+    const cheio = Array.from({ length: 300 }, (_, i) => traco(`s-id${String(i).padStart(5, '0')}`))
+    const a = make('token-da-admin-123456')
+    a.sock().open()
+    a.sock().receive(snapshot({ papel: 'admin', cor: '#ffc933', strokes: cheio }))
+    expect(a.store.addStroke(traco('s-novo0001') as never)).toBe(false)
+    expect(a.sock().ofType('stroke_add')).toHaveLength(0)
+    expect(a.store.getMeta().error).toMatch(/300 traços/)
+  })
+
+  it('traços de outra pessoa: snapshot, stroke_add, stroke_remove, strokes_clear e reset', () => {
+    const a = make()
+    a.sock().open()
+    a.sock().receive(snapshot({ strokes: [traco('s-um00001')] }))
+    expect(a.store.getDrawing().strokes.map((x) => x.id)).toEqual(['s-um00001'])
+    a.sock().receive({ type: 'stroke_add', clientId: 'prof-cliente-1', stroke: traco('s-dois0001') })
+    a.sock().receive({ type: 'stroke_add', clientId: 'prof-cliente-1', stroke: traco('s-dois0001') }) // repetido: ignora
+    expect(a.store.getDrawing().strokes.map((x) => x.id)).toEqual(['s-um00001', 's-dois0001'])
+    a.sock().receive({ type: 'stroke_remove', clientId: 'prof-cliente-1', id: 's-um00001' })
+    expect(a.store.getDrawing().strokes.map((x) => x.id)).toEqual(['s-dois0001'])
+    a.sock().receive({ type: 'reset', clientId: 'prof-cliente-1', to: 'saved', state: {}, strokes: [traco('s-salvo001')] })
+    expect(a.store.getDrawing().strokes.map((x) => x.id)).toEqual(['s-salvo001'])
+    a.sock().receive({ type: 'strokes_clear', clientId: 'prof-cliente-1' })
+    expect(a.store.getDrawing().strokes).toEqual([])
+  })
+
+  it('a prévia de quem está desenhando aparece e some com o traço final, com stroke_clear ou quando a pessoa sai', () => {
+    const a = make()
+    a.sock().open()
+    a.sock().receive(snapshot())
+    a.sock().receive({ type: 'stroke_preview', clientId: 'prof-cliente-1', stroke: traco('s-um00001') })
+    expect(Object.keys(a.store.getDrawing().previews)).toEqual(['prof-cliente-1'])
+    expect(a.store.getDrawing().strokes).toEqual([]) // a prévia não vira traço
+    a.sock().receive({ type: 'stroke_add', clientId: 'prof-cliente-1', stroke: traco('s-um00001') })
+    expect(a.store.getDrawing().previews).toEqual({})
+    a.sock().receive({ type: 'stroke_preview', clientId: 'prof-cliente-1', stroke: traco('s-dois0001') })
+    a.sock().receive({ type: 'leave', clientId: 'prof-cliente-1' })
+    expect(a.store.getDrawing().previews).toEqual({})
+  })
+
+  it('Limpar quadro (admin) também esvazia os desenhos aqui e envia só o reset', () => {
+    const a = adminAberto()
+    a.store.addStroke(traco('s-um00001') as never)
+    a.store.applyMove({ type: 'clear', instances: [] })
+    expect(a.store.getDrawing().strokes).toEqual([])
+    expect(a.sock().ofType('reset')).toHaveLength(1)
+    expect(a.sock().ofType('strokes_clear')).toHaveLength(0)
+  })
+
+  it('ao perder a conexão a prévia dos outros some (os traços ficam)', () => {
+    const a = make()
+    a.sock().open()
+    a.sock().receive(snapshot({ strokes: [traco('s-um00001')] }))
+    a.sock().receive({ type: 'stroke_preview', clientId: 'prof-cliente-1', stroke: traco('s-dois0001') })
+    a.sock().drop(1006)
+    expect(a.store.getDrawing().previews).toEqual({})
+    expect(a.store.getDrawing().strokes).toHaveLength(1)
+  })
 })

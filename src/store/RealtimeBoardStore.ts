@@ -2,6 +2,7 @@ import { backoffDelay } from '../lib/backoff'
 import { throttle, type Throttled } from '../lib/throttle'
 import { CLOSE_BAD_ID, CLOSE_NO_ROOM, CLOSE_REPLACED, CLOSE_SESSION_EXPIRED, encode, parseServerMessage, type ClientMessage, type PresenceUser, type ServerMessage } from '../shared/protocol'
 import type { PalavraInput } from '../shared/palavras'
+import { MAX_TRACOS, type Stroke } from '../shared/tracos'
 import type { SavedMeta } from '../shared/professora'
 import type { Papel } from '../theme/presence'
 import type { BoardState, Instance, Move, Palavra, Pos } from '../types'
@@ -36,6 +37,12 @@ export interface RemoteCursor {
   t: number
 }
 export type Cursors = Record<string, RemoteCursor>
+
+/** Desenhos: os traços do quadro e a prévia (ao vivo, só em memória) de quem está desenhando agora. */
+export interface Drawing {
+  strokes: Stroke[]
+  previews: Record<string, Stroke>
+}
 
 /** O pedaço de WebSocket que usamos (facilita o mock nos testes). */
 export interface SocketLike {
@@ -84,6 +91,8 @@ export class RealtimeBoardStore implements BoardStore {
   private listeners = new Set<Listener>()
   private metaListeners = new Set<() => void>()
   private cursorListeners = new Set<() => void>()
+  private drawingListeners = new Set<() => void>()
+  private drawing: Drawing = { strokes: [], previews: {} }
   private meta: Meta
   private cursors: Cursors = {}
 
@@ -96,6 +105,7 @@ export class RealtimeBoardStore implements BoardStore {
 
   private readonly sendCursorThrottled: Throttled<Pos>
   private readonly sendPreviewThrottled: Throttled<{ instanceId: string; to: Pos }>
+  private readonly sendStrokePreviewThrottled: Throttled<Stroke>
   private lastCursor: Pos | null = null
   /** Cartões que EU estou arrastando: movimentos de outros para eles são ignorados nesse meio-tempo. */
   private previewAt = new Map<string, number>()
@@ -106,6 +116,8 @@ export class RealtimeBoardStore implements BoardStore {
     this.meta = { status: 'connecting', papel: null, cor: null, clientId: opts.clientId, saved: null, aviso: null, extras: [], users: [], error: null, motivo: null }
     const ms = opts.throttleMs ?? 200
     this.sendCursorThrottled = throttle((p) => this.send({ type: 'cursor', clientId: this.opts.clientId, x: p.x, y: p.y }), ms)
+    // prévia da caneta: no máximo ~1 envio a cada 200 ms, só em memória no servidor
+    this.sendStrokePreviewThrottled = throttle((st) => this.send({ type: 'stroke_preview', clientId: this.opts.clientId, stroke: st }), ms)
     this.sendPreviewThrottled = throttle(
       (m) => this.send({ type: 'move', clientId: this.opts.clientId, instanceId: m.instanceId, to: m.to, final: false }),
       ms,
@@ -126,6 +138,7 @@ export class RealtimeBoardStore implements BoardStore {
     this.retryTimer = null
     this.sendCursorThrottled.cancel()
     this.sendPreviewThrottled.cancel()
+    this.sendStrokePreviewThrottled.cancel()
     const s = this.socket
     this.socket = null
     if (s) {
@@ -137,6 +150,7 @@ export class RealtimeBoardStore implements BoardStore {
       }
     }
     this.setCursors({})
+    this.clearPreviews()
     this.setMeta({ status: 'closed' })
   }
 
@@ -161,6 +175,7 @@ export class RealtimeBoardStore implements BoardStore {
       if (this.socket !== s) return
       this.socket = null
       this.setCursors({})
+      this.clearPreviews()
       if (!this.wanted || NO_RETRY.has(ev.code)) {
         const motivo =
           ev.code === CLOSE_NO_ROOM ? 'sala_inexistente' : ev.code === CLOSE_REPLACED ? 'substituida' : ev.code === CLOSE_SESSION_EXPIRED ? 'sessao_expirada' : null
@@ -218,6 +233,7 @@ export class RealtimeBoardStore implements BoardStore {
           this.opts.onSessao?.(m.sessao.id)
         }
         this.setState(m.state)
+        this.setDrawing({ strokes: m.strokes, previews: {} })
         this.setMeta({ status: 'open', papel: m.papel, cor: m.cor, error: null, extras: m.palavras ?? [] })
         break
       case 'presence': {
@@ -244,6 +260,22 @@ export class RealtimeBoardStore implements BoardStore {
       }
       case 'reset':
         this.setState(m.state)
+        this.setDrawing({ strokes: m.strokes, previews: {} })
+        break
+      case 'stroke_add': {
+        const { [m.clientId]: _prev, ...previews } = this.drawing.previews
+        const strokes = this.drawing.strokes.some((x) => x.id === m.stroke.id) ? this.drawing.strokes : [...this.drawing.strokes, m.stroke]
+        this.setDrawing({ strokes, previews })
+        break
+      }
+      case 'stroke_remove':
+        this.setDrawing({ ...this.drawing, strokes: this.drawing.strokes.filter((x) => x.id !== m.id) })
+        break
+      case 'strokes_clear':
+        this.setDrawing({ strokes: [], previews: {} })
+        break
+      case 'stroke_preview':
+        this.setDrawing({ ...this.drawing, previews: { ...this.drawing.previews, [m.clientId]: m.stroke } })
         break
       case 'saved': {
         const resto = (this.meta.saved ?? []).filter((q) => q.id !== m.meta.id)
@@ -260,6 +292,10 @@ export class RealtimeBoardStore implements BoardStore {
         this.setCursors({ ...this.cursors, [m.clientId]: { x: m.x, y: m.y, t: Date.now() } })
         break
       case 'leave': {
+        if (m.clientId in this.drawing.previews) {
+          const { [m.clientId]: _gone, ...previews } = this.drawing.previews
+          this.setDrawing({ ...this.drawing, previews })
+        }
         if (!(m.clientId in this.cursors)) break
         const { [m.clientId]: _gone, ...rest } = this.cursors
         this.setCursors(rest)
@@ -347,6 +383,8 @@ export class RealtimeBoardStore implements BoardStore {
         this.send({ type: 'remove', clientId: cid, instanceIds: [move.instance.instanceId] })
         break
       case 'clear':
+        // Limpar quadro também apaga os desenhos (o servidor faz o mesmo e avisa os outros)
+        this.setDrawing({ strokes: [], previews: {} })
         this.send({ type: 'reset', clientId: cid, to: 'empty' })
         break
       case 'move':
@@ -356,6 +394,45 @@ export class RealtimeBoardStore implements BoardStore {
         this.send({ type: 'move', clientId: cid, instanceId: move.instanceId, to: move.to, final: true })
         break
     }
+  }
+
+  // --- caneta (só admin; o servidor confere de novo) ---------------------------
+
+  /** Acrescenta o traço pronto (ao soltar a caneta): aparece na hora aqui e é enviado inteiro. */
+  addStroke(stroke: Stroke): boolean {
+    if (this.meta.papel !== 'admin') return false
+    if (this.drawing.strokes.length >= MAX_TRACOS) {
+      this.setMeta({ error: `O quadro aceita até ${MAX_TRACOS} traços. Apague algum para continuar.` })
+      return false
+    }
+    this.sendStrokePreviewThrottled.cancel() // a prévia acabou: vale o traço final
+    this.setDrawing({ ...this.drawing, strokes: [...this.drawing.strokes, stroke] })
+    this.send({ type: 'stroke_add', clientId: this.opts.clientId, stroke })
+    return true
+  }
+
+  /** Apaga um traço inteiro (aqui na hora e para todos). */
+  removeStroke(id: string): void {
+    if (this.meta.papel !== 'admin' || !this.drawing.strokes.some((x) => x.id === id)) return
+    this.setDrawing({ ...this.drawing, strokes: this.drawing.strokes.filter((x) => x.id !== id) })
+    this.send({ type: 'stroke_remove', clientId: this.opts.clientId, id })
+  }
+
+  /** Apaga todos os desenhos (aqui na hora e para todos). */
+  clearStrokes(): void {
+    if (this.meta.papel !== 'admin' || this.drawing.strokes.length === 0) return
+    this.setDrawing({ strokes: [], previews: this.drawing.previews })
+    this.send({ type: 'strokes_clear', clientId: this.opts.clientId })
+  }
+
+  /** Prévia do traço em andamento para os outros: no máximo ~1 envio a cada 200 ms; o servidor não grava. */
+  previewStroke(stroke: Stroke): void {
+    if (this.meta.papel === 'admin') this.sendStrokePreviewThrottled(stroke)
+  }
+
+  /** O traço em andamento foi cancelado (ou virou o final): some a prévia dos outros na próxima mensagem. */
+  cancelStrokePreview(): void {
+    this.sendStrokePreviewThrottled.cancel()
   }
 
   // --- arrasto e cursor -----------------------------------------------------
@@ -394,6 +471,14 @@ export class RealtimeBoardStore implements BoardStore {
     }
   }
 
+  getDrawing = (): Drawing => this.drawing
+  subscribeDrawing = (cb: () => void): (() => void) => {
+    this.drawingListeners.add(cb)
+    return () => {
+      this.drawingListeners.delete(cb)
+    }
+  }
+
   getCursors = (): Cursors => this.cursors
   subscribeCursors = (cb: () => void): (() => void) => {
     this.cursorListeners.add(cb)
@@ -410,6 +495,15 @@ export class RealtimeBoardStore implements BoardStore {
   private setMeta(patch: Partial<Meta>): void {
     this.meta = { ...this.meta, ...patch }
     this.metaListeners.forEach((l) => l())
+  }
+
+  private setDrawing(next: Drawing): void {
+    this.drawing = next
+    this.drawingListeners.forEach((l) => l())
+  }
+
+  private clearPreviews(): void {
+    if (Object.keys(this.drawing.previews).length > 0) this.setDrawing({ ...this.drawing, previews: {} })
   }
 
   private setCursors(next: Cursors): void {
