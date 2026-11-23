@@ -3,4 +3,9 @@
 .zoom button:hover:not(:disabled) { background: #f2f4f7; }
 .zoom button:disabled { opacity: .35; cursor: default; }
 .zoom .pct { font-size: .8rem; min-width: 56px; border-left: 1px solid #e3e6eb; border-right: 1px solid #e3e6eb; }
-@media (max-width: 699px) { .zoom button { height: 42px; } }
+/* Celular: o zoom vira uma coluna no canto e fica ACIMA da paleta da caneta (a paleta ocupa o centro embaixo) */
+@media (max-width: 699px) {
+  .zoom { right: 8px; bottom: calc(var(--tray-h, 0px) + var(--dock-h, 28px) + var(--paleta-h, 0px) + 8px); flex-direction: column-reverse; }
+  .zoom button { height: 42px; padding: 0 10px; }
+  .zoom .pct { min-width: 48px; border-left: 0; border-right: 0; border-top: 1px solid #e3e6eb; border-bottom: 1px solid #e3e6eb; }
+}

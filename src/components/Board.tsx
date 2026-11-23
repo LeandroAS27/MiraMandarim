@@ -372,6 +372,8 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
           '--tray-w': trayOpen && !isMobile ? `${TRAY_W}px` : '0px',
           '--tray-h': trayOpen && isMobile ? 'var(--tray-sheet-h)' : '0px',
           '--dock-h': `${dockH}px`,
+          // altura que a paleta da caneta ocupa (só a admin a tem): no celular o zoom e a legenda sobem acima dela
+          '--paleta-h': isAdmin ? '74px' : '0px',
         } as React.CSSProperties
       }
     >
