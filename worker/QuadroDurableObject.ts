@@ -4,9 +4,10 @@ import type { Env } from './env'
 import palavrasData from '../src/data/palavras.json'
 import { CLOSE_BAD_ID, CLOSE_NO_ROOM, CLOSE_REPLACED, CLOSE_SESSION_EXPIRED, encode, parseClientMessage, type ClientMessage, type ErrorCode, type ServerMessage } from '../src/shared/protocol'
 import { decideRole, handleMessage, snapshotFor, toPresence, type RoomData } from '../src/shared/room'
+import { ExtrasCache } from '../src/shared/extrasCache'
 import { entrarComoAluno, expirou, type SessaoStore } from '../src/shared/sessoes'
 import type { Stroke } from '../src/shared/tracos'
-import type { BoardState, Palavra } from '../src/types'
+import type { BoardState } from '../src/types'
 import type { Papel } from '../src/theme/presence'
 
 export type { Env }
@@ -38,9 +39,11 @@ interface Attachment {
 export class QuadroDurableObject extends DurableObject<Env> {
   private data: RoomData = { state: {}, strokes: [] }
   private donoHash: string | null = null
-  /** Cópia (na memória) das palavras extras da admin: valem para validar cartões e vão no snapshot. */
-  private extras: Palavra[] = []
-  private extrasCarregadas = false
+  /**
+   * Cópia (só na memória) das palavras extras da admin: valem para validar cartões e vão no snapshot.
+   * Some quando a sala hiberna; ao acordar, a primeira entrada busca a lista no PROFESSORA (ver ExtrasCache).
+   */
+  private extras = new ExtrasCache(() => this.professora().listarPalavras())
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env)
@@ -81,8 +84,7 @@ export class QuadroDurableObject extends DurableObject<Env> {
     await this.ctx.storage.deleteAll()
     this.donoHash = null
     this.data = { state: {}, strokes: [] }
-    this.extras = []
-    this.extrasCarregadas = false
+    this.extras.limpar()
     return true
   }
 
@@ -118,15 +120,15 @@ export class QuadroDurableObject extends DurableObject<Env> {
     if (att.expiraEm !== null && expirou(att.expiraEm, Date.now())) return this.expulsar(ws)
 
     // depois de acordar da hibernação, busca as palavras extras antes de validar cartões
-    if ((msg.type === 'add' || msg.type === 'open') && !this.extrasCarregadas) await this.carregarExtras()
-    const valida = (id: string) => VALID_PALAVRAS.has(id) || this.extras.some((p) => p.id === id)
+    if (msg.type === 'add' || msg.type === 'open') await this.extras.garantir()
+    const valida = (id: string) => VALID_PALAVRAS.has(id) || this.extras.lista.some((p) => p.id === id)
     const out = isAcaoDeAdmin(msg)
       ? await acaoDeAdmin(this.data, msg, att.papel, this.professora(), valida)
       : handleMessage(this.data, msg, att.papel, valida)
     if (out.error) return this.sendError(ws, att.clientId, out.error.code, out.error.message)
 
     this.data = { state: out.state, strokes: out.strokes }
-    if (out.extras) this.extras = out.extras
+    if (out.extras) this.extras.definir(out.extras)
     if (out.persistState) await this.ctx.storage.put('state', out.state)
     // traços: só os finalizados (e apagar/limpar/abrir quadro salvo); a prévia nunca chega aqui
     if (out.persistStrokes) await this.ctx.storage.put('strokes', out.strokes)
@@ -177,8 +179,10 @@ export class QuadroDurableObject extends DurableObject<Env> {
     }
 
     ws.serializeAttachment({ clientId, nome, papel, expiraEm: sessao?.expiraEm ?? null } satisfies Attachment)
-    await this.carregarExtras() // sempre a lista mais nova (uma palavra pode ter sido criada em outra sala)
-    ws.send(encode(snapshotFor(papel, clientId, this.data, sessao, this.extras)))
+    // Aluno: reaproveita o cache (uma única busca por acordar da sala, nunca uma por aluno). Admin: busca de novo,
+    // porque é ela quem edita e uma palavra pode ter sido criada em outra sala.
+    const extras = papel === 'admin' ? await this.extras.atualizar() : await this.extras.garantir()
+    ws.send(encode(snapshotFor(papel, clientId, this.data, sessao, extras)))
     this.broadcastPresence()
   }
 
@@ -194,15 +198,6 @@ export class QuadroDurableObject extends DurableObject<Env> {
       adicionarPalavra: (dados) => stub.adicionarPalavra(dados),
       editarPalavra: (id, dados) => stub.editarPalavra(id, dados),
       excluirPalavra: (id) => stub.excluirPalavra(id),
-    }
-  }
-
-  private async carregarExtras(): Promise<void> {
-    try {
-      this.extras = await this.professora().listarPalavras()
-      this.extrasCarregadas = true
-    } catch {
-      // sem resposta: segue com o que já tinha (o próximo join tenta de novo)
     }
   }
 

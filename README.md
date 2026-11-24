@@ -113,7 +113,9 @@ A admin escreve na lousa com uma caneta; os **alunos só veem** os desenhos, em 
 - A palavra entra no banco com o selo **"E"** no lugar do selo de HSK, com a cor da classe, e ganha o filtro **Extras** ao lado de Todos, HSK 1, HSK 2 e HSK 3.
 - Ficam no **dicionário da admin** (`PROFESSORA`, um único registro, até 300 palavras) e aparecem em **todas as salas dela**, separadas das 978 originais (a lista original nunca é alterada). Quem entra na sala (aluno ou admin) recebe as extras no `snapshot`.
 - A admin pode **editar** e **excluir** uma palavra extra. Excluir tira os cartões dela da sala atual; em outras salas e quadros salvos, o cartão de uma palavra que não existe mais simplesmente não aparece (e é descartado ao abrir um quadro salvo).
-- Limite conhecido: uma palavra nova só aparece em **outra sala já aberta** quando alguém entra de novo nela (a sala consulta o dicionário a cada entrada).
+- **Como a palavra chega às outras salas (sem gastar requisição à toa):** as extras pertencem à professora, não à sala, e vivem no servidor (`PROFESSORA`), então não somem ao fechar o navegador, trocar de computador ou limpar o cache. Cada sala guarda só uma **cópia na memória** (`ExtrasCache`). Uma sala que ninguém usa **hiberna e não gasta nada**; ao hibernar, a cópia some. Quando alguém entra nela, a sala acorda e **busca a lista uma única vez**: por isso a palavra criada em outra sala aparece assim que se entra nesta, sem nenhum aviso entre salas. Enquanto a sala está acordada, as entradas seguintes reaproveitam a cópia (**nunca uma consulta por aluno**, por cursor ou por movimento); só a **admin**, ao entrar, força uma busca nova. Na sala onde a admin cria, edita ou exclui, a mudança vale **na hora** para todos os conectados.
+- O aluno nunca fala com o `PROFESSORA`: quem busca é a sala, e ela repassa as extras no `snapshot`.
+- **Limite conhecido:** quem já está conectado numa *outra* sala, no momento exato da edição, só vê a palavra nova quando a sala dele hibernar e acordar (segundos a minutos depois) ou quando ele reconectar. Como a professora usa uma sala por vez, isso foi aceito para não acordar salas paradas.
 
 ## Nome, cursores e papéis na tela
 
@@ -247,7 +249,7 @@ Premissas: cada pessoa move o mouse sobre o quadro em 30% do tempo, cursor a no 
 | --- | --- |
 | Cursores: 30 × 5 × 0,3 × 3 600 s ≈ 162 000 mensagens ÷ 20 | **~8 100** |
 | Arrasto ao vivo: ~20 arrastos de 3 s por pessoa ≈ 9 000 mensagens ÷ 20 | ~450 |
-| Entradas (cada `join` consulta o dicionário da admin: +1 requisição), adds, drops, presença | < 150 |
+| Entradas (a sala busca o dicionário da admin **uma vez por acordar**, não por aluno), adds, drops, presença | < 100 |
 | Caneta da admin: ~200 traços numa aula ≈ 200 mensagens finais + ~3 000 de prévia (≤ 5 por segundo, só enquanto desenha) ÷ 20 | ~160 |
 | **Total** | **~8 900 (≈ 9% das 100 mil)** |
 
