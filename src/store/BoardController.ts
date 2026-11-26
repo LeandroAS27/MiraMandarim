@@ -22,6 +22,16 @@ export class BoardController {
     this.store.applyMove({ type: 'move', instanceId, from: inst.pos, to })
   }
 
+  /** Move vários cartões de uma vez (seleção em grupo): um único passo, uma única mensagem. */
+  moveMany(moves: { instanceId: string; to: Pos }[]): void {
+    const estado = this.store.getState()
+    const mudam = moves.filter((m) => {
+      const i = estado[m.instanceId]
+      return i && (i.pos.x !== m.to.x || i.pos.y !== m.to.y)
+    })
+    if (mudam.length > 0) this.store.applyMove({ type: 'moveMany', moves: mudam })
+  }
+
   remove(instanceId: string): void {
     const instance = this.store.getState()[instanceId]
     if (!instance) return

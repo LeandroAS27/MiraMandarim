@@ -504,4 +504,30 @@ describe('RealtimeBoardStore', () => {
     vi.advanceTimersByTime(1000)
     expect(a.store.getDrawing().previews).toEqual({})
   })
+
+  // --- seleção em grupo -------------------------------------------------------
+
+  it('mover um grupo: aplica aqui na hora e envia UMA única mensagem move_many', () => {
+    const a = make()
+    a.sock().open()
+    const i1 = { instanceId: 'i-aaaa1111', palavraId: 'p001', pos: { x: 0, y: 0 } }
+    const i2 = { instanceId: 'i-bbbb2222', palavraId: 'p001', pos: { x: 100, y: 0 } }
+    a.sock().receive(snapshot({ state: { [i1.instanceId]: i1, [i2.instanceId]: i2 } }))
+    a.store.applyMove({ type: 'moveMany', moves: [{ instanceId: i1.instanceId, to: { x: 10, y: 10 } }, { instanceId: i2.instanceId, to: { x: 110, y: 10 } }] })
+    expect(a.store.getState()[i1.instanceId].pos).toEqual({ x: 10, y: 10 })
+    expect(a.store.getState()[i2.instanceId].pos).toEqual({ x: 110, y: 10 })
+    expect(a.sock().ofType('move_many')).toHaveLength(1)
+    expect(a.sock().ofType('move')).toHaveLength(0)
+  })
+
+  it('o grupo movido por outra pessoa chega de uma vez', () => {
+    const a = make()
+    a.sock().open()
+    const i1 = { instanceId: 'i-aaaa1111', palavraId: 'p001', pos: { x: 0, y: 0 } }
+    const i2 = { instanceId: 'i-bbbb2222', palavraId: 'p001', pos: { x: 100, y: 0 } }
+    a.sock().receive(snapshot({ state: { [i1.instanceId]: i1, [i2.instanceId]: i2 } }))
+    a.sock().receive({ type: 'move_many', clientId: 'outro-cliente-1', moves: [{ instanceId: i1.instanceId, to: { x: 7, y: 8 } }, { instanceId: i2.instanceId, to: { x: 107, y: 8 } }] })
+    expect(a.store.getState()[i1.instanceId].pos).toEqual({ x: 7, y: 8 })
+    expect(a.store.getState()[i2.instanceId].pos).toEqual({ x: 107, y: 8 })
+  })
 })

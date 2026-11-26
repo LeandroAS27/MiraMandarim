@@ -14,6 +14,17 @@ export function applyMoveToState(current: BoardState, move: Move): BoardState | 
     case 'remove':
       delete next[move.instance.instanceId]
       break
+    case 'moveMany': {
+      let mudou = false
+      for (const m of move.moves) {
+        const inst = next[m.instanceId]
+        if (!inst) continue
+        next[m.instanceId] = { ...inst, pos: m.to }
+        mudou = true
+      }
+      if (!mudou) return null
+      break
+    }
     case 'move': {
       const inst = next[move.instanceId]
       if (!inst) return null

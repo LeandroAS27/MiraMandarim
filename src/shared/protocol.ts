@@ -33,6 +33,8 @@ export type ClientMessage =
    *  `sessao` é a sessão de aluno que o servidor emitiu antes (vale 4 horas). */
   | { type: 'join'; clientId: string; nome: string; token?: string; sessao?: string }
   | { type: 'move'; clientId: string; instanceId: string; to: Pos; final: boolean }
+  /** Vários cartões movidos juntos (seleção em grupo): uma única mensagem e uma única gravação. */
+  | { type: 'move_many'; clientId: string; moves: { instanceId: string; to: Pos }[] }
   | { type: 'add'; clientId: string; instances: Instance[] }
   | { type: 'remove'; clientId: string; instanceIds: string[] }
   /** Salva o quadro atual com um nome (só admin). */
@@ -84,6 +86,7 @@ export type ServerMessage =
   | { type: 'palavras'; clientId: string; items: Palavra[] }
   | { type: 'presence'; clientId: string; users: PresenceUser[] }
   | { type: 'move'; clientId: string; instanceId: string; to: Pos; final: boolean }
+  | { type: 'move_many'; clientId: string; moves: { instanceId: string; to: Pos }[] }
   | { type: 'add'; clientId: string; instances: Instance[] }
   | { type: 'remove'; clientId: string; instanceIds: string[] }
   /** Só para quem salvou. */
@@ -157,6 +160,16 @@ export function parseClientMessage(raw: unknown): ParseResult<ClientMessage> {
       const to = parsePos(d.to)
       if (!isStr(d.instanceId) || !INSTANCE_ID_RE.test(d.instanceId) || !to) return bad('Movimento inválido.')
       return { ok: true, msg: { type: 'move', clientId, instanceId: d.instanceId, to, final: d.final === true } }
+    }
+    case 'move_many': {
+      if (!Array.isArray(d.moves) || d.moves.length === 0 || d.moves.length > MAX_BATCH) return bad('Lista de movimentos inválida.')
+      const moves: { instanceId: string; to: Pos }[] = []
+      for (const v of d.moves) {
+        const to = isObj(v) ? parsePos(v.to) : null
+        if (!isObj(v) || !isStr(v.instanceId) || !INSTANCE_ID_RE.test(v.instanceId) || !to) return bad('Movimento inválido.')
+        moves.push({ instanceId: v.instanceId, to })
+      }
+      return { ok: true, msg: { type: 'move_many', clientId, moves } }
     }
     case 'add': {
       if (!Array.isArray(d.instances) || d.instances.length === 0 || d.instances.length > MAX_BATCH) return bad('Lista de cópias inválida.')
@@ -289,6 +302,15 @@ export function parseServerMessage(raw: unknown): ParseResult<ServerMessage> {
       const to = parsePos(d.to)
       if (!isStr(d.instanceId) || !to) return bad('move inválido.')
       return { ok: true, msg: { type: 'move', clientId, instanceId: d.instanceId, to, final: d.final === true } }
+    }
+    case 'move_many': {
+      if (!Array.isArray(d.moves)) return bad('move_many inválido.')
+      const moves: { instanceId: string; to: Pos }[] = []
+      for (const v of d.moves) {
+        const to = isObj(v) ? parsePos(v.to) : null
+        if (isObj(v) && isStr(v.instanceId) && to) moves.push({ instanceId: v.instanceId, to })
+      }
+      return { ok: true, msg: { type: 'move_many', clientId, moves } }
     }
     case 'add': {
       if (!Array.isArray(d.instances)) return bad('add inválido.')

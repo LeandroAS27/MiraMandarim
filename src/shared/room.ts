@@ -1,4 +1,4 @@
-import type { BoardState, Instance, Palavra } from '../types'
+import type { BoardState, Instance, Palavra, Pos } from '../types'
 import { colorFor, type Papel } from '../theme/presence'
 import { TOKEN_RE } from './chaves'
 import { MAX_TRACOS, type Stroke } from './tracos'
@@ -86,7 +86,7 @@ const fail = (data: RoomData, code: ErrorCode, message: string): Outcome => ({ .
  */
 export function handleMessage(
   data: RoomData,
-  msg: Extract<ClientMessage, { type: 'cursor' | 'move' | 'add' | 'remove' | 'reset' | 'stroke_add' | 'stroke_preview' | 'stroke_remove' | 'strokes_clear' }>,
+  msg: Extract<ClientMessage, { type: 'cursor' | 'move' | 'move_many' | 'add' | 'remove' | 'reset' | 'stroke_add' | 'stroke_preview' | 'stroke_remove' | 'strokes_clear' }>,
   papel: Papel,
   isValidPalavra: (palavraId: string) => boolean,
 ): Outcome {
@@ -103,6 +103,20 @@ export function handleMessage(
       const state = { ...data.state, [msg.instanceId]: { ...inst, pos: msg.to } }
       // Durante o arrasto (final = false) só memória + broadcast; ao soltar, grava.
       return { ...noop(data), state, persistState: msg.final, broadcast: { type: 'move', clientId, instanceId: msg.instanceId, to: msg.to, final: msg.final } }
+    }
+
+    case 'move_many': {
+      // seleção em grupo: todos os cartões de uma vez, com uma única gravação
+      const state = { ...data.state }
+      const aplicados: { instanceId: string; to: Pos }[] = []
+      for (const m of msg.moves) {
+        const inst = state[m.instanceId]
+        if (!inst) continue
+        state[m.instanceId] = { ...inst, pos: m.to }
+        aplicados.push(m)
+      }
+      if (aplicados.length === 0) return noop(data)
+      return { ...noop(data), state, persistState: true, broadcast: { type: 'move_many', clientId, moves: aplicados } }
     }
 
     case 'add': {

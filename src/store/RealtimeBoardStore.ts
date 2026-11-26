@@ -253,6 +253,9 @@ export class RealtimeBoardStore implements BoardStore {
         this.applyRemote({ type: 'move', instanceId: m.instanceId, from: m.to, to: m.to })
         break
       }
+      case 'move_many':
+        this.applyRemote({ type: 'moveMany', moves: m.moves })
+        break
       case 'add':
         this.applyRemote({ type: 'restore', instances: m.instances })
         break
@@ -401,6 +404,12 @@ export class RealtimeBoardStore implements BoardStore {
         // Limpar quadro também apaga os desenhos (o servidor faz o mesmo e avisa os outros)
         this.setDrawing({ strokes: [], previews: {} })
         this.send({ type: 'reset', clientId: cid, to: 'empty' })
+        break
+      case 'moveMany':
+        // Grupo solto: uma única mensagem (o servidor grava uma vez)
+        this.sendPreviewThrottled.cancel()
+        for (const m of move.moves) this.previewAt.delete(m.instanceId)
+        this.send({ type: 'move_many', clientId: cid, moves: move.moves })
         break
       case 'move':
         // Ao soltar: cancela o envio agendado do arrasto e manda a posição final (o servidor grava).
