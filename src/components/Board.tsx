@@ -24,7 +24,8 @@ import { Draggable } from './Draggable'
 import { SentencePanel } from './SentencePanel'
 import { StickyNote } from './StickyNote'
 import { Legend } from './Legend'
-import { arrasteDePostitLigado, type Modo } from '../lib/desenho'
+import { arrasteDePostitLigado, modoEfetivo, type Modo } from '../lib/desenho'
+import { alternar, cartoesNoRetangulo, limitarDeslocamento, moverGrupo, podar, retanguloEntre, unir, type Retangulo } from '../lib/selecao'
 import { COR_PADRAO, type CorId } from '../shared/tracos'
 import { DrawingLayer } from './DrawingLayer'
 import { Paleta } from './Paleta'
@@ -67,7 +68,7 @@ interface BoardProps {
 
 export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom, onLeave, sessao, onSessao, onSessaoExpirada }: BoardProps) {
   const {
-    instances, createInstance, moveInstance, removeInstance, clearBoard, save, listSaved, openSaved, deleteSaved, clearNotices, addPalavra, editPalavra, removePalavra,
+    instances, createInstance, moveInstance, removeInstance, moveInstances, clearBoard, save, listSaved, openSaved, deleteSaved, clearNotices, addPalavra, editPalavra, removePalavra,
     previewMove, cancelPreview, sendCursor, meta, store,
   } = useBoard(boardId, { clientId, nome, token, sessao, onSessao })
   const isAdmin = meta.papel === 'admin'
@@ -77,7 +78,22 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
   // Caneta e apagador (só admin). O modo é só local: nunca vai para o servidor nem para as preferências.
   const [modo, setModo] = useState<Modo>('mover')
   const [corCaneta, setCorCaneta] = useState<CorId>(COR_PADRAO)
-  const modoAtivo: Modo = isAdmin ? modo : 'mover'
+  const modoAtivo: Modo = modoEfetivo(modo, isAdmin)
+  // Seleção em grupo (só local: não vai ao servidor). Arrastar um cartão selecionado move o grupo todo.
+  const [selecao, setSelecao] = useState<Set<string>>(() => new Set())
+  const [marquee, setMarquee] = useState<Retangulo | null>(null)
+  const [dragDelta, setDragDelta] = useState<XY | null>(null)
+  const selecaoRef = useRef(selecao)
+  selecaoRef.current = selecao
+  const instancesRef = useRef(instances)
+  instancesRef.current = instances
+  const modoRef = useRef(modoAtivo)
+  modoRef.current = modoAtivo
+  const dragFim = useRef(0)
+  // o que sumiu do quadro (outra pessoa removeu, ou o quadro foi trocado) sai da seleção
+  useEffect(() => {
+    setSelecao((s) => podar(s, instances))
+  }, [instances])
   const totalTracos = useSyncExternalStore(store.subscribeDrawing, () => store.getDrawing().strokes.length)
   // palavras: as 300 originais + as extras da admin (que chegam do servidor)
   const todas = useMemo(() => juntarPalavras(palavras, meta.extras), [meta.extras])
@@ -195,12 +211,13 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
   // Nos modos caneta e apagador o arraste de post-its fica desligado (nenhum sensor ativo).
   const sensorsOff = useSensors()
 
-  // Esc volta para o modo mover.
+  // Esc limpa a seleção e volta para o modo mover.
   useEffect(() => {
-    if (modo === 'mover') return
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null
-      if (e.key === 'Escape' && !(t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA'))) setModo('mover')
+      if (e.key !== 'Escape' || (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA'))) return
+      setSelecao((s) => (s.size > 0 ? new Set() : s))
+      if (modo !== 'mover') setModo('mover')
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -258,7 +275,23 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
     return () => window.removeEventListener('pointermove', onMove)
   }, [sendCursor])
 
-  const onDragStart = ({ active }: DragStartEvent) => setActiveId(String(active.id))
+  const onDragStart = ({ active }: DragStartEvent) => {
+    const id = String(active.id)
+    setActiveId(id)
+    // arrastar um cartão que NÃO está selecionado solta a seleção (move só ele)
+    const data = active.data.current as DragData | undefined
+    if (data?.kind === 'instance' && !selecaoRef.current.has(id)) setSelecao((s) => (s.size > 0 ? new Set() : s))
+  }
+
+  /** O cartão arrastado faz parte de um grupo (2 ou mais selecionados)? */
+  const emGrupo = (id: string) => selecaoRef.current.has(id) && selecaoRef.current.size > 1
+
+  /** Deslocamento do grupo, já limitado para nenhum cartão sair do quadro. */
+  const deslocamentoDoGrupo = (id: string, to: XY): XY | null => {
+    const orig = instancesRef.current[id]
+    if (!orig) return null
+    return limitarDeslocamento(instancesRef.current, selecaoRef.current, { x: to.x - orig.pos.x, y: to.y - orig.pos.y })
+  }
 
   /** Onde o cartão cairia agora (coordenadas do quadro), ou null se o ponteiro está fora do quadro. */
   const canvasPos = (): XY | null => {
@@ -278,16 +311,37 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
     const data = active.data.current as DragData | undefined
     if (data?.kind !== 'instance' || (trayOpen && inside(tray.current, pointer.current))) return
     const to = canvasPos()
-    if (to) previewMove(data.instanceId, to)
+    if (!to) return
+    if (emGrupo(data.instanceId)) {
+      // o grupo todo anda junto (os outros cartões selecionados acompanham pelo deslocamento)
+      const d = deslocamentoDoGrupo(data.instanceId, to)
+      if (d) setDragDelta((prev) => (prev && prev.x === d.x && prev.y === d.y ? prev : d))
+      return
+    }
+    previewMove(data.instanceId, to)
   }
 
   // O estado global só muda ao soltar.
   const onDragEnd = ({ active }: DragEndEvent) => {
     setActiveId(null)
+    setDragDelta(null)
+    dragFim.current = performance.now() // o clique que o navegador solta depois do arrasto não vale como seleção
     const data = active.data.current as DragData | undefined
     if (!data) return
     const p = pointer.current
     const to = canvasPos()
+    if (data.kind === 'instance' && emGrupo(data.instanceId)) {
+      if (trayOpen && inside(tray.current, p)) {
+        // grupo solto no banco: remove todos
+        for (const id of selecaoRef.current) removeInstance(id)
+        setSelecao(new Set())
+      } else if (to) {
+        const d = deslocamentoDoGrupo(data.instanceId, to)
+        if (d) moveInstances(moverGrupo(instancesRef.current, selecaoRef.current, d)) // uma mensagem para o grupo todo
+        setTopId(data.instanceId)
+      }
+      return
+    }
     if (trayOpen && inside(tray.current, p)) {
       // solto no banco: remove a cópia (uma palavra do banco solta no banco não faz nada)
       if (data.kind === 'instance') removeInstance(data.instanceId)
@@ -304,17 +358,54 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
 
   const onDragCancel = ({ active }: { active: { data: { current?: unknown } } }) => {
     setActiveId(null)
+    setDragDelta(null)
     const data = active.data.current as DragData | undefined
     if (data?.kind === 'instance') cancelPreview(data.instanceId)
   }
 
-  // Pan arrastando o fundo (mouse). No toque, o scroll nativo cuida disso.
+  // Clique no cartão: no modo Selecionar (toque ou mouse) ou com Ctrl/Shift/Cmd, liga e desliga o cartão na seleção.
+  const onCardClick = useCallback((id: string, e: React.MouseEvent) => {
+    if (performance.now() - dragFim.current < 300) return
+    if (modoRef.current === 'selecionar' || e.ctrlKey || e.metaKey || e.shiftKey) setSelecao((s) => alternar(s, id))
+  }, [])
+
+  // Fundo do quadro:
+  //  - modo Selecionar (ou Shift+arrastar com o mouse): arrasta um retângulo e seleciona os cartões que ele toca;
+  //  - modo Mover: arrasta o fundo (pan, só mouse; no toque o scroll nativo cuida disso). Um clique no fundo solta a seleção.
   const onBgPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     const vp = viewport.current
-    if (!vp || e.target !== e.currentTarget || e.pointerType !== 'mouse' || e.button !== 0) return
+    if (!vp || e.target !== e.currentTarget || e.button !== 0) return
+    const aditivo = e.shiftKey || e.ctrlKey || e.metaKey
+    if (modoRef.current === 'selecionar' || (e.pointerType === 'mouse' && e.shiftKey)) {
+      e.preventDefault()
+      const p0 = toCanvas(e.clientX, e.clientY)
+      const base = aditivo ? new Set(selecaoRef.current) : new Set<string>()
+      let mexeu = false
+      const move = (ev: PointerEvent) => {
+        const r = retanguloEntre(p0, toCanvas(ev.clientX, ev.clientY))
+        if (!mexeu && r.w <= 3 && r.h <= 3) return
+        mexeu = true
+        setMarquee(r)
+        setSelecao(unir(base, cartoesNoRetangulo(instancesRef.current, r)))
+      }
+      const up = () => {
+        window.removeEventListener('pointermove', move)
+        window.removeEventListener('pointerup', up)
+        window.removeEventListener('pointercancel', up)
+        setMarquee(null)
+        if (!mexeu && !aditivo) setSelecao((s) => (s.size > 0 ? new Set() : s)) // clique no fundo: solta a seleção
+      }
+      window.addEventListener('pointermove', move)
+      window.addEventListener('pointerup', up)
+      window.addEventListener('pointercancel', up)
+      return
+    }
+    if (e.pointerType !== 'mouse') return
     const start = { x: e.clientX, y: e.clientY, sl: vp.scrollLeft, st: vp.scrollTop }
+    let moveu = false
     vp.classList.add(styles.panning)
     const move = (ev: PointerEvent) => {
+      if (Math.abs(ev.clientX - start.x) + Math.abs(ev.clientY - start.y) > 3) moveu = true
       vp.scrollLeft = start.sl - (ev.clientX - start.x)
       vp.scrollTop = start.st - (ev.clientY - start.y)
     }
@@ -322,6 +413,7 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
       vp.classList.remove(styles.panning)
       window.removeEventListener('pointermove', move)
       window.removeEventListener('pointerup', up)
+      if (!moveu) setSelecao((s) => (s.size > 0 ? new Set() : s))
     }
     window.addEventListener('pointermove', move)
     window.addEventListener('pointerup', up)
@@ -372,8 +464,8 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
           '--tray-w': trayOpen && !isMobile ? `${TRAY_W}px` : '0px',
           '--tray-h': trayOpen && isMobile ? 'var(--tray-sheet-h)' : '0px',
           '--dock-h': `${dockH}px`,
-          // altura que a paleta da caneta ocupa (só a admin a tem): no celular o zoom e a legenda sobem acima dela
-          '--paleta-h': isAdmin ? '74px' : '0px',
+          // altura que a paleta ocupa (todos têm Mover e Selecionar): no celular o zoom e a legenda sobem acima dela
+          '--paleta-h': '74px',
         } as React.CSSProperties
       }
     >
@@ -421,7 +513,14 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
           <div style={{ width: CANVAS_W * zoom, height: CANVAS_H * zoom }}>
             <div
               className={styles.canvas}
-              style={{ width: CANVAS_W, height: CANVAS_H, transform: `scale(${zoom})` }}
+              style={{
+                width: CANVAS_W,
+                height: CANVAS_H,
+                transform: `scale(${zoom})`,
+                // no modo Selecionar o toque no fundo desenha o retângulo, em vez de rolar a tela
+                touchAction: modoAtivo === 'selecionar' ? 'none' : undefined,
+                cursor: modoAtivo === 'selecionar' ? 'crosshair' : undefined,
+              }}
               onPointerDown={onBgPointerDown}
             >
               {placed.map((i) => (
@@ -434,15 +533,21 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
                   showTraducao={prefs.showTraducao}
                   onRemove={removeNote}
                   onDuplicate={duplicateNote}
+                  selected={selecao.has(i.instanceId)}
+                  offset={dragDelta && selecao.has(i.instanceId) && i.instanceId !== activeId ? dragDelta : undefined}
+                  onClickCard={onCardClick}
                 />
               ))}
+              {marquee && <div className={styles.marquee} style={{ left: marquee.x, top: marquee.y, width: marquee.w, height: marquee.h }} />}
               <DrawingLayer store={store} modo={modoAtivo} cor={corCaneta} isAdmin={isAdmin} zoom={zoom} toCanvas={toCanvas} />
               <Cursors store={store} zoom={zoom} />
             </div>
           </div>
         </div>
-        {isAdmin && (
+        {(
           <Paleta
+            isAdmin={isAdmin}
+            selecionados={selecao.size}
             modo={modoAtivo}
             onModo={setModo}
             cor={corCaneta}

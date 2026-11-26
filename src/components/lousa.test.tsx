@@ -160,7 +160,7 @@ const porNome = (raiz: ParentNode, re: RegExp) =>
 
 describe('paleta flutuante da lousa (estilo Freeform, só ícones)', () => {
   const props = (over: Record<string, unknown> = {}) =>
-    ({ modo: 'mover', onModo: vi.fn(), cor: 'preto', onCor: vi.fn(), temTracos: true, onApagarTudo: vi.fn(), ...over }) as unknown as React.ComponentProps<typeof Paleta>
+    ({ isAdmin: true, selecionados: 0, modo: 'mover', onModo: vi.fn(), cor: 'preto', onCor: vi.fn(), temTracos: true, onApagarTudo: vi.fn(), ...over }) as unknown as React.ComponentProps<typeof Paleta>
 
   it('tem Mover, Caneta, Apagador e Apagar todos, todos só com ícone (sem texto visível)', () => {
     const div = render(<Paleta {...props()} />)
@@ -202,6 +202,25 @@ describe('paleta flutuante da lousa (estilo Freeform, só ícones)', () => {
     await act(async () => apagar.click())
     await act(async () => porNome(document.body, /^Apagar desenhos/)?.click())
     expect(p.onApagarTudo).toHaveBeenCalledTimes(1)
+  })
+
+  it('o aluno só tem Mover e Selecionar (sem caneta, apagador, cores nem lixeira)', () => {
+    const div = render(<Paleta {...props({ isAdmin: false, modo: 'caneta' })} />)
+    const nomes = botoes(div).map((b) => b.getAttribute('aria-label'))
+    expect(nomes).toEqual(['Mover', 'Selecionar'])
+    expect(div.querySelectorAll('button[aria-label^="Cor "]')).toHaveLength(0)
+  })
+
+  it('Selecionar: aparece para a admin também, marca o modo e mostra quantos cartões estão selecionados', () => {
+    const p = props({ modo: 'selecionar', selecionados: 3 })
+    const div = render(<Paleta {...p} />)
+    const sel = porNome(div, /^Selecionar/) as HTMLButtonElement
+    expect(sel.getAttribute('aria-pressed')).toBe('true')
+    expect(sel.textContent).toBe('3')
+    act(() => porNome(div, /^Mover/)?.click())
+    expect(p.onModo).toHaveBeenCalledWith('mover')
+    act(() => sel.click())
+    expect(p.onModo).toHaveBeenCalledWith('selecionar')
   })
 
   it('sem traços, apagar todos fica desligado', () => {

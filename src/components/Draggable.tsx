@@ -14,6 +14,12 @@ interface Props {
   onRemove: (instanceId: string) => void
   /** Duplica este cartão (cópia da mesma palavra, um pouco deslocada). */
   onDuplicate: (instanceId: string) => void
+  /** Está na seleção em grupo (contorno azul). */
+  selected?: boolean
+  /** Enquanto o grupo é arrastado, os outros cartões selecionados andam junto por este deslocamento (px do quadro). */
+  offset?: { x: number; y: number }
+  /** Clique no cartão (seleção: Ctrl/Shift+clique, ou toque no modo Selecionar). */
+  onClickCard?: (instanceId: string, e: React.MouseEvent) => void
 }
 
 /**
@@ -22,7 +28,7 @@ interface Props {
  * transform, e o DragOverlay precisa partir do ponto certo.
  * Durante o arraste quem aparece é o DragOverlay; este fica invisível no lugar.
  */
-export const Draggable = memo(function Draggable({ instance, palavra, isTop, showPinyin, showTraducao, onRemove, onDuplicate }: Props) {
+export const Draggable = memo(function Draggable({ instance, palavra, isTop, showPinyin, showTraducao, onRemove, onDuplicate, selected, offset, onClickCard }: Props) {
   const { instanceId, pos } = instance
   const { setNodeRef, attributes, listeners, isDragging } = useDraggable({
     id: instanceId,
@@ -33,7 +39,9 @@ export const Draggable = memo(function Draggable({ instance, palavra, isTop, sho
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      className={styles.wrap}
+      className={`${styles.wrap} ${selected ? styles.selected : ''}`}
+      onClick={(e) => onClickCard?.(instanceId, e)}
+      aria-selected={selected || undefined}
       onKeyDown={(e) => {
         if (e.key === 'Delete' || e.key === 'Backspace') {
           e.preventDefault()
@@ -48,6 +56,7 @@ export const Draggable = memo(function Draggable({ instance, palavra, isTop, sho
         top: pos.y,
         zIndex: isTop ? 10 : 1,
         opacity: isDragging ? 0 : 1,
+        transform: offset ? `translate(${offset.x}px, ${offset.y}px)` : undefined,
       }}
     >
       <StickyNote palavra={palavra} showPinyin={showPinyin} showTraducao={showTraducao} />

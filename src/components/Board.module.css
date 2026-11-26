@@ -3,3 +3,5 @@
 .canvas { transform-origin: 0 0; position: relative; background-color: var(--bg); background-image: radial-gradient(var(--dot) 1px, transparent 1px); background-size: 24px 24px; cursor: grab; }
 .panning, .panning * { cursor: grabbing !important; user-select: none; }
 .hint { position: fixed; top: calc((100vh - var(--tray-h, 0px) - var(--dock-h, 28px)) / 2); left: calc(var(--tray-w, 0px) + (100vw - var(--tray-w, 0px)) / 2); transform: translate(-50%, -50%); margin: 0; color: var(--muted); font-size: 1.05rem; pointer-events: none; text-align: center; }
+/* retângulo de seleção (arrastar no fundo no modo Selecionar, ou Shift+arrastar) */
+.marquee { position: absolute; z-index: 15; pointer-events: none; border: 1.5px dashed #0969da; background: rgba(9, 105, 218, 0.08); border-radius: 3px; }

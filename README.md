@@ -139,6 +139,7 @@ Toda mensagem tem `type` e `clientId`. O `clientId` é gerado a cada carregament
 | --- | --- | --- |
 | `join` | `nome`, `token?` (admin), `sessao?` (aluno) | todos; também troca o nome |
 | `move` | `instanceId`, `to`, `final` | todos |
+| `move_many` | `moves: [{ instanceId, to }]` (grupo solto; até 400 cartões) | todos |
 | `add` | `instances` | todos |
 | `remove` | `instanceIds` | todos |
 | `cursor` | `x`, `y` | todos |
@@ -163,6 +164,7 @@ Toda mensagem tem `type` e `clientId`. O `clientId` é gerado a cada carregament
 | `presence` | todos | `users: [{ clientId, nome, papel, cor }]` |
 | `move`, `add`, `remove`, `cursor` | os outros | os mesmos campos da mensagem original |
 | `reset` | todos | `to` (`"empty"` ou `"saved"`), `state`, `strokes` |
+| `move_many` | os outros | `moves` |
 | `stroke_add`, `stroke_preview` | os outros | `stroke` |
 | `stroke_remove` | os outros | `id` |
 | `strokes_clear` | os outros | — |
@@ -280,6 +282,12 @@ Premissas: cada pessoa move o mouse sobre o quadro em 30% do tempo, cursor a no 
 
 - A coluna ao lado (no celular, uma gaveta embaixo) é um **banco**: arrastar uma palavra para o quadro cria uma **cópia**, e a palavra continua no banco. Cada cópia tem um `instanceId` próprio.
 - Para remover uma cópia: arraste-a de volta para o banco, ou clique no **×** (ou selecione e aperte Delete). Para **duplicar** um cartão que já está na lousa, clique no **⧉** (ao lado do ×) ou aperte **Ctrl+D** com o cartão selecionado: nasce uma cópia da mesma palavra, um pouco deslocada. Todos podem remover e duplicar. No toque o × e o ⧉ ficam sempre visíveis.
+- **Selecionar vários cartões e mover juntos** (todos podem, professora e alunos). A seleção é só sua: não vai ao servidor nem aparece para os outros, só o resultado (os cartões movidos).
+  - **Modo Selecionar** (ícone de retângulo tracejado na paleta flutuante, com a contagem de cartões selecionados): **arraste um retângulo** no fundo da lousa e todos os cartões que ele tocar são selecionados, ou **toque nos cartões** um a um (liga e desliga), como se estivesse juntando post-it por post-it. No celular o toque no fundo desenha o retângulo em vez de rolar a tela.
+  - **No computador, sem trocar de modo:** **Ctrl/Cmd/Shift + clique** num cartão liga ou desliga ele na seleção, e **Shift + arrastar** no fundo desenha o retângulo (somando ao que já estava selecionado, se segurar Ctrl/Cmd/Shift desde o começo).
+  - **Mover o grupo:** arraste qualquer cartão selecionado; todos andam juntos, **mantendo a distância entre si**, e o grupo para na borda do quadro sem se deformar. Arrastar um cartão que não está selecionado move só ele. Soltar o grupo no banco de palavras remove todos.
+  - **Soltar a seleção:** clique no fundo, ou **Esc** (que também volta ao modo Mover). Cartões que outra pessoa remover saem da seleção sozinhos.
+  - Custo: o grupo vai numa **única mensagem** (`move_many`) e o servidor grava **uma vez**, não uma por cartão.
 - **Busca:** por hanzi, pinyin (com ou sem tom, ex.: `ni`, `nǐ`) ou tradução (com ou sem acento).
 - **Filtro:** Todos, HSK 1, HSK 2, HSK 3 ou **Extras**. Cada cartão tem um selo no canto superior direito: **1**, **2** ou **3** nas originais, **E** nas extras.
 

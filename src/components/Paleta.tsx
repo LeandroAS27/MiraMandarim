@@ -3,10 +3,14 @@ import { useConfirm } from '../hooks/useConfirm'
 import type { Modo } from '../lib/desenho'
 import { COR_IDS, type CorId } from '../shared/tracos'
 import { CORES_TRACO } from '../theme/tracos'
-import { IconeApagador, IconeCaneta, IconeLixeira, IconeMover } from './icons'
+import { IconeApagador, IconeCaneta, IconeLixeira, IconeMover, IconeSelecionar } from './icons'
 import styles from './Paleta.module.css'
 
 interface Props {
+  /** Só a admin tem caneta, apagador e lixeira; todos têm Mover e Selecionar. */
+  isAdmin: boolean
+  /** Quantos cartões estão selecionados (aparece no botão Selecionar). */
+  selecionados: number
   modo: Modo
   onModo: (m: Modo) => void
   cor: CorId
@@ -17,9 +21,9 @@ interface Props {
 
 /**
  * Paleta de ferramentas da lousa, flutuante embaixo (estilo Freeform): só ícones, sem texto.
- * Só a admin recebe esta paleta. Tocar na caneta já ativa abre as cinco cores.
+ * Todos têm Mover e Selecionar; caneta, apagador e lixeira são só da admin. Tocar na caneta já ativa abre as cinco cores.
  */
-export function Paleta({ modo, onModo, cor, onCor, temTracos, onApagarTudo }: Props) {
+export function Paleta({ isAdmin, selecionados, modo, onModo, cor, onCor, temTracos, onApagarTudo }: Props) {
   const [coresAbertas, setCoresAbertas] = useState(false)
   const { pedir, dialogo } = useConfirm()
   const raiz = useRef<HTMLDivElement>(null)
@@ -51,8 +55,8 @@ export function Paleta({ modo, onModo, cor, onCor, temTracos, onApagarTudo }: Pr
   }
 
   return (
-    <div ref={raiz} className={styles.paleta} role="toolbar" aria-label="Ferramentas da lousa (só a admin)">
-      {coresAbertas && (
+    <div ref={raiz} className={styles.paleta} role="toolbar" aria-label="Ferramentas da lousa">
+      {isAdmin && coresAbertas && (
         <div className={styles.cores} role="group" aria-label="Cor da caneta">
           {COR_IDS.map((id) => (
             <button
@@ -75,6 +79,19 @@ export function Paleta({ modo, onModo, cor, onCor, temTracos, onApagarTudo }: Pr
       <button type="button" className={styles.ferr} aria-pressed={modo === 'mover'} aria-label="Mover" title="Mover post-its (Esc)" onClick={() => escolher('mover')}>
         <IconeMover />
       </button>
+      <button
+        type="button"
+        className={styles.ferr}
+        aria-pressed={modo === 'selecionar'}
+        aria-label="Selecionar"
+        title="Selecionar vários cartões: arraste um retângulo ou toque nos cartões (Shift/Ctrl+clique também funciona). Depois arraste um deles para mover o grupo."
+        onClick={() => escolher('selecionar')}
+      >
+        <IconeSelecionar />
+        {selecionados > 0 && <span className={styles.contagem}>{selecionados}</span>}
+      </button>
+      {isAdmin && (
+        <>
       <button
         type="button"
         className={styles.ferr}
@@ -111,6 +128,8 @@ export function Paleta({ modo, onModo, cor, onCor, temTracos, onApagarTudo }: Pr
       >
         <IconeLixeira />
       </button>
+        </>
+      )}
       {dialogo}
     </div>
   )

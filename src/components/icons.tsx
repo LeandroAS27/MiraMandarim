@@ -60,3 +60,11 @@ export const IconeSeta = () => (
     <path d="M6 9l6 6 6-6" />
   </Icone>
 )
+
+/** Retângulo tracejado com seta: modo selecionar (arrastar um retângulo ou tocar vários cartões). */
+export const IconeSelecionar = () => (
+  <Icone>
+    <rect x="3.5" y="3.5" width="13" height="13" rx="2" strokeDasharray="3 2.6" />
+    <path d="M12.5 12.5l8 3-3.4 1.4L15.6 20z" />
+  </Icone>
+)

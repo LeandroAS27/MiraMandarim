@@ -8,3 +8,4 @@
 .wrap:hover .dup, .dup:focus-visible { opacity: 1; }
 .dup:hover { background: #0969da; }
 @media (hover: none) { .dup { opacity: 1; width: 28px; height: 28px; line-height: 28px; top: -10px; left: 24px; font-size: 16px; } }
+.selected { outline: 2px solid #0969da; outline-offset: 3px; border-radius: 10px; }

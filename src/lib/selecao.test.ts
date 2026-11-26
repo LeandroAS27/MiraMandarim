@@ -60,3 +60,21 @@ describe('seleção em grupo', () => {
     expect(limitarDeslocamento(estado, ['zzz'], { x: 5, y: 5 })).toEqual({ x: 5, y: 5 })
   })
 })
+
+import { arrasteDePostitLigado, camadaCaptura, modoEfetivo } from './desenho'
+
+describe('modo Selecionar', () => {
+  it('não captura o ponteiro com camada de desenho e mantém o arraste de post-its ligado (é assim que o grupo se move)', () => {
+    expect(camadaCaptura('selecionar', true)).toBe(false)
+    expect(camadaCaptura('selecionar', false)).toBe(false)
+    expect(arrasteDePostitLigado('selecionar', true)).toBe(true)
+    expect(arrasteDePostitLigado('selecionar', false)).toBe(true)
+  })
+
+  it('o aluno pode usar Selecionar, mas caneta e apagador viram Mover', () => {
+    expect(modoEfetivo('selecionar', false)).toBe('selecionar')
+    expect(modoEfetivo('caneta', false)).toBe('mover')
+    expect(modoEfetivo('apagador', false)).toBe('mover')
+    expect(modoEfetivo('caneta', true)).toBe('caneta')
+  })
+})
