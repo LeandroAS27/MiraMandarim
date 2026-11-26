@@ -92,8 +92,6 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
   const modoRef = useRef(modoAtivo)
   modoRef.current = modoAtivo
   const dragFim = useRef(0)
-  // cartões que acabaram de ser movidos ou duplicados em grupo ficam por cima dos outros
-  const [topGrupo, setTopGrupo] = useState<Set<string>>(() => new Set())
   const { pedir, dialogo: dialogoConfirma } = useConfirm()
   // o que sumiu do quadro (outra pessoa removeu, ou o quadro foi trocado) sai da seleção
   useEffect(() => {
@@ -117,7 +115,6 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
     if (isAdmin) saveUltimaSala(boardId)
   }, [isAdmin, boardId])
   const [prefs, updatePrefs] = usePreferences()
-  const [topId, setTopId] = useState<string | null>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [hsk, setHsk] = useState<HskFilter>('all')
@@ -343,8 +340,6 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
       } else if (to) {
         const d = deslocamentoDoGrupo(data.instanceId, to)
         if (d) moveInstances(moverGrupo(instancesRef.current, selecaoRef.current, d)) // uma mensagem para o grupo todo
-        setTopId(data.instanceId)
-        setTopGrupo(new Set(selecaoRef.current)) // o grupo solto fica por cima dos outros cartões
       }
       return
     }
@@ -352,11 +347,8 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
       // solto no banco: remove a cópia (uma palavra do banco solta no banco não faz nada)
       if (data.kind === 'instance') removeInstance(data.instanceId)
     } else if (to) {
-      if (data.kind === 'bank') setTopId(createInstance(data.palavraId, to).instanceId)
-      else {
-        setTopId(data.instanceId)
-        moveInstance(data.instanceId, to)
-      }
+      if (data.kind === 'bank') createInstance(data.palavraId, to)
+      else moveInstance(data.instanceId, to)
     } else if (data.kind === 'instance') {
       cancelPreview(data.instanceId) // solto fora de tudo: os outros voltam a ver o cartão onde está
     }
@@ -447,7 +439,6 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
     if (copias.length === 0) return
     const ids = new Set(copias.map((c) => c.instanceId))
     setSelecao(ids) // a seleção passa para as cópias, prontas para arrastar
-    setTopGrupo(ids)
   }, [duplicateInstances])
 
   const removeNote = useCallback(
@@ -462,7 +453,7 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
     (instanceId: string) => {
       if (selecaoRef.current.has(instanceId) && selecaoRef.current.size > 1) return duplicarSelecao()
       const original = store.getState()[instanceId]
-      if (original) setTopId(createInstance(original.palavraId, duplicatePos(original.pos)).instanceId)
+      if (original) createInstance(original.palavraId, duplicatePos(original.pos))
     },
     [store, createInstance, duplicarSelecao],
   )
@@ -584,7 +575,6 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
                   key={i.instanceId}
                   instance={i}
                   palavra={palavraById[i.palavraId]}
-                  isTop={i.instanceId === topId || topGrupo.has(i.instanceId)}
                   showPinyin={prefs.showPinyin}
                   showTraducao={prefs.showTraducao}
                   onRemove={removeNote}

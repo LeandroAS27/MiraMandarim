@@ -250,7 +250,7 @@ export class RealtimeBoardStore implements BoardStore {
       case 'move': {
         const mine = this.previewAt.get(m.instanceId)
         if (mine !== undefined && Date.now() - mine < 1000) break
-        this.applyRemote({ type: 'move', instanceId: m.instanceId, from: m.to, to: m.to })
+        this.applyRemote({ type: 'move', instanceId: m.instanceId, from: m.to, to: m.to, frente: m.final })
         break
       }
       case 'move_many':

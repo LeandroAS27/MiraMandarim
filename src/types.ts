@@ -34,7 +34,8 @@ export type BoardState = Record<string, Instance>
 /** Um movimento no quadro (usado no BoardStore). */
 export type Move =
   | { type: 'create'; instance: Instance }
-  | { type: 'move'; instanceId: string; from: Pos; to: Pos }
+  /** `frente: false` = movimento de prévia (alguém ainda arrastando): muda a posição sem trazer o cartão para a frente. */
+  | { type: 'move'; instanceId: string; from: Pos; to: Pos; frente?: boolean }
   | { type: 'moveMany'; moves: { instanceId: string; to: Pos }[] } // vários cartões de uma vez (seleção em grupo)
   | { type: 'removeMany'; instances: Instance[] } // vários cartões de uma vez (apagar o grupo selecionado)
   | { type: 'remove'; instance: Instance }

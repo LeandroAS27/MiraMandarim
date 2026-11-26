@@ -22,6 +22,8 @@ export function applyMoveToState(current: BoardState, move: Move): BoardState | 
       for (const m of move.moves) {
         const inst = next[m.instanceId]
         if (!inst) continue
+        // o cartão movido vai para o fim da lista = fica por cima dos outros (a ordem da lista é a ordem de empilhamento)
+        delete next[m.instanceId]
         next[m.instanceId] = { ...inst, pos: m.to }
         mudou = true
       }
@@ -31,6 +33,8 @@ export function applyMoveToState(current: BoardState, move: Move): BoardState | 
     case 'move': {
       const inst = next[move.instanceId]
       if (!inst) return null
+      // movimento final: vai para o fim da lista (por cima). Prévia de quem ainda arrasta: só muda a posição.
+      if (move.frente !== false) delete next[move.instanceId]
       next[move.instanceId] = { ...inst, pos: move.to }
       break
     }

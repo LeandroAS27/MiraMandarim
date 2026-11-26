@@ -7,7 +7,6 @@ import styles from './Draggable.module.css'
 interface Props {
   instance: Instance
   palavra: Palavra
-  isTop: boolean
   showPinyin: boolean
   showTraducao: boolean
   /** Remove esta cópia do quadro (um único passo no histórico). */
@@ -28,7 +27,7 @@ interface Props {
  * transform, e o DragOverlay precisa partir do ponto certo.
  * Durante o arraste quem aparece é o DragOverlay; este fica invisível no lugar.
  */
-export const Draggable = memo(function Draggable({ instance, palavra, isTop, showPinyin, showTraducao, onRemove, onDuplicate, selected, offset, onClickCard }: Props) {
+export const Draggable = memo(function Draggable({ instance, palavra, showPinyin, showTraducao, onRemove, onDuplicate, selected, offset, onClickCard }: Props) {
   const { instanceId, pos } = instance
   const { setNodeRef, attributes, listeners, isDragging } = useDraggable({
     id: instanceId,
@@ -54,7 +53,8 @@ export const Draggable = memo(function Draggable({ instance, palavra, isTop, sho
       style={{
         left: pos.x,
         top: pos.y,
-        zIndex: isTop ? 10 : 1,
+        // a ordem de empilhamento é a ordem dos cartões no estado (igual para todos): o último movido fica por cima
+        zIndex: 1,
         opacity: isDragging ? 0 : 1,
         transform: offset ? `translate(${offset.x}px, ${offset.y}px)` : undefined,
       }}

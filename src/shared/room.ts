@@ -100,7 +100,11 @@ export function handleMessage(
     case 'move': {
       const inst = data.state[msg.instanceId]
       if (!inst) return noop(data)
-      const state = { ...data.state, [msg.instanceId]: { ...inst, pos: msg.to } }
+      const state = { ...data.state }
+      // Ao soltar, o cartão vai para o fim da lista (= por cima dos outros), igual para todo mundo e depois de recarregar.
+      // Durante o arrasto (final = false) só muda a posição.
+      if (msg.final) delete state[msg.instanceId]
+      state[msg.instanceId] = { ...inst, pos: msg.to }
       // Durante o arrasto (final = false) só memória + broadcast; ao soltar, grava.
       return { ...noop(data), state, persistState: msg.final, broadcast: { type: 'move', clientId, instanceId: msg.instanceId, to: msg.to, final: msg.final } }
     }
@@ -112,6 +116,7 @@ export function handleMessage(
       for (const m of msg.moves) {
         const inst = state[m.instanceId]
         if (!inst) continue
+        delete state[m.instanceId] // vai para o fim da lista: por cima, na ordem do grupo
         state[m.instanceId] = { ...inst, pos: m.to }
         aplicados.push(m)
       }
