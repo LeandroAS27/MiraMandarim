@@ -28,7 +28,9 @@ import { arrasteDePostitLigado, modoEfetivo, type Modo } from '../lib/desenho'
 import { alternar, cartoesNoRetangulo, limitarDeslocamento, moverGrupo, podar, retanguloEntre, unir, type Retangulo } from '../lib/selecao'
 import { COR_PADRAO, type CorId } from '../shared/tracos'
 import { DrawingLayer } from './DrawingLayer'
+import { BarraSelecao } from './BarraSelecao'
 import { Paleta } from './Paleta'
+import { useConfirm } from '../hooks/useConfirm'
 import { PalavrasExtras } from './PalavrasExtras'
 import { QuadrosSalvos } from './QuadrosSalvos'
 import { Toolbar } from './Toolbar'
@@ -68,7 +70,7 @@ interface BoardProps {
 
 export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom, onLeave, sessao, onSessao, onSessaoExpirada }: BoardProps) {
   const {
-    instances, createInstance, moveInstance, removeInstance, moveInstances, clearBoard, save, listSaved, openSaved, deleteSaved, clearNotices, addPalavra, editPalavra, removePalavra,
+    instances, createInstance, moveInstance, removeInstance, moveInstances, removeInstances, duplicateInstances, clearBoard, save, listSaved, openSaved, deleteSaved, clearNotices, addPalavra, editPalavra, removePalavra,
     previewMove, cancelPreview, sendCursor, meta, store,
   } = useBoard(boardId, { clientId, nome, token, sessao, onSessao })
   const isAdmin = meta.papel === 'admin'
@@ -90,6 +92,9 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
   const modoRef = useRef(modoAtivo)
   modoRef.current = modoAtivo
   const dragFim = useRef(0)
+  // cartões que acabaram de ser movidos ou duplicados em grupo ficam por cima dos outros
+  const [topGrupo, setTopGrupo] = useState<Set<string>>(() => new Set())
+  const { pedir, dialogo: dialogoConfirma } = useConfirm()
   // o que sumiu do quadro (outra pessoa removeu, ou o quadro foi trocado) sai da seleção
   useEffect(() => {
     setSelecao((s) => podar(s, instances))
@@ -339,6 +344,7 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
         const d = deslocamentoDoGrupo(data.instanceId, to)
         if (d) moveInstances(moverGrupo(instancesRef.current, selecaoRef.current, d)) // uma mensagem para o grupo todo
         setTopId(data.instanceId)
+        setTopGrupo(new Set(selecaoRef.current)) // o grupo solto fica por cima dos outros cartões
       }
       return
     }
@@ -419,15 +425,65 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
     window.addEventListener('pointerup', up)
   }
 
-  const removeNote = useCallback((instanceId: string) => removeInstance(instanceId), [removeInstance])
+  // Apagar e duplicar valem para o GRUPO quando o cartão faz parte da seleção (2 ou mais); senão, só para o cartão.
+  const apagarSelecao = useCallback(async () => {
+    const ids = [...selecaoRef.current]
+    if (ids.length === 0) return
+    if (ids.length > 1) {
+      const ok = await pedir({
+        titulo: `Apagar ${ids.length} cartões?`,
+        mensagem: 'Os cartões selecionados saem do quadro, para todos os conectados.',
+        confirmar: 'Apagar cartões',
+        perigo: true,
+      })
+      if (!ok) return
+    }
+    removeInstances(ids)
+    setSelecao(new Set())
+  }, [pedir, removeInstances])
+
+  const duplicarSelecao = useCallback(() => {
+    const copias = duplicateInstances([...selecaoRef.current])
+    if (copias.length === 0) return
+    const ids = new Set(copias.map((c) => c.instanceId))
+    setSelecao(ids) // a seleção passa para as cópias, prontas para arrastar
+    setTopGrupo(ids)
+  }, [duplicateInstances])
+
+  const removeNote = useCallback(
+    (instanceId: string) => {
+      if (selecaoRef.current.has(instanceId) && selecaoRef.current.size > 1) void apagarSelecao()
+      else removeInstance(instanceId)
+    },
+    [removeInstance, apagarSelecao],
+  )
   // Duplicar: nova cópia da mesma palavra, um pouco deslocada, já por cima das outras (todos podem; vira um "add" normal)
   const duplicateNote = useCallback(
     (instanceId: string) => {
+      if (selecaoRef.current.has(instanceId) && selecaoRef.current.size > 1) return duplicarSelecao()
       const original = store.getState()[instanceId]
       if (original) setTopId(createInstance(original.palavraId, duplicatePos(original.pos)).instanceId)
     },
-    [store, createInstance],
+    [store, createInstance, duplicarSelecao],
   )
+
+  // Atalhos com cartões selecionados: Delete/Backspace apaga o grupo, Ctrl/Cmd+D duplica.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null
+      if (e.defaultPrevented || (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) || selecaoRef.current.size === 0) return
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault()
+        void apagarSelecao()
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
+        e.preventDefault()
+        duplicarSelecao()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [apagarSelecao, duplicarSelecao])
+
   // cartão de uma palavra que não existe mais (ex.: extra excluída em outra sala) não aparece
   const placed = Object.values(instances).filter((i) => palavraById[i.palavraId])
   const trayItems = useMemo(
@@ -528,7 +584,7 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
                   key={i.instanceId}
                   instance={i}
                   palavra={palavraById[i.palavraId]}
-                  isTop={i.instanceId === topId}
+                  isTop={i.instanceId === topId || topGrupo.has(i.instanceId)}
                   showPinyin={prefs.showPinyin}
                   showTraducao={prefs.showTraducao}
                   onRemove={removeNote}
@@ -544,6 +600,10 @@ export function Board({ boardId, nome, token, clientId, onChangeName, onNewRoom,
             </div>
           </div>
         </div>
+        {selecao.size > 0 && (
+          <BarraSelecao quantidade={selecao.size} onDuplicar={duplicarSelecao} onApagar={() => void apagarSelecao()} onSoltar={() => setSelecao(new Set())} />
+        )}
+        {dialogoConfirma}
         {(
           <Paleta
             isAdmin={isAdmin}

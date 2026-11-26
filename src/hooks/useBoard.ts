@@ -43,6 +43,8 @@ export function useBoard(boardId: string, session: BoardSession) {
   const createInstance = useCallback((palavraId: string, pos: Pos) => ctl.create(palavraId, pos), [ctl])
   const moveInstance = useCallback((instanceId: string, to: Pos) => ctl.move(instanceId, to), [ctl])
   const moveInstances = useCallback((moves: { instanceId: string; to: Pos }[]) => ctl.moveMany(moves), [ctl])
+  const removeInstances = useCallback((ids: string[]) => ctl.removeMany(ids), [ctl])
+  const duplicateInstances = useCallback((ids: string[]) => ctl.duplicateMany(ids), [ctl])
   const removeInstance = useCallback((instanceId: string) => ctl.remove(instanceId), [ctl])
   const clearBoard = useCallback(() => ctl.clear(), [ctl])
   const save = useCallback((nome: string) => store.save(nome), [store])
@@ -64,6 +66,8 @@ export function useBoard(boardId: string, session: BoardSession) {
     createInstance,
     moveInstance,
     moveInstances,
+    removeInstances,
+    duplicateInstances,
     removeInstance,
     clearBoard,
     save,

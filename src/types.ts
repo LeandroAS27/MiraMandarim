@@ -36,6 +36,7 @@ export type Move =
   | { type: 'create'; instance: Instance }
   | { type: 'move'; instanceId: string; from: Pos; to: Pos }
   | { type: 'moveMany'; moves: { instanceId: string; to: Pos }[] } // vários cartões de uma vez (seleção em grupo)
+  | { type: 'removeMany'; instances: Instance[] } // vários cartões de uma vez (apagar o grupo selecionado)
   | { type: 'remove'; instance: Instance }
   | { type: 'clear'; instances: Instance[] } // limpar quadro: guarda todas as cópias removidas
   | { type: 'restore'; instances: Instance[] } // recria várias cópias de uma vez (ex.: cópias que chegam de outras pessoas)

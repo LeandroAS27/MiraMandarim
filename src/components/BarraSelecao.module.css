@@ -1,0 +1,7 @@
+.barra { position: fixed; left: calc(var(--tray-w, 0px) + (100vw - var(--tray-w, 0px)) / 2); bottom: calc(var(--tray-h, 0px) + var(--dock-h, 28px) + var(--paleta-h, 0px) + 10px); transform: translateX(-50%); z-index: 1300; display: flex; align-items: center; gap: 6px; padding: 6px 8px 6px 14px; background: #fff; border-radius: 999px; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(9, 105, 218, 0.35); transition: bottom 0.2s ease; white-space: nowrap; }
+.conta { font-size: 0.85rem; font-weight: 600; color: #0969da; margin-right: 4px; }
+.barra button { font: inherit; font-size: 0.85rem; padding: 6px 12px; border: 1px solid #d0d7de; border-radius: 999px; background: #f6f8fa; color: #24292f; cursor: pointer; }
+.barra button:hover { background: #eaeef2; }
+.barra .perigo { color: #b42318; border-color: #e7b7b2; }
+.barra .soltar { width: 30px; padding: 0; border-color: transparent; background: transparent; font-size: 1.1rem; line-height: 1; color: #6b7280; }
+@media (max-width: 699px) { .barra { bottom: calc(var(--tray-h, 0px) + var(--dock-h, 28px) + var(--paleta-h, 0px) + 10px); } .barra button { min-height: 38px; } }

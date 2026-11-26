@@ -405,6 +405,12 @@ export class RealtimeBoardStore implements BoardStore {
         this.setDrawing({ strokes: [], previews: {} })
         this.send({ type: 'reset', clientId: cid, to: 'empty' })
         break
+      case 'removeMany':
+        // Grupo apagado: uma única mensagem remove todos
+        this.sendPreviewThrottled.cancel()
+        for (const i of move.instances) this.previewAt.delete(i.instanceId)
+        this.send({ type: 'remove', clientId: cid, instanceIds: move.instances.map((i) => i.instanceId) })
+        break
       case 'moveMany':
         // Grupo solto: uma única mensagem (o servidor grava uma vez)
         this.sendPreviewThrottled.cancel()

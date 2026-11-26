@@ -5,6 +5,7 @@ import { arrasteDePostitLigado, camadaCaptura, podeDesenhar, type Modo } from '.
 import type { Stroke } from '../shared/tracos'
 import type { RealtimeBoardStore } from '../store/RealtimeBoardStore'
 import { DrawingLayer } from './DrawingLayer'
+import { BarraSelecao } from './BarraSelecao'
 import { Paleta } from './Paleta'
 import { Toolbar } from './Toolbar'
 
@@ -311,5 +312,24 @@ describe('barra do topo enxuta, com menus', () => {
       document.body.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }))
     })
     expect(document.querySelector('[role="menu"]')).toBeNull()
+  })
+})
+
+describe('barra dos cartões selecionados', () => {
+  it('mostra a contagem e chama duplicar, apagar e soltar', () => {
+    const f = { onDuplicar: vi.fn(), onApagar: vi.fn(), onSoltar: vi.fn() }
+    const div = render(<BarraSelecao quantidade={3} {...f} />)
+    expect(div.textContent).toMatch(/3 selecionados/)
+    act(() => porNome(div, /^Duplicar/)?.click())
+    act(() => porNome(div, /^Apagar/)?.click())
+    act(() => porNome(div, /Soltar a seleção/)?.click())
+    expect(f.onDuplicar).toHaveBeenCalledTimes(1)
+    expect(f.onApagar).toHaveBeenCalledTimes(1)
+    expect(f.onSoltar).toHaveBeenCalledTimes(1)
+  })
+
+  it('usa o singular com um cartão', () => {
+    const div = render(<BarraSelecao quantidade={1} onDuplicar={vi.fn()} onApagar={vi.fn()} onSoltar={vi.fn()} />)
+    expect(div.textContent).toMatch(/1 selecionado(?!s)/)
   })
 })

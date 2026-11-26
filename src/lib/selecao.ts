@@ -73,3 +73,23 @@ export function moverGrupo(estado: BoardState, ids: Iterable<string>, d: Pos): {
   }
   return out
 }
+
+/** Quanto a cópia do grupo fica deslocada do original (px), igual à de um cartão só. */
+export const DESLOCAMENTO_COPIA = 24
+
+/**
+ * Deslocamento das cópias de um grupo: um pouco para baixo e para a direita (o grupo inteiro, mantendo o desenho).
+ * Se não couber (grupo na borda do quadro), tenta para cima e para a esquerda; nunca devolve zero se houver espaço.
+ */
+export function deslocamentoDuplicado(estado: BoardState, ids: Iterable<string>): Pos {
+  const lista = [...ids]
+  const tenta = (d: Pos) => limitarDeslocamento(estado, lista, d)
+  const direita = tenta({ x: DESLOCAMENTO_COPIA, y: DESLOCAMENTO_COPIA })
+  if (direita.x === DESLOCAMENTO_COPIA && direita.y === DESLOCAMENTO_COPIA) return direita
+  const esquerda = tenta({ x: -DESLOCAMENTO_COPIA, y: -DESLOCAMENTO_COPIA })
+  // se nenhum dos dois cabe inteiro, usa o que coube (por eixo) em vez de empilhar exatamente em cima
+  return {
+    x: direita.x === DESLOCAMENTO_COPIA ? direita.x : esquerda.x !== 0 ? esquerda.x : direita.x,
+    y: direita.y === DESLOCAMENTO_COPIA ? direita.y : esquerda.y !== 0 ? esquerda.y : direita.y,
+  }
+}

@@ -530,4 +530,30 @@ describe('RealtimeBoardStore', () => {
     expect(a.store.getState()[i1.instanceId].pos).toEqual({ x: 7, y: 8 })
     expect(a.store.getState()[i2.instanceId].pos).toEqual({ x: 107, y: 8 })
   })
+
+  it('apagar o grupo: uma única mensagem remove todos (e some aqui na hora)', () => {
+    const a = make()
+    a.sock().open()
+    const i1 = { instanceId: 'i-aaaa1111', palavraId: 'p001', pos: { x: 0, y: 0 } }
+    const i2 = { instanceId: 'i-bbbb2222', palavraId: 'p001', pos: { x: 100, y: 0 } }
+    const i3 = { instanceId: 'i-cccc3333', palavraId: 'p001', pos: { x: 200, y: 0 } }
+    a.sock().receive(snapshot({ state: { [i1.instanceId]: i1, [i2.instanceId]: i2, [i3.instanceId]: i3 } }))
+    a.store.applyMove({ type: 'removeMany', instances: [i1, i2] })
+    expect(Object.keys(a.store.getState())).toEqual([i3.instanceId])
+    expect(a.sock().ofType('remove')).toMatchObject([{ instanceIds: [i1.instanceId, i2.instanceId] }])
+  })
+
+  it('duplicar o grupo: uma única mensagem add com todas as cópias', () => {
+    const a = make()
+    a.sock().open()
+    a.sock().receive(snapshot())
+    const copias = [
+      { instanceId: 'i-novo0001', palavraId: 'p001', pos: { x: 24, y: 24 } },
+      { instanceId: 'i-novo0002', palavraId: 'p002', pos: { x: 124, y: 24 } },
+    ]
+    a.store.applyMove({ type: 'restore', instances: copias })
+    expect(a.sock().ofType('add')).toHaveLength(1)
+    expect(a.sock().ofType('add')[0].instances).toHaveLength(2)
+    expect(Object.keys(a.store.getState())).toHaveLength(2)
+  })
 })

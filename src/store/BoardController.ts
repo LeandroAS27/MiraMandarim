@@ -1,5 +1,6 @@
 import { newInstanceId } from '../lib/boardId'
 import type { Instance, Pos } from '../types'
+import { deslocamentoDuplicado } from '../lib/selecao'
 import type { BoardStore } from './BoardStore'
 
 /** Operações do quadro: criar, mover e remover cópias, e limpar tudo. */
@@ -36,6 +37,27 @@ export class BoardController {
     const instance = this.store.getState()[instanceId]
     if (!instance) return
     this.store.applyMove({ type: 'remove', instance })
+  }
+
+  /** Apaga vários cartões de uma vez (o grupo selecionado): um único passo e uma única mensagem. */
+  removeMany(instanceIds: string[]): void {
+    const estado = this.store.getState()
+    const instances = instanceIds.map((id) => estado[id]).filter((i): i is Instance => Boolean(i))
+    if (instances.length > 0) this.store.applyMove({ type: 'removeMany', instances })
+  }
+
+  /**
+   * Duplica vários cartões de uma vez (o grupo selecionado): as cópias mantêm o desenho do grupo, um pouco deslocadas,
+   * numa única mensagem. Devolve as cópias (para a seleção passar a elas).
+   */
+  duplicateMany(instanceIds: string[]): Instance[] {
+    const estado = this.store.getState()
+    const originais = instanceIds.map((id) => estado[id]).filter((i): i is Instance => Boolean(i))
+    if (originais.length === 0) return []
+    const d = deslocamentoDuplicado(estado, originais.map((i) => i.instanceId))
+    const copias: Instance[] = originais.map((o) => ({ instanceId: this.makeId(), palavraId: o.palavraId, pos: { x: o.pos.x + d.x, y: o.pos.y + d.y } }))
+    this.store.applyMove({ type: 'restore', instances: copias })
+    return copias
   }
 
   /** Limpa o quadro: remove todas as cópias de uma vez. */
